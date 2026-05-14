@@ -138,7 +138,7 @@ def manage_escrow_balances(sender, instance, created, **kwargs):
     """
     Handles financial movements based on Order Lifecycle.
     """
-    if kwargs.get('raw', False):
+    if kwargs.get('raw', False) or created:
         return
 
     with transaction.atomic():
@@ -324,7 +324,7 @@ def manage_crave_escrow_balances(sender, instance, created, **kwargs):
     Handles financial movements for Crave Campus Orders.
     """
 
-    if kwargs.get('raw', False):
+    if kwargs.get('raw', False) or created:
         return
 
     with transaction.atomic():

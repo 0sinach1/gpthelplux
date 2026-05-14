@@ -129,6 +129,54 @@ def process_courier_payout(master_order_id):
 
 
 # ---------------------------------------------------------
+# STEP 1: CHECKOUT LOCK
+# Customer funds move from available balance into locked escrow.
+# ---------------------------------------------------------
+def step_1_checkout_lock(customer_user, amount, order_id):
+    """Lock a customer's funds for an order in an idempotent transaction.
+
+    This legacy helper is still used by tests and older checkout flows. It
+    debits the customer's available balance, moves the same amount to locked
+    escrow, records a unique lock transaction, and mirrors the vendor's pending
+    clearing balance when the order can be found.
+    """
+    amount = Decimal(amount)
+    lock_ref = f"LOCK-{order_id}"
+
+    if WalletTransaction.objects.filter(reference=lock_ref).exists():
+        return
+
+    with transaction.atomic():
+        try:
+            order = Order.objects.select_for_update().get(pk=order_id)
+        except Order.DoesNotExist:
+            order = None
+
+        customer_wallet = get_wallet(customer_user, Wallet.WalletType.CUSTOMER)
+        if customer_wallet.available_balance < amount:
+            raise ValueError(f"Insufficient funds. Required: ₦{amount}")
+
+        customer_wallet.available_balance -= amount
+        customer_wallet.locked_escrow += amount
+        customer_wallet.save()
+
+        WalletTransaction.objects.create(
+            wallet=customer_wallet,
+            transaction_type='PURCHASE_LOCK',
+            amount=-amount,
+            running_balance=customer_wallet.available_balance,
+            reference=lock_ref,
+            description=f"Payment locked for Order #{order_id}"
+        )
+
+        if order is not None:
+            vendor_share = order.vendor_payout if order.vendor_payout else order.subtotal
+            vendor_wallet = get_wallet(order.vendor.user_account, Wallet.WalletType.VENDOR)
+            vendor_wallet.pending_clearing += vendor_share
+            vendor_wallet.save()
+
+
+# ---------------------------------------------------------
 # STEP 2: START DELIVERY (Vendor Awareness)
 # Vendor Pending Balance shows the order payout (after Luxa cut).
 # ---------------------------------------------------------
@@ -161,7 +209,11 @@ def step_3_complete_delivery(order_id):
     transaction_ref = f"EARN-{order_id}"
 
     # 1. OPTIMIZATION: Quick check before locking DB rows
-    if WalletTransaction.objects.filter(reference=transaction_ref).exists():
+    refs_to_check = [transaction_ref]
+    order_number = Order.objects.filter(pk=order_id).values_list('order_number', flat=True).first()
+    if order_number:
+        refs_to_check.append(f"EARN-{order_number}")
+    if WalletTransaction.objects.filter(reference__in=refs_to_check).exists():
         return
 
     try:
@@ -175,7 +227,7 @@ def step_3_complete_delivery(order_id):
                 raise ValueError("Security Alert: Attempted to settle a cancelled order.")
             if order.status != 'delivered':
                 return 
-            if WalletTransaction.objects.filter(reference=transaction_ref).exists():
+            if WalletTransaction.objects.filter(reference__in=refs_to_check).exists():
                 return 
 
             customer_user = order.customer.user_account 
