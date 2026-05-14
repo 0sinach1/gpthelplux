@@ -8,10 +8,15 @@ These tests ensure:
 """
 
 from django.test import TestCase, TransactionTestCase
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
 from django.db import IntegrityError, transaction
 from MAIN.models import Product, ProductVariant, Cart, CartItem, Customer, Vendor, Category
 from django.contrib.auth.models import User
+
+
+def test_image(name='test-product.jpg'):
+    return SimpleUploadedFile(name, b'test image bytes', content_type='image/jpeg')
 
 
 class ProductVariantMigrationTest(TransactionTestCase):
@@ -57,6 +62,7 @@ class ProductVariantMigrationTest(TransactionTestCase):
             vendor=self.vendor,
             category=self.category,
             price=100.00,
+            main_image=test_image(),
             stock_quantity=10,
             available_colors='Red,Blue,Green',
             available_sizes='S,M,L,XL'
@@ -118,6 +124,7 @@ class ProductVariantMigrationTest(TransactionTestCase):
             vendor=self.vendor,
             category=self.category,
             price=50.00,
+            main_image=test_image('messy-product.jpg'),
             available_colors='  red  ,  BLUE  ,green  ',
             available_sizes='  s  ,  M  ,  l  '
         )
@@ -179,6 +186,7 @@ class CartItemUniqueConstraintTest(TestCase):
             vendor=self.vendor,
             category=self.category,
             price=100.00,
+            main_image=test_image('cart-product.jpg'),
             stock_quantity=10
         )
         

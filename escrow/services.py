@@ -129,6 +129,42 @@ def process_courier_payout(master_order_id):
 
 
 # ---------------------------------------------------------
+# STEP 1: CHECKOUT LOCK
+# Moves customer funds from available balance into escrow.
+# ---------------------------------------------------------
+def step_1_checkout_lock(customer, amount, order_id):
+    """Lock customer funds for an order checkout.
+
+    The function is idempotent per order: a duplicate lock request with the
+    same order id is ignored once a lock transaction already exists.
+    """
+    amount = Decimal(str(amount))
+    transaction_ref = f"LOCK-{order_id}"
+
+    if WalletTransaction.objects.filter(reference=transaction_ref).exists():
+        return
+
+    with transaction.atomic():
+        customer_wallet = get_wallet(customer, Wallet.WalletType.CUSTOMER)
+
+        if customer_wallet.available_balance < amount:
+            raise ValueError(f"Insufficient funds. Required: ₦{amount}")
+
+        customer_wallet.available_balance -= amount
+        customer_wallet.locked_escrow += amount
+        customer_wallet.save()
+
+        WalletTransaction.objects.create(
+            wallet=customer_wallet,
+            transaction_type='PURCHASE_LOCK',
+            amount=-amount,
+            running_balance=customer_wallet.available_balance,
+            reference=transaction_ref,
+            description=f"Escrow lock for Order #{order_id}",
+        )
+
+
+# ---------------------------------------------------------
 # STEP 2: START DELIVERY (Vendor Awareness)
 # Vendor Pending Balance shows the order payout (after Luxa cut).
 # ---------------------------------------------------------
