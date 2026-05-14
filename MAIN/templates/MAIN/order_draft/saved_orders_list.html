@@ -1,0 +1,239 @@
+{% extends "MAIN/base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Saved Drafts{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+    .gallery-wrapper {
+        background-color: #f8fafc;
+        min-height: calc(100vh - 80px);
+        padding: 40px 20px;
+        font-family: 'Inter', sans-serif;
+    }
+    
+    .gallery-header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+    
+    .gallery-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 25px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    
+    .order-card {
+        background: white;
+        border-radius: 16px;
+        padding: 24px;
+        border: 1px solid #e2e8f0;
+        transition: transform 0.2s, box-shadow 0.2s;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+    
+    .order-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+        border-color: #cbd5e1;
+    }
+    
+    .order-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 16px;
+    }
+    
+    .customer-name { 
+        font-weight: 700; 
+        color: #1e293b; 
+        font-size: 1.1rem; 
+        margin-bottom: 4px;
+    }
+    
+    .order-date { font-size: 0.85rem; color: #94a3b8; }
+    
+    .info-badges {
+        display: flex;
+        gap: 10px;
+        margin: 15px 0 20px 0;
+    }
+    
+    .badge-pill {
+        padding: 4px 10px; 
+        border-radius: 6px; 
+        font-size: 0.75rem; 
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .badge-delivery { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+    .badge-items { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+
+    /* Buttons */
+    .card-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-top: auto;
+    }
+    
+    .btn-card {
+        padding: 10px;
+        border-radius: 8px;
+        text-align: center;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+    
+    .btn-dispatch {
+        background: #0f172a;
+        color: white;
+        border: none;
+    }
+    .btn-dispatch:hover { background: #334155; color: white; }
+    
+    .btn-edit {
+        background: white;
+        color: #334155;
+        border: 1px solid #cbd5e1;
+    }
+    .btn-edit:hover { background: #f8fafc; border-color: #94a3b8; color: #0f172a; }
+
+    .btn-delete {
+        grid-column: span 2;
+        background: #fff1f2;
+        color: #e11d48;
+        border: 1px solid #fecdd3;
+        margin-top: 5px;
+    }
+    .btn-delete:hover { background: #ffe4e6; color: #be123c; }
+    
+    .empty-state {
+        grid-column: 1/-1; 
+        text-align: center; 
+        padding: 5rem 0; 
+        color: #94a3b8;
+    }
+
+    /* NEW: Alert Styles */
+    .alert-container {
+        max-width: 1200px;
+        margin: 0 auto 20px auto;
+    }
+    .alert-box {
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        animation: slideIn 0.3s ease-out;
+    }
+    .alert-success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+    .alert-info { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
+    .alert-warning { background: #fef9c3; color: #854d0e; border: 1px solid #fde047; }
+    .alert-error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+    
+    @keyframes slideIn {
+        from { transform: translateY(-10px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="gallery-wrapper">
+
+    {% if messages %}
+    <div class="alert-container">
+        {% for message in messages %}
+            {% if 'onboarding_popup' not in message.tags %}
+            <div class="alert-box alert-{{ message.tags|default:'info' }}">
+                <i class="fas fa-info-circle"></i>
+                <span>{{ message }}</span>
+            </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <div class="gallery-header">
+        <h1 style="color: #1e293b; margin-bottom: 10px;">Saved Drafts</h1>
+        <p style="color: #64748b;">Manage your pending orders awaiting dispatch</p>
+        
+        <a href="{% url 'cart' %}" class="btn-card btn-dispatch" style="display: inline-block; width: auto; padding: 12px 24px; margin-top: 15px;">
+            <i class="fas fa-plus"></i> Create New Order
+        </a>
+    </div>
+
+    <div class="gallery-grid">
+        {% for draft in saved_drafts %}
+        <div class="order-card">
+            <div>
+                <div class="order-header">
+                    <div>
+                        <div class="customer-name">
+                            {{ draft.customer.user_account.first_name|default:draft.customer.user_account.username }} →
+                            Order #{{ draft.id|stringformat:".8s" }}
+                        </div>
+                        <div class="order-date">Created {{ draft.created_at|date:"M d, Y \a\t g:i A" }}</div>
+                    </div>
+                </div>
+                
+                <div class="info-badges">
+                    <span class="badge-pill badge-delivery">
+                        <i class="fas fa-truck"></i> {{ draft.delivery_type|cut:"_delivery"|title }}
+                    </span>
+                    <span class="badge-pill badge-items">
+                        <i class="fas fa-box"></i> {{ draft.items.count }} Items
+                    </span>
+                </div>
+            </div>
+
+            <div class="card-actions">
+                <a href="{% url 'order_dispatch_prompt' draft.id %}" class="btn-card btn-dispatch">
+                    <i class="fas fa-rocket"></i> Dispatch
+                </a>
+                
+                <a href="{% url 'order_edit_form' draft.id %}" class="btn-card btn-edit">
+                    <i class="fas fa-pen"></i> Edit
+                </a>
+
+                <a href="javascript:void(0);" 
+                   onclick="confirmCancel('{% url 'delete_draft' draft.id %}')" 
+                   class="btn-card btn-delete">
+                    <i class="fas fa-trash-alt"></i> Remove
+                </a>
+            </div>
+        </div>
+        {% empty %}
+        <div class="empty-state">
+            <i class="fas fa-folder-open fa-3x" style="margin-bottom: 20px; opacity: 0.5;"></i>
+            <p>You have no saved drafts right now.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+    function confirmCancel(url) {
+        if (confirm("Are you sure you want to delete this draft? This cannot be undone.")) {
+            window.location.href = url;
+        }
+    }
+</script>
+{% endblock %}

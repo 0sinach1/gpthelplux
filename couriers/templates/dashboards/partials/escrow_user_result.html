@@ -1,0 +1,121 @@
+{% load humanize %}
+
+<div class="card" style="margin-bottom: 25px; border-left: 4px solid {% if profile_type == 'Courier' %}#8b5cf6{% else %}#3b82f6{% endif %};">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h3 style="margin-bottom: 5px;">{{ target_user.first_name }} {{ target_user.last_name }} ({{ target_user.username }})</h3>
+            <span style="color: var(--text-muted); font-size: 0.85rem;">{{ target_user.email }} | Phone: {{ phone_number }}</span>
+        </div>
+        <span class="badge" style="background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; font-size: 0.85rem;">
+            <i class="bi bi-person-badge"></i> {{ profile_type }}
+        </span>
+    </div>
+</div>
+
+<div class="grid-3">
+    <div class="card stat-card" style="border-top-color: #3b82f6;">
+        <div class="stat-label">Personal Wallet (Customer)</div>
+        <div class="stat-value" style="color: #1d4ed8;">₦{{ customer_wallet.available_balance|default:"0.00"|intcomma }}</div>
+        <div style="font-size: 0.8rem; color: var(--text-muted);">
+            Locked Escrow: ₦{{ customer_wallet.locked_escrow|default:"0.00"|intcomma }}
+        </div>
+    </div>
+    
+    <div class="card stat-card" style="border-top-color: #10b981; opacity: {% if not courier_wallet %}0.4{% else %}1{% endif %};">
+        <div class="stat-label">Earnings Wallet (Courier)</div>
+        <div class="stat-value" style="color: #047857;">₦{{ courier_wallet.available_balance|default:"0.00"|intcomma }}</div>
+        <div style="font-size: 0.8rem; color: var(--text-muted);">
+            Pending: ₦{{ courier_wallet.pending_clearing|default:"0.00"|intcomma }}
+        </div>
+    </div>
+    
+    <div class="card stat-card" style="border-top-color: #f59e0b; opacity: {% if not advance_wallet %}0.4{% else %}1{% endif %};">
+        <div class="stat-label">Purchasing Advance</div>
+        <div class="stat-value" style="color: #b45309;">₦{{ advance_wallet.available_balance|default:"0.00"|intcomma }}</div>
+        <div style="font-size: 0.8rem; color: var(--text-muted);">Courier Only</div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-title">
+        Transaction History
+        <select class="form-select" id="ledger-filter" style="width: auto; padding: 8px 15px; font-weight: 600;" onchange="filterLedger()">
+            <option value="all">All Transactions</option>
+            <option value="CUSTOMER">Customer Wallet Only</option>
+            <option value="COURIER">Courier Earnings Only</option>
+            <option value="COURIER_ADVANCE">Advance Wallet Only</option>
+        </select>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Ref / ID</th>
+                    <th>Wallet</th>
+                    <th>Description</th>
+                    <th>Type</th>
+                    <th>Amount</th>
+                    <th>Balance</th>
+                </tr>
+            </thead>
+            <tbody id="ledger-body">
+                {% for txn in transactions %}
+                <tr class="txn-row" data-wallet="{{ txn.wallet.wallet_type }}">
+                    <td>{{ txn.timestamp|date:"M d, H:i" }}</td>
+                    <td><span style="font-family: monospace; color: var(--text-muted); font-size: 0.8rem;">{{ txn.reference }}</span></td>
+                    
+                    <td>
+                        <span class="badge" style="background: #f1f5f9; color: #475569;">
+                            {% if txn.wallet.wallet_type == 'COURIER_ADVANCE' %}ADVANCE
+                            {% else %}{{ txn.wallet.wallet_type }}
+                            {% endif %}
+                        </span>
+                    </td>
+                    
+                    <td>{{ txn.description }}</td>
+                    
+                    <td>
+                        {% if txn.transaction_type == 'CREDIT' or txn.transaction_type == 'DEPOSIT' or txn.transaction_type == 'PURCHASE_RELEASE' %}
+                            <span class="badge badge-credit">{{ txn.transaction_type }}</span>
+                        {% elif txn.transaction_type == 'PURCHASE_LOCK' %}
+                            <span class="badge badge-lock">{{ txn.transaction_type }}</span>
+                        {% else %}
+                            <span class="badge badge-debit">{{ txn.transaction_type }}</span>
+                        {% endif %}
+                    </td>
+                    
+                    <td class="{% if txn.amount > 0 %}amount-pos{% else %}amount-neg{% endif %}">
+                        {% if txn.amount > 0 %}+{% endif %}₦{{ txn.amount|intcomma }}
+                    </td>
+                    
+                    <td style="font-weight: 600;">₦{{ txn.running_balance|intcomma }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" style="text-align: center; padding: 30px; color: var(--text-muted);">
+                        No transactions found for this user.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // Simple frontend filter so we don't have to hit the database again!
+    function filterLedger() {
+        const filterValue = document.getElementById('ledger-filter').value;
+        const rows = document.querySelectorAll('.txn-row');
+        
+        rows.forEach(row => {
+            if (filterValue === 'all' || row.getAttribute('data-wallet') === filterValue) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+</script>

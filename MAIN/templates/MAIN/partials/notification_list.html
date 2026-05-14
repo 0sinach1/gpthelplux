@@ -1,0 +1,99 @@
+{% if notifs %}
+  {% for notif in notifs %}
+    <div class="notif-card {% if is_read %}notif-card--read{% endif %}"
+         id="notif-{{ notif.id }}">
+
+      {# Icon #}
+      <div class="notif-card__icon notif-card__icon--{{ notif.notif_type|default:'order' }}">
+        {% if notif.notif_type == 'order' or notif.notif_type == 'shipping' %}
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12"/>
+          </svg>
+        {% elif notif.notif_type == 'promo' or notif.notif_type == 'promotion' %}
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z"/>
+          </svg>
+        {% else %}
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        {% endif %}
+      </div>
+
+      {# Body #}
+      <div class="notif-card__body">
+        <p class="notif-card__title">
+          {{ notif.title }}
+          {% if not is_read %}
+            <span class="notif-unread-dot" aria-label="Unread"></span>
+          {% endif %}
+        </p>
+        <p class="notif-card__desc">{{ notif.message }}</p>
+        <p class="notif-card__meta">
+          {{ notif.created_at|timesince }} ago
+          {% if notif.notif_type %} · <span style="text-transform:capitalize;">{{ notif.notif_type }}</span>{% endif %}
+        </p>
+      </div>
+
+      {# Actions #}
+      <div class="notif-card__actions">
+        {% if notif.action_url %}
+          <a href="{{ notif.action_url }}" class="notif-action-btn notif-action-btn--primary">
+            {% if notif.notif_type == 'promo' %}Shop Now{% else %}View Order{% endif %}
+          </a>
+        {% endif %}
+        {% if not is_read %}
+          <button class="notif-action-btn"
+                  onclick="markNotifRead({{ notif.id }}, this)">
+            Mark Read
+          </button>
+        {% endif %}
+        <button class="notif-delete-btn"
+                onclick="deleteNotif({{ notif.id }}, this)"
+                title="Delete">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/>
+          </svg>
+        </button>
+      </div>
+
+    </div>
+  {% endfor %}
+
+{% else %}
+  <div class="card" style="text-align:center; padding:48px; color:var(--clr-text-3);">
+    {% if is_read %}No read notifications.{% else %}You're all caught up!{% endif %}
+  </div>
+{% endif %}
+
+<script>
+function markNotifRead(id, btn) {
+  fetch(`/api/notifications/${id}/mark-read/`, {
+    method: 'POST',
+    headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' }
+  }).then(r => {
+    if (r.ok) {
+      const card = document.getElementById('notif-' + id);
+      card.classList.add('notif-card--read');
+      card.querySelector('.notif-unread-dot')?.remove();
+      btn.remove();
+    }
+  });
+}
+
+function deleteNotif(id, btn) {
+  fetch(`/api/notifications/${id}/delete/`, {
+    method: 'DELETE',
+    headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+  }).then(r => {
+    if (r.ok) {
+      const card = document.getElementById('notif-' + id);
+      card.style.opacity = '0';
+      card.style.transform = 'translateX(10px)';
+      card.style.transition = 'all 0.25s ease';
+      setTimeout(() => card.remove(), 250);
+    }
+  });
+}
+</script>

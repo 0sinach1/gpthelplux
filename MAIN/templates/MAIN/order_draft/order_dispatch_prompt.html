@@ -1,0 +1,178 @@
+{% extends "MAIN/base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Order Dispatch{% endblock %}
+
+{% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+    /* Wrapper to center content within the available space below the navbar */
+    .prompt-wrapper {
+        font-family: 'Inter', sans-serif;
+        background-color: #f3f4f6;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        /* Calculate height minus approx navbar height to prevent scrollbar issues */
+        min-height: calc(100vh - 80px); 
+        padding: 20px;
+    }
+
+    .prompt-card {
+        background: white;
+        padding: 40px;
+        border-radius: 20px;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        text-align: center;
+        max-width: 450px;
+        width: 100%;
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* Success Icon Animation */
+    .icon-container {
+        width: 80px;
+        height: 80px;
+        background: #dcfce7;
+        color: #16a34a;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 25px auto;
+        font-size: 35px;
+        animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes popIn {
+        0% { transform: scale(0); opacity: 0; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+
+    .prompt-card h2 {
+        margin: 0 0 10px 0;
+        color: #111827;
+        font-weight: 800;
+        font-size: 1.8rem;
+        letter-spacing: -0.025em;
+    }
+
+    .prompt-card p {
+        color: #6b7280;
+        line-height: 1.6;
+        margin-bottom: 30px;
+        font-size: 1.05rem;
+    }
+
+    .order-badge {
+        display: inline-block;
+        background: #f1f5f9;
+        color: #475569;
+        padding: 4px 12px;
+        border-radius: 9999px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-bottom: 15px;
+        border: 1px solid #e2e8f0;
+    }
+
+    /* Action Buttons */
+    .action-group {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .btn-action {
+        width: 100%;
+        padding: 16px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        text-decoration: none;
+    }
+
+    .btn-primary-action {
+        background: #000;
+        color: white;
+        border: none;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+    .btn-primary-action:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        background: #1f2937;
+        color: white;
+    }
+
+    .btn-secondary-action {
+        background: white;
+        color: #374151;
+        border: 2px solid #e5e7eb;
+    }
+    .btn-secondary-action:hover {
+        background: #f9fafb;
+        border-color: #d1d5db;
+        color: #374151;
+    }
+
+    .edit-link {
+        margin-top: 25px;
+        display: block;
+        color: #9ca3af;
+        font-size: 0.9rem;
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+    .edit-link:hover {
+        color: #4b5563;
+    }
+
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="prompt-wrapper">
+    <div class="prompt-card">
+        <div class="icon-container">
+            <i class="fas fa-check"></i>
+        </div>
+
+        <div class="order-badge">
+            Draft #{{ draft.id|stringformat:".8s" }}
+        </div>
+        
+        <h2>Ready to Dispatch?</h2>
+        <p>
+            The order for <strong>{{ draft.customer.user_account.first_name|default:draft.customer.user_account.username }}</strong> has been harvested successfully. 
+            Select an action below.
+        </p>
+
+        <form method="POST">
+            {% csrf_token %}
+            <div class="action-group">
+                <button type="submit" name="choice" value="now" class="btn-action btn-primary-action">
+                    <i class="fas fa-rocket"></i> Start & Check Eligibility
+                </button>
+
+                <button type="submit" name="choice" value="later" class="btn-action btn-secondary-action">
+                    <i class="fas fa-folder-open"></i> Save to Drafts
+                </button>
+            </div>
+        </form>
+        
+        <a href="{% url 'order_edit_form' draft.id %}" class="edit-link">
+            <i class="fas fa-pen"></i> Review or Edit Details
+        </a>
+    </div>
+</div>
+{% endblock %}

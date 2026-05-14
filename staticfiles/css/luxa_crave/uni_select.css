@@ -1,0 +1,375 @@
+/* =========================================
+   LUXA CRAVE: UNIVERSITY SELECTION
+   ========================================= */
+
+:root {
+    /* Crave Palette: Deep Brown & Warm White */
+    --crave-primary: #2D1B69;       
+    --crave-primary-hover: #3A2580; 
+    --crave-light: #795548;
+    --bg-color: #f7f6fb; 
+    --text-dark: #2f3542;
+    --text-muted: #8d6e63;
+    --border-color: #f0e9e4;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-color);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.landing-container {
+    width: 100%;
+    max-width: 1000px;
+    padding: 40px 20px;
+    text-align: center;
+    margin-top: 40px; /* Space for the absolute back button */
+}
+
+/* --- HEADER --- */
+.brand-header {
+    margin-bottom: 40px;
+}
+
+.brand-header h1 {
+    font-size: 3.5rem;
+    font-weight: 800;
+    color: var(--text-dark);
+    margin: 0 0 10px 0;
+    letter-spacing: -1px;
+}
+
+.brand-header h1 span {
+    font-family: "Gagalin", sans-serif; 
+    color: #e5df34;
+}
+
+.brand-subtitle {
+    color: var(--text-muted);
+    font-size: 1.05rem;
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.5;
+}
+
+/* --- GRID LAYOUT --- */
+.uni-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 25px;
+    margin: 0 auto 40px auto;
+    max-width: 900px; /* Centers the grid beautifully */
+}
+
+.uni-label {
+    width: 100%;
+    cursor: pointer;
+    display: block;
+}
+
+.uni-radio {
+    display: none;
+}
+
+/* --- SQUARE CARDS --- */
+.uni-card {
+    background: white;
+    border: 2px solid var(--border-color);
+    border-radius: 24px;
+    padding: 30px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-shadow: 0 4px 10px rgba(78, 52, 46, 0.02);
+    
+    /* Forces the card to be a perfect square */
+    aspect-ratio: 1 / 1; 
+}
+
+/* Hover State */
+.uni-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 15px 35px rgba(78, 52, 46, 0.08);
+    border-color: rgba(78, 52, 46, 0.2); 
+}
+
+/* Selected State */
+.uni-radio:checked + .uni-card {
+    border-color: var(--crave-primary);
+    background-color: #fffcfb; 
+    box-shadow: 0 0 0 4px rgba(78, 52, 46, 0.1); 
+}
+
+/* Checkmark Indicator */
+.check-indicator {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: var(--crave-primary);
+    color: white;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    opacity: 0;
+    transform: scale(0);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.uni-radio:checked + .uni-card .check-indicator {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* Image / Icon */
+.uni-image {
+    width: 75px;
+    height: 75px;
+    border-radius: 50%;
+    background: #fdf8f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 2rem;
+    color: var(--crave-primary);
+    margin-bottom: 15px;
+    transition: transform 0.4s ease, background 0.4s ease;
+    border: 1px solid var(--border-color);
+}
+
+.uni-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.uni-card:hover .uni-image {
+    transform: scale(1.08);
+    background: var(--crave-primary);
+    color: white;
+}
+.uni-radio:checked + .uni-card .uni-image {
+    transform: scale(1.08);
+}
+
+/* Text Details */
+.uni-details {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.uni-name {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--text-dark);
+    margin: 0 0 8px 0;
+    line-height: 1.2;
+}
+
+.uni-desc {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+    margin: 0;
+    padding: 0 10px;
+}
+
+/* Hover Reveal: Outlets Tags */
+.uni-outlets {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    margin-top: 0;
+    width: 100%;
+}
+
+.uni-card:hover .uni-outlets,
+.uni-radio:checked + .uni-card .uni-outlets {
+    max-height: 100px; /* Slides open */
+    opacity: 1;
+    margin-top: 15px;
+}
+
+.outlets-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+}
+
+.outlet-tag {
+    background: white;
+    color: var(--crave-primary);
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border: 1px solid var(--border-color);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.outlet-tag.empty {
+    background: #f5f5f5;
+    color: #9e9e9e;
+    border-color: #e0e0e0;
+}
+
+/* --- BUTTONS & EXTRAS --- */
+.btn-continue {
+    background: var(--crave-primary);
+    color: white;
+    border: none;
+    padding: 18px 50px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    opacity: 0.5;
+    pointer-events: none;
+    box-shadow: 0 10px 20px rgba(78, 52, 46, 0.15);
+}
+
+.btn-continue.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.btn-continue.active:hover {
+    transform: translateY(-2px);
+    background: var(--crave-primary-hover);
+    box-shadow: 0 12px 25px rgba(78, 52, 46, 0.3);
+}
+
+.back-link {
+    position: absolute;
+    top: 30px;
+    left: 30px;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: color 0.2s;
+    background: white;
+    padding: 10px 16px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+}
+
+.back-link:hover {
+    color: var(--text-dark);
+    border-color: var(--text-dark);
+}
+
+.empty-state {
+    grid-column: 1 / -1;
+    color: var(--text-muted);
+    padding: 40px;
+    text-align: center;
+    border: 2px dashed var(--border-color);
+    border-radius: 24px;
+    background: white;
+}
+
+.empty-state i {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 15px;
+    color: #d7ccc8;
+}
+
+/* --- MOBILE RESPONSIVENESS --- */
+@media (max-width: 768px) {
+    .landing-container {
+        padding-top: 80px; 
+    }
+    
+    .back-link {
+        top: 20px;
+        left: 20px;
+        padding: 8px 12px;
+        font-size: 0.85rem;
+    }
+
+    .brand-header h1 { font-size: 2.2rem; }
+    .brand-subtitle { font-size: 0.9rem; }
+    
+    /* FORCE 2 COLUMNS ON MOBILE */
+    .uni-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+    
+    .uni-card {
+        padding: 15px 10px;
+        border-radius: 16px;
+    }
+    
+    /* Scale everything down to fit perfectly inside the new smaller squares */
+    .uni-image {
+        width: 45px;
+        height: 45px;
+        font-size: 1.2rem;
+        margin-bottom: 8px;
+    }
+    
+    .uni-name { 
+        font-size: 0.95rem; 
+        margin-bottom: 4px;
+    }
+    
+    .uni-desc { 
+        font-size: 0.7rem; 
+        line-height: 1.3;
+        padding: 0 4px;
+    }
+    
+    .check-indicator {
+        top: 10px;
+        right: 10px;
+        width: 20px;
+        height: 20px;
+        font-size: 0.8rem;
+    }
+
+    /* Keep hover items extremely compact */
+    .uni-card:hover .uni-outlets,
+    .uni-radio:checked + .uni-card .uni-outlets {
+        max-height: 80px;
+        margin-top: 10px;
+    }
+
+    .outlet-tag {
+        padding: 3px 6px;
+        font-size: 0.65rem;
+    }
+    
+    .btn-continue {
+        padding: 15px 40px;
+        font-size: 1rem;
+        width: 100%;
+    }
+}

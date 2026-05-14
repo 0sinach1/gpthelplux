@@ -1,0 +1,40 @@
+<div style="margin-bottom: 20px;">
+    <h4 style="margin-bottom: 5px;">Current Assignment: <span style="color: #2563eb;">{{ batch.courier.user_account.username }}</span></h4>
+    <div style="font-size: 0.85rem; color: #64748b;">Batch Status: <strong>{{ batch.status|upper }}</strong> | Volume: {{ batch.total_volume|default:"0" }}</div>
+</div>
+
+<div style="margin-bottom: 20px;">
+    <h5 style="margin-bottom: 10px; font-size: 0.95rem;">Orders in this Batch</h5>
+    <ul style="list-style: none; padding: 0; margin: 0; font-size: 0.85rem; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+    {% for order in batch.campus_orders.all %}
+        <li style="padding: 10px 12px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; background: {% cycle '#ffffff' '#f8fafc' %};">
+            <span><strong>{{ order.order_number|slice:"-8:" }}</strong> - {{ order.customer.user_account.username }}</span>
+            <span class="status-badge status-{{ order.status }}" style="font-size: 0.7rem; padding: 2px 6px;">{{ order.status|upper }}</span>
+        </li>
+    {% empty %}
+        <li style="padding: 15px; text-align: center; color: #94a3b8; font-style: italic;">No active orders found in this batch.</li>
+    {% endfor %}
+    </ul>
+</div>
+
+<div style="background: #f8fafc; border: 1px dashed #cbd5e1; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+    <label style="font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; display: block;">Force Reassign To:</label>
+    
+    <select id="new-courier-select" class="form-select" style="width: 100%; margin-bottom: 15px;" 
+            {% if batch.status in 'completed,cancelled' %}disabled{% endif %}>
+        <option value="">-- Select New Courier --</option>
+        {% for c in available_couriers %}
+            <option value="{{ c.id }}">{{ c.user_account.username }} ({{ c.gender|title }})</option>
+        {% endfor %}
+    </select>
+
+    <button id="btn-execute-reassign" class="btn btn-primary" style="width: 100%; background: #0f172a; border: none;" 
+            onclick="confirmReassignBatch({{ batch.id }})" 
+            {% if batch.status in 'completed,cancelled' %}disabled{% endif %}>
+        <i class="bi bi-arrow-left-right"></i> Execute Escrow Reassignment
+    </button>
+
+    <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 10px; text-align: center;">
+        Advance funds will be automatically clawed back from the current courier and transferred.
+    </div>
+</div>

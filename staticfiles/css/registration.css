@@ -1,0 +1,182 @@
+/* Styling for sign up form */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    display: flex;
+    flex-direction: row;
+}
+
+#luxalogo {
+    margin-left: 30px;
+}
+
+#luxa {
+    width: 200px;
+}
+
+.form_cont {
+    position: absolute;
+    color: black;
+    width: 50%;
+    top: 20%;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 30px;
+    z-index: 5;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.086);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+}
+
+
+.form_hd {
+    text-align: center;
+    font-size: 35px;
+}
+
+.registration {
+    grid-column: 1/span 2;
+    margin-bottom: 10px;
+}
+
+input[type="text"],
+input[type="password"],
+input[type="email"] {
+    width: 100%;
+    font-size: 1em;
+    border-radius: 20px;
+    padding: 10px 15px;
+    background-color: rgb(237, 232, 227);
+}
+
+.subbtn {
+    position: relative;
+    display: flex;
+    font-size: 18px;
+    font-weight: 550;
+    align-self: center;
+    margin: auto;
+    background-color: #9245f0;
+    padding: 10px 50px;
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    transition: background-color 0.3s;
+}
+
+.subbtn:hover {
+    background-color: #6931ac;
+}
+
+.cutout {
+    position: absolute;
+    height: 85%;
+    top: -100px;
+    right: -230px;
+}
+
+
+/* Styling for sign in form */
+.logincont {
+    position: absolute;
+    color: black;
+    width: 50%;
+    top: 20%;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 30px;
+    z-index: 5;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.086);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+}
+
+.link {
+    text-decoration: none;
+    color: #9245f0;
+}
+
+.logincont p {
+    text-align: center;
+}
+
+.actinp {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+}
+
+.loginreg {
+    margin: auto 10px;
+    width: 49.5%;
+}
+
+.formicons {
+    position: absolute;
+    width: 25px;
+    left: 15px;
+}
+
+.signin_alts {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding: 10px 0px 0px 10px;
+    width: 49.5%;
+    margin: auto 10px;
+}
+
+.signin_alts button {
+    position: relative;
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 20px;
+    background-color: #c1a5e4;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.12);
+    border: none;
+}
+
+button a {
+    text-decoration: none;
+    color: black;
+}
+
+#verline {
+    height: 300px;
+    width: 1.5px;
+    margin: 0px 15px;
+    background-color: rgb(210, 210, 210);
+}
+
+
+/* Styling for vendor creation form */
+
+.maincont {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+    margin-top: 50px;
+    background-color: white;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    border-radius: 20px;
+}
+
+.vendformcont {
+    color: black;
+    width: 90%;
+    padding: 30px;
+    z-index: 5;
+    border-radius: 20px;
+}
+
+.formhead {
+    margin-top: 40px;
+}

@@ -1,0 +1,737 @@
+{% extends 'base.html' %} 
+{% load static %} 
+{% block title %}List Your Product{% endblock %} 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'MAIN/css/vendor.css' %}" />
+{% endblock %} {% block category_bar %}{% endblock %} {% block content %}
+<div class="container page-wrapper">
+  {# Breadcrumb #}
+  <div class="breadcrumb">
+    <a href="{% url 'vendordashboard' %}">Vendor Dashboard</a>
+    <span class="breadcrumb__sep">›</span>
+    <a href="{% url 'productmanage' %}">Product Management</a>
+    <span class="breadcrumb__sep">›</span>
+    <span class="breadcrumb__current">List New Product</span>
+  </div>
+
+  {# Page header #}
+  <div class="pm-page-header">
+    <div class="pm-page-header__left">
+      <h1>List Your Product</h1>
+      <p>
+        Almost there — upload your product photos and 3D model views to finish.
+      </p>
+    </div>
+    <div class="pm-page-header__actions">
+      <a href="{% url 'save_draft' product.id %}" class="btn btn--ghost"
+        >Save Draft</a
+      >
+      <button class="btn btn--ghost" id="previewBtn">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="14"
+          height="14"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="1.8"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.964-7.178z"
+          />
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+          />
+        </svg>
+        Preview
+      </button>
+    </div>
+  </div>
+
+  {# ── Desktop: top stepper bar ── #}
+  <div
+    class="wizard-steps-bar"
+    role="tablist"
+    aria-label="Product listing steps"
+  >
+    {% with steps="Basic Info,Description,Pricing & Stock,Variants,Photos & 3D"
+    %} {% for step in steps|split:"," %} {% with forloop.counter as i %}
+    <div
+      class="wizard-step-item {% if i < current_step|default:5 %}wizard-step-item--done {% elif i == current_step|default:5 %}wizard-step-item--active{% endif %}"
+      role="tab"
+      aria-selected="{% if i == current_step|default:5 %}true{% else %}false{% endif %}"
+    >
+      <div class="wizard-step-dot">
+        {% if i < current_step|default:5 %}
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="12"
+          height="12"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="3"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M4.5 12.75l6 6 9-13.5"
+          />
+        </svg>
+        {% else %} {{ i }} {% endif %}
+      </div>
+      <span class="wizard-step-label">{{ step }}</span>
+      {% if i < current_step|default:5 %}
+      <span class="wizard-step-sublabel">Completed</span>
+      {% elif i == current_step|default:5 %}
+      <span class="wizard-step-sublabel">Almost done</span>
+      {% endif %}
+    </div>
+    {% endwith %} {% endfor %} {% endwith %}
+  </div>
+
+  {# ── Mobile step bar ── #}
+  <div class="mobile-step-bar">
+    <span class="mobile-step-bar__text"
+      >Step {{ current_step|default:5 }} of 5 · Photos &amp; 3D</span
+    >
+    <span class="mobile-step-bar__link">Almost done</span>
+  </div>
+  <div class="mobile-step-track">
+    <div
+      class="mobile-step-fill"
+      style="width:{% widthratio current_step|default:5 5 100 %}%;"
+    ></div>
+  </div>
+
+  <div class="list-product-layout">
+    {# ── Left sidebar: step summary ── #}
+    <aside class="list-product-sidebar" aria-label="Listing progress">
+      <p class="sidebar-step-section__title" style="margin-bottom: var(--sp-3)">
+        In this step
+      </p>
+
+      <div class="sidebar-step-section">
+        <a class="sidebar-sub-item active" href="#product-gallery">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="14"
+            height="14"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.8"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
+            />
+          </svg>
+          Product Gallery
+        </a>
+        <a class="sidebar-sub-item" href="#model-views">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="14"
+            height="14"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.8"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9"
+            />
+          </svg>
+          3D Model Views
+        </a>
+        <a class="sidebar-sub-item" href="#video-section">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="14"
+            height="14"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.8"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z"
+            />
+          </svg>
+          360° Video
+        </a>
+      </div>
+
+      <div class="divider"></div>
+      <p class="sidebar-step-section__title">All prior steps done</p>
+      <div class="sidebar-step-section">
+        {% for label in "Basic Info,Description,Pricing &
+        Stock,Variants"|split:"," %}
+        <div class="sidebar-done-item">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="2.5"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M4.5 12.75l6 6 9-13.5"
+            />
+          </svg>
+          {{ label }}
+        </div>
+        {% endfor %}
+      </div>
+    </aside>
+
+    {# ── Right: main content ── #}
+    <div>
+      {# Prior steps summary cards #}
+      <div class="step-summary-grid">
+        <div class="step-summary-card">
+          <div class="step-summary-card__icon">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.8"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"
+              />
+            </svg>
+          </div>
+          <div class="step-summary-card__body">
+            <p class="step-summary-card__label">Basic Info</p>
+            <p class="step-summary-card__value">
+              {{ basic_info.name|default:"Handwoven Artisan Tote Bag" }}
+            </p>
+          </div>
+          <a
+            href="{% url 'product_listing_step' 1 product.id %}"
+            class="step-summary-card__edit"
+            >Edit</a
+          >
+        </div>
+        <div class="step-summary-card">
+          <div class="step-summary-card__icon">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.8"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
+              />
+            </svg>
+          </div>
+          <div class="step-summary-card__body">
+            <p class="step-summary-card__label">Description</p>
+            <p class="step-summary-card__value">1 tag · Hero title set</p>
+          </div>
+          <a
+            href="{% url 'product_listing_step' 2 product.id %}"
+            class="step-summary-card__edit"
+            >Edit</a
+          >
+        </div>
+        <div class="step-summary-card">
+          <div class="step-summary-card__icon">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.8"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          </div>
+          <div class="step-summary-card__body">
+            <p class="step-summary-card__label">Pricing &amp; Stock</p>
+            <p class="step-summary-card__value">
+              ₦{{ pricing.price|default:"1,500" }} · {{
+              pricing.stock|default:"24" }} in stock
+            </p>
+          </div>
+          <a
+            href="{% url 'product_listing_step' 3 product.id %}"
+            class="step-summary-card__edit"
+            >Edit</a
+          >
+        </div>
+        <div class="step-summary-card">
+          <div class="step-summary-card__icon">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.8"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z"
+              />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M6 6h.008v.008H6V6z"
+              />
+            </svg>
+          </div>
+          <div class="step-summary-card__body">
+            <p class="step-summary-card__label">Variants</p>
+            <p class="step-summary-card__value">
+              {{ variants.count|default:"5" }} / {{ variants.sizes|default:"1"
+              }} / {{ variants.colours|default:"2" }} colours
+            </p>
+          </div>
+          <a
+            href="{% url 'product_listing_step' 4 product.id %}"
+            class="step-summary-card__edit"
+            >Edit</a
+          >
+        </div>
+      </div>
+
+      {# ── Photos & 3D Section ── #}
+      <div class="photos-section">
+        <div class="photos-section__header">
+          <div class="flex items-center gap-3">
+            <div class="photos-section__icon">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="1.8"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
+                />
+              </svg>
+            </div>
+            <div>
+              <h2 style="font-size: 16px; font-weight: 600">
+                Photos &amp; 3D Model
+              </h2>
+              <p class="text-sm text-muted">
+                Product gallery · 8+ angle 3D model views · Optional 360° video
+              </p>
+            </div>
+          </div>
+          <span class="step-badge step-badge--progress">In Progress</span>
+        </div>
+
+        <div class="photos-section__body">
+          {# ── Product Gallery ── #}
+          <div id="product-gallery">
+            <p class="model-views-label">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="1.8"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
+                />
+              </svg>
+              Product Gallery <span style="color: var(--clr-cancelled)">*</span>
+              <span class="model-views-label__req"
+                >— First image is the store cover</span
+              >
+            </p>
+
+            {# Drop zone #}
+            <div class="drop-zone" id="dropZone">
+              <div class="drop-zone__icon">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.5"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
+                  />
+                </svg>
+              </div>
+              <p class="drop-zone__title">Drop product photos here</p>
+              <p class="drop-zone__hint">
+                Supports JPG, PNG, WEBP. Min 800×800px recommended.<br />Upload
+                up to 10 photos. First image will be the cover on product
+                listing.
+              </p>
+              <label
+                class="btn btn--ghost"
+                for="galleryInput"
+                style="cursor: pointer"
+                >Browse Files</label
+              >
+              <input
+                type="file"
+                id="galleryInput"
+                name="gallery_images"
+                multiple
+                accept="image/jpeg,image/png,image/webp"
+                style="display: none"
+                form="listingForm"
+              />
+            </div>
+
+            {# Uploaded thumbs #}
+            <div class="photo-thumbs" id="galleryThumbs">
+              {% for photo in uploaded_photos %}
+              <div class="photo-thumb">
+                <img
+                  src="{{ photo.url }}"
+                  alt="Product photo {{ forloop.counter }}"
+                  loading="lazy"
+                />
+                <button
+                  class="photo-thumb__remove"
+                  data-photo-id="{{ photo.id }}"
+                  title="Remove"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="10"
+                    height="10"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="3"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+              {% endfor %} {# Add button #}
+              <label
+                class="photo-thumb photo-thumb--add"
+                for="galleryInput"
+                title="Add more photos"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="2.5"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M12 4.5v15m7.5-7.5h-15"
+                  />
+                </svg>
+              </label>
+            </div>
+            <p class="photo-count-note">
+              {{ uploaded_photos|length|default:"3" }} of 10 photos uploaded.
+              Only to review: First photo = product cover.
+            </p>
+          </div>
+
+          <div class="divider"></div>
+
+          {# ── 3D Model Views ── #}
+          <div id="model-views">
+            <p class="model-views-label">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="1.8"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9"
+                />
+              </svg>
+              3D Model Views <span style="color: var(--clr-cancelled)">*</span>
+              <span class="model-views-label__req"
+                >— All 8 angles required for 3D page</span
+              >
+            </p>
+
+            {# Photo guide banner #}
+            <div class="photo-guide-banner">
+              <svg
+                class="photo-guide-banner__icon"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="1.8"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
+                />
+              </svg>
+              <p class="photo-guide-banner__text">
+                <strong style="color: var(--clr-suspended)">Photo Guide</strong>
+                — Clean neutral background. Consistent lighting. Product centred
+                in frame. Each slot must match its specified angle exactly —
+                these images are used to construct the interactive 3D view.
+              </p>
+            </div>
+
+            {# 8 view slots grid #}
+            <div class="model-views-grid">
+              {% with views="Front View,Back View,Left Side,Right Side,Top
+              View,Bottom View,Front ¾,Back ¾" %} {% for view_name in
+              views|split:"," %} {% with slot=model_views|dictsort:"name"|first
+              %}
+              <div
+                class="model-view-slot {% if forloop.counter <= model_views_uploaded|default:4 %}model-view-slot--done{% endif %}"
+                data-view="{{ view_name|lower|slugify }}"
+                onclick="document.getElementById('view_{{ forloop.counter }}').click()"
+              >
+                <input
+                  type="file"
+                  id="view_{{ forloop.counter }}"
+                  name="view_{{ view_name|lower|slugify }}"
+                  accept="image/*"
+                  style="display: none"
+                  form="listingForm"
+                />
+                {% if forloop.counter <= model_views_uploaded|default:4 %}
+                <div class="model-view-slot__check">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="3"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M4.5 12.75l6 6 9-13.5"
+                    />
+                  </svg>
+                </div>
+                <svg
+                  class="model-view-slot__icon"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.5"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5z"
+                  />
+                </svg>
+                <p class="model-view-slot__label">{{ view_name }}</p>
+                <p class="model-view-slot__status">Uploaded ✓</p>
+                {% else %}
+                <svg
+                  class="model-view-slot__icon"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.5"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
+                  />
+                </svg>
+                <p class="model-view-slot__label">{{ view_name }}</p>
+                <p class="model-view-slot__status">Tap to upload</p>
+                {% endif %}
+              </div>
+              {% endwith %} {% endfor %} {% endwith %}
+            </div>
+
+            {# Completion bar #}
+            <div class="completion-bar-wrap">
+              <div class="completion-bar-top">
+                <span>3D Model Completion</span>
+                <span
+                  >{{ model_views_uploaded|default:"4" }} / 8 views
+                  uploaded</span
+                >
+              </div>
+              <div class="completion-bar-track">
+                <div
+                  class="completion-bar-fill"
+                  style="width:{% widthratio model_views_uploaded|default:4 8 100 %}%;"
+                ></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          {# ── 360° Video ── #}
+          <div id="video-section" class="video-upload-row">
+            <svg
+              class="video-upload-row__icon"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z"
+              />
+            </svg>
+            <div class="video-upload-row__body">
+              <p class="video-upload-row__title">
+                360° Product Video
+                <span
+                  style="
+                    font-size: 12px;
+                    color: var(--clr-text-4);
+                    font-weight: 400;
+                  "
+                  >(Optional)</span
+                >
+              </p>
+              <p class="video-upload-row__hint">
+                Upload a turntable video of your product. MP4 or MOV, max 100MB,
+                30–60 seconds, used in the 3D product view page.
+              </p>
+            </div>
+            <label
+              class="btn btn--ghost"
+              for="videoInput"
+              style="cursor: pointer; flex-shrink: 0"
+              >Browse</label
+            >
+            <input
+              type="file"
+              id="videoInput"
+              name="product_video"
+              accept="video/mp4,video/quicktime"
+              style="display: none"
+              form="listingForm"
+            />
+          </div>
+        </div>
+        {# /photos-section__body #}
+      </div>
+      {# /photos-section #} {# Wizard footer #}
+      <div class="wizard-footer">
+        <p class="wizard-footer__left">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="13"
+            height="13"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.8"
+            stroke="currentColor"
+            style="display: inline; vertical-align: middle"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"
+            />
+          </svg>
+          Final step — {{ model_views_uploaded|default:"4" }} of 8 model views
+          uploaded.
+        </p>
+        <a
+          href="{% url 'product_listing_step' 4 product.id %}"
+          class="btn btn--ghost"
+        >
+          ← Back
+        </a>
+        <a href="{% url 'save_draft' product.id %}" class="btn btn--ghost"
+          >Save Draft</a
+        >
+        <form
+          id="listingForm"
+          method="POST"
+          enctype="multipart/form-data"
+          action="{% url 'publish_product' product.id %}"
+          style="display: inline"
+        >
+          {% csrf_token %}
+          <button type="submit" class="btn btn--primary btn--lg">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="2"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            Publish Product
+          </button>
+        </form>
+      </div>
+    </div>
+    {# /main content #}
+  </div>
+  {# /list-product-layout #}
+</div>
+{% endblock %} {% block extra_js %}
+<script src="{% static 'MAIN/js/vendor.js' %}" defer></script>
+{% endblock %}

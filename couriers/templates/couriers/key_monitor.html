@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Luxa | Daily CMS Access Monitor</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --luxa-purple: #924ae4;
+            --luxa-black: #000000;
+        }
+
+        body { 
+            background-color: #ffffff !important; /* PURE WHITE BACKGROUND */
+            color: var(--luxa-black); 
+            font-family: 'Segoe UI', Roboto, sans-serif; 
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Brand Header */
+        .brand-header {
+            text-align: center;
+            padding: 50px 0 30px 0;
+        }
+
+        .brand-logo {
+            height: 120px; /* ENLARGED LOGO */
+            width: auto;
+            margin-bottom: 20px;
+        }
+
+        .monitor-title {
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+
+        /* Table Styling */
+        .table-container {
+            margin-top: 20px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #f0f0f0;
+        }
+
+        .table thead { 
+            background-color: var(--luxa-black); 
+            color: white; 
+        }
+
+        .table thead th {
+            border: none;
+            padding: 18px;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        /* Access Key - Purple Accent */
+        .key-badge { 
+            font-family: 'Courier New', monospace; 
+            font-size: 1.2rem; 
+            font-weight: 800;
+            color: var(--luxa-purple); 
+            background: rgba(146, 74, 228, 0.05); 
+            padding: 8px 20px; 
+            border-radius: 6px; 
+            border: 1px solid rgba(146, 74, 228, 0.15); 
+            display: inline-block;
+            box-shadow: 0 2px 10px rgba(146, 74, 228, 0.1);
+        }
+
+        .staff-name { font-size: 1.1rem; font-weight: 700; color: #111; }
+        .staff-email { color: #888; font-size: 0.85rem; }
+
+        /* Buttons */
+        .btn-luxa-black {
+            background-color: var(--luxa-black);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: 0.3s;
+        }
+
+        .btn-luxa-black:hover {
+            background-color: #333;
+            color: white;
+        }
+
+        .btn-luxa-outline {
+            color: var(--luxa-purple);
+            border: 2px solid var(--luxa-purple);
+            padding: 10px 25px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            background: transparent;
+            transition: 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-luxa-outline:hover {
+            background-color: var(--luxa-purple);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container pb-5">
+    
+    <div class="brand-header">
+        <img src="/static/images/LUXA_Logo.png" alt="Luxa Logo" class="brand-logo">
+        <h1 class="monitor-title">CMS Access Key Monitor</h1>
+        <div class="text-muted small">SECURE STAFF LOGS | {{ current_time|date:"l, F j, Y" }}</div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-4 px-2">
+        <div>
+            <span style="color: var(--luxa-purple); font-weight: 800; font-size: 0.9rem;">● SYSTEM ACTIVE</span>
+            <div class="small text-muted">Daily Reset: 5:00 AM</div>
+        </div>
+        <div class="text-end">
+            <div class="h4 mb-0 fw-bold">{{ current_time|date:"H:i:s" }}</div>
+        </div>
+    </div>
+
+    <div class="table-container shadow-sm">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th class="ps-4">Staff Details</th>
+                    <th>Current Access Key</th>
+                    <th class="text-center">Issued Time</th>
+                    <th class="pe-4 text-end">Verified By</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in active_logs %}
+                <tr>
+                    <td class="ps-4 py-4">
+                        <div class="staff-name">
+                            {{ log.courier.user_account.get_full_name|default:log.courier.user_account.username }}
+                        </div>
+                        <div class="staff-email">@{{ log.courier.user_account.username }}</div>
+                    </td>
+                    <td>
+                        <span class="key-badge">
+                            {{ log.daily_access_key }}
+                        </span>
+                    </td>
+                    <td class="text-center">
+                        <div class="fw-bold">{{ log.issued_at|date:"P" }}</div>
+                        <div class="text-muted small">{{ log.issued_at|date:"M d" }}</div>
+                    </td>
+                    <td class="pe-4 text-end">
+                        <span class="badge bg-light text-dark border px-3 py-2">
+                            {{ log.issued_by.username|default:"System" }}
+                        </span>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center py-5">
+                        <p class="text-muted mb-0 italic">No keys have been issued for the current shift yet.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="mt-5 d-flex justify-content-between align-items-center">
+        <div class="d-flex gap-3">
+            <button onclick="window.location.reload();" class="btn btn-luxa-black">
+                Refresh Monitor
+            </button>
+            <a href="{% url 'monitor_logout' %}" class="btn btn-luxa-outline">
+                Logout
+            </a>
+        </div>
+        <div class="text-muted small">© 2026 LUXA ECOSYSTEM</div>
+    </div>
+</div>
+
+</body>
+</html>

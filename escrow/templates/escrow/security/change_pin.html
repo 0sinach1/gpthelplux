@@ -1,0 +1,66 @@
+{% extends 'MAIN/base.html' %}
+{% load static %}
+
+{% block title %}
+Change Security PIN - Wallet Security
+{% endblock %}
+
+{% block content %}
+<div style="min-height: 80vh; display: flex; align-items: center; justify-content: center; background: #f4f6f8;">
+    <div style="background: white; width: 100%; max-width: 400px; padding: 40px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); text-align: center;">
+        
+        <div style="width: 60px; height: 60px; background: #e0f2fe; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; color: #0284c7; font-size: 1.5rem;">
+            🔐
+        </div>
+
+        <h2 style="margin-bottom: 10px; color: #333;">Change Security PIN</h2>
+        <p style="color: #666; margin-bottom: 30px; font-size: 0.95rem;">
+            Enter your current PIN to set a new one.
+        </p>
+
+        <form method="POST">
+            {% csrf_token %}
+            
+            <div style="margin-bottom: 20px; text-align: left;">
+                <label style="font-size: 0.85rem; font-weight: 600; color: #555; display: block; margin-bottom: 8px;">Current PIN</label>
+                {{ form.old_pin }}
+                {% if form.old_pin.errors %}
+                    <div style="color: #dc3545; font-size: 0.6rem; margin-top: 5px;">{{ form.old_pin.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div style="margin-bottom: 30px; text-align: left;">
+                <label style="font-size: 0.85rem; font-weight: 600; color: #555; display: block; margin-bottom: 8px;">New PIN</label>
+                {{ form.new_pin }}
+                {% if form.new_pin.errors %}
+                    <div style="color: #dc3545; font-size: 0.6rem; margin-top: 5px;">{{ form.new_pin.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div style="margin-bottom: 30px; text-align: left;">
+                <label style="font-size: 0.85rem; font-weight: 600; color: #555; display: block; margin-bottom: 8px;">Confirm New PIN</label>
+                {{ form.confirm_new_pin }}
+                {% if form.confirm_new_pin.errors %}
+                    <div style="color: #dc3545; font-size: 0.6rem; margin-top: 5px;">{{ form.confirm_new_pin.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <a href="{% url 'wallet_dashboard' %}" style="flex: 1; padding: 12px; border: 1px solid #ddd; background: white; color: #555; border-radius: 8px; text-decoration: none; font-weight: 600;">Cancel</a>
+                
+                <button type="submit" style="flex: 1; background: #0284c7; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                    Update PIN
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .pin-input-field {
+        width: 100%; padding: 12px; font-size: 1.5rem; letter-spacing: 8px;
+        text-align: center; border: 2px solid #eee; border-radius: 8px; outline: none; transition: 0.3s;
+    }
+    .pin-input-field:focus { border-color: #0284c7; box-shadow: 0 0 0 4px rgba(2, 132, 199, 0.1); }
+</style>
+{% endblock %}

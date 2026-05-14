@@ -1,0 +1,157 @@
+{% extends "MAIN/base.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Verify Identity - Luxa{% endblock %}
+
+{% block content %}
+<style>
+    /* --- LUXA CRISPY FORM OVERRIDES --- */
+    .luxa-kyc-form .form-group {
+        margin-bottom: 22px;
+    }
+    
+    .luxa-kyc-form label {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: #475569;
+        margin-bottom: 8px;
+        display: block;
+        letter-spacing: 0.3px;
+    }
+
+    .luxa-kyc-form .asteriskField {
+        color: #ef4444; /* Red asterisk for required fields */
+        margin-left: 3px;
+    }
+
+    .luxa-kyc-form .form-control, 
+    .luxa-kyc-form select.select, 
+    .luxa-kyc-form input.textinput,
+    .luxa-kyc-form input.fileinput {
+        width: 100%;
+        padding: 14px 16px;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        font-size: 0.95rem;
+        color: #1e293b;
+        outline: none;
+        transition: all 0.2s ease;
+        background: #f8fafc;
+        box-shadow: none;
+    }
+
+    .luxa-kyc-form .form-control:focus, 
+    .luxa-kyc-form select.select:focus, 
+    .luxa-kyc-form input.textinput:focus {
+        border-color: #960ffa; /* Luxa Purple */
+        background: white;
+        box-shadow: 0 0 0 4px rgba(150, 15, 250, 0.1);
+    }
+
+    /* Style the file upload button specifically */
+    .luxa-kyc-form input[type="file"] {
+        padding: 10px 14px;
+        background: white;
+        cursor: pointer;
+    }
+
+    .luxa-kyc-form input[type="file"]::file-selector-button {
+        background: #f1f5f9;
+        border: 1px solid #cbd5e1;
+        padding: 8px 16px;
+        border-radius: 8px;
+        color: #475569;
+        font-weight: 700;
+        font-size: 0.85rem;
+        cursor: pointer;
+        margin-right: 15px;
+        transition: all 0.2s ease;
+    }
+
+    .luxa-kyc-form input[type="file"]::file-selector-button:hover {
+        background: #e2e8f0;
+        color: #1e293b;
+        border-color: #94a3b8;
+    }
+
+    .luxa-kyc-form .help-block {
+        font-size: 0.75rem;
+        color: #94a3b8;
+        margin-top: 6px;
+        display: block;
+    }
+</style>
+
+<div style="min-height: 85vh; padding: 40px 20px; display: flex; justify-content: center; align-items: flex-start;">
+    
+    <div style="background: white; width: 100%; max-width: 600px; position: relative; border-radius: 16px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">
+        <a href="{% url 'kyc_info' %}" style="position: absolute; top: 20px; right: 20px; font-size: 0.8rem; color: #64748b; text-decoration: none; background: #f8fafc; padding: 6px 12px; border-radius: 20px; font-weight: 600; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 6px; transition: all 0.2s;">
+            <i class="fas fa-info-circle" style="color: #960ffa;"></i> 
+            <span>Terms & Purpose</span>
+        </a>
+        <div style="text-align: center; margin-bottom: 30px;">
+            <div style="width: 60px; height: 60px; background: #f3e8ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;">
+                <i class="fas fa-user-shield" style="font-size: 1.5rem; color: #960ffa;"></i>
+            </div>
+            <h2 style="color: #1e293b; font-weight: 800; margin-bottom: 10px;">Identity Verification</h2>
+            <p style="color: #64748b; font-size: 0.95rem; line-height: 1.5;">
+                To ensure secure delivery of your orders, we need to verify your identity. 
+                This helps our couriers ensure packages are handed to the right person.
+            </p>
+        </div>
+
+        {% if kyc and kyc.status == 'PENDING' %}
+            <div style="text-align: center; padding: 30px; background: #f8fafc; border-radius: 12px; border: 1px dashed #cbd5e1;">
+                <i class="fas fa-clock" style="font-size: 2rem; color: #f59e0b; margin-bottom: 15px;"></i>
+                <h3 style="font-size: 1.1rem; color: #1e293b;">Verification in Progress</h3>
+                <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 0;">
+                    We are currently reviewing your documents. You will be notified once approved.
+                </p>
+            </div>
+            
+            <div style="margin-top: 20px; text-align: center;">
+                <a href="{% url 'customer_page' %}" style="text-decoration: none; color: #64748b; font-weight: 600;">&larr; Back to Dashboard</a>
+            </div>
+
+        {% elif kyc and kyc.status == 'REJECTED' %}
+             <div class="alert alert-danger" style="border-radius: 8px; font-size: 0.9rem; background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 15px;">
+                 <strong style="display: block; margin-bottom: 5px;"><i class="fas fa-exclamation-triangle"></i> Verification Failed:</strong> 
+                 {{ kyc.rejection_reason|default:"Document not clear. Please try again." }}
+             </div>
+        {% endif %}
+
+        {% if not kyc or kyc.status == 'REJECTED' %}
+            <!-- ADDED: 'luxa-kyc-form' class to target the CSS overrides -->
+            <form method="post" enctype="multipart/form-data" class="luxa-kyc-form">
+                {% csrf_token %}
+                
+                <div style="margin-bottom: 25px;">
+                    {{ form|crispy }}
+                </div>
+
+                <div style="background: #f8fafc; padding: 15px; border-radius: 12px; margin-bottom: 25px; border-left: 4px solid #960ffa;">
+                    <h5 style="font-size: 0.9rem; font-weight: 800; color: #1e293b; margin-bottom: 8px;">Photo Guidelines</h5>
+                    <ul style="margin: 0; padding-left: 20px; font-size: 0.85rem; color: #64748b; line-height: 1.6;">
+                        <li>Ensure text on ID is perfectly readable.</li>
+                        <li>Selfie must clearly show your face alongside the ID card.</li>
+                        <li>Avoid glare or flash that obscures important details.</li>
+                    </ul>
+                </div>
+
+                <button type="submit" style="width: 100%; background: #960ffa; color: white; padding: 16px; border: none; border-radius: 12px; font-weight: 800; font-size: 1.05rem; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(150, 15, 250, 0.2);">
+                    Submit Documents
+                </button>
+            </form>
+            
+            <div style="margin-top: 25px; text-align: center;">
+                <a href="{% url 'customerpage' %}" style="text-decoration: none; color: #64748b; font-size: 0.9rem; font-weight: 600; transition: color 0.2s;" onmouseover="this.style.color='#1e293b'" onmouseout="this.style.color='#64748b'">Cancel & Return</a>
+            </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}
+
+{% block luxaslide %}
+{% endblock %}

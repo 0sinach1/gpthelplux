@@ -1,0 +1,500 @@
+{% extends "luxa_crave/base_crave.html" %}
+{% load static %}
+{% load humanize %}
+{% load hosts %}
+
+{% block title %}
+    {{ university.name }} | {{ outlet.name }}
+{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/luxa_crave/outlet_terminal_style.css' %}">
+{% endblock %}
+
+{% block navlinks %}
+    <a href="javascript:history.back()" class="navlink">
+        <i class="bi bi-arrow-left-circle-fill"></i> 
+        Return
+    </a>
+{% endblock %}
+
+{% block content %}
+
+<input type="hidden" id="validate-url" value="{% url 'validate_pack' %}">
+<input type="hidden" id="checkout-url" value="{% url 'checkout_bag_validation' %}">
+<input type="hidden" id="outlet-is-open" value="{{ outlet.is_currently_open|yesno:'true,false' }}">
+<main class="crave-content">
+<div class="terminal-wrapper">
+    
+    <div class="terminal-main">
+        
+        <div class="outlet-banner">
+
+            <div class="banner-content">
+                <h1>{{ outlet.name }}</h1>
+                <p>{{ outlet.description|default:"Fresh campus meals and essentials." }}</p>
+                <div class="outlet-meta">
+                    {% if outlet.is_currently_open %}
+                        <span class="status-badge open">Open Now</span>
+                    {% else %}
+                        <span class="status-badge closed">Closed</span>
+                    {% endif %}
+                    <span><i class="bi bi-clock"></i> 10-30 mins delivery</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-nav">
+            {% for section in sections %}
+                <a href="#section-{{ section.id }}" class="nav-pill {% if forloop.first %}active{% endif %}">
+                    {{ section.name }}
+                </a>
+            {% empty %}
+                <span class="nav-pill active">All Items</span>
+            {% endfor %}
+        </div>
+
+        <div class="products-feed">
+            <div class="section-fab-container">
+                <button class="btn-section-nav" id="btn-prev-section" onclick="navigateSection(-1)" disabled>
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+                <button class="btn-section-nav" id="btn-next-section" onclick="navigateSection(1)">
+                    <i class="bi bi-chevron-right"></i>
+                </button>
+            </div>
+            {% for section in sections %}
+                <div class="product-section {% if forloop.first %}active{% endif %}" id="section-{{ section.id }}">
+                    <h2 class="section-title">{{ section.name }}</h2>
+                    
+                    <div class="product-grid">
+                        {% for item in section.products.all %}
+                        <div class="product-card" draggable="true"
+                             data-item-id="{{ item.id }}"
+                             data-name="{{ item.product_name }}"
+                             data-price="{{ item.unit_price }}"
+                             data-filling-value="{{ item.filling_value }}"
+                             data-image="{% if item.product_image %}{{ item.product_image.url }}{% else %}placeholder{% endif %}"
+                             data-requires-pack="{{ item.requires_pack|yesno:'true,false' }}"
+                             data-section-id="{{ section.id }}"
+                             data-not-ordered-alone="{{ item.not_ordered_alone|yesno:'true,false' }}"
+                             data-is-soup="{{ item.is_a_soup|yesno:'true,false' }}"
+                             data-need-soup="{{ item.need_soup|yesno:'true,false' }}"
+                             data-is-strange="{{ item.is_strange|yesno:'true,false' }}"
+                             data-strange-value="{{ item.strange_value }}"
+                             data-has-charge="{{ item.has_charge|yesno:'true,false' }}">
+                            <div class="product-image">
+                                {% if item.product_image %}
+                                    <img src="{{ item.product_image.url }}" alt="{{ item.product_name }}">
+                                {% else %}
+                                    <div class="img-placeholder"><i class="bi bi-cup-hot"></i></div>
+                                {% endif %}
+                            </div>
+                            <div class="product-details">
+                                <h3 class="product-name" style="display: flex; flex-wrap: wrap; align-items: center; gap: 6px;">
+                                    {{ item.product_name }} 
+                                    
+                                    {% if not item.availability_status %}
+                                        <span style="background: #ef4444; color: white; font-size: 0.65rem; font-weight: 700; padding: 2px 6px; border-radius: 10px; white-space: nowrap; letter-spacing: 0.5px; line-height: 1;">Out of Stock</span>
+                                    {% endif %}
+
+                                    {% if item.need_soup %}
+                                        <span class="need-soup-badge" style="margin-left: 0; line-height: 1;">Requires Soup</span>
+                                    {% elif item.not_ordered_alone %}
+                                        <span class="need-soup-badge" style="margin-left: 0; line-height: 1;">Not Ordered Alone</span>
+                                    {% endif %}
+                                </h3>
+                                
+                                <p class="product-desc" title="{{item.description}}">{{ item.description|truncatechars:50 }}</p>
+                                
+                                <div class="product-bottom">
+                                    <span class="product-price">1 {{ item.unit_of_measure }} - ₦{{ item.unit_price|intcomma }}</span>
+                                    
+                                    {% if item.availability_status %}
+                                        <button class="btn-add" 
+                                            onclick="addToPackFromClick(this)"
+                                            data-item-id="{{ item.id }}"  
+                                            data-name="{{ item.product_name }}"
+                                            data-price="{{ item.unit_price }}"
+                                            data-filling-value="{{ item.filling_value }}"
+                                            data-image="{% if item.product_image %}{{ item.product_image.url }}{% else %}placeholder{% endif %}"
+                                            data-requires-pack="{{ item.requires_pack|yesno:'true,false' }}"
+                                            data-section-id="{{ section.id }}"
+                                            data-section-name="{{ section.name }}" 
+                                            data-not-ordered-alone="{{ item.not_ordered_alone|yesno:'true,false' }}"
+                                            data-is-soup="{{ item.is_a_soup|yesno:'true,false' }}"
+                                            data-need-soup="{{ item.need_soup|yesno:'true,false' }}"
+                                            data-is-strange="{{ item.is_strange|yesno:'true,false' }}"
+                                            data-strange-value="{{ item.strange_value }}"
+                                            data-has-charge="{{ item.has_charge|yesno:'true,false' }}"
+                                            >
+                                            <i class="bi bi-plus-lg"></i>
+                                        </button>
+                                    {% else %}
+                                        <button class="btn-add" style="background: #f1f5f9; border-color: #e2e8f0; color: #94a3b8; cursor: not-allowed;" disabled title="Item is currently out of stock">
+                                            <i class="bi bi-slash-circle"></i>
+                                        </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <p class="empty-text">No items available in this section currently.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        
+
+        <div id="pack-builder-panel" class="pack-builder-panel hidden">
+            <div id="pack-drop-zone" class="pack-drop-zone">
+                <div class="drop-content">
+                    <i class="bi bi-box-arrow-in-down"></i>
+                    <span>Drop item here to add to pack</span>
+                </div>
+            </div>
+            <div class="pack-builder-header">
+                <div class="pack-info">
+                    <h4>Building: <span id="current-pack-name">Bundle 1</span></h4>
+                    
+                    <div class="pack-multiplier-wrapper">
+                        <span class="multiplier-label">Pack Quantity:</span>
+                        <div class="qty-stepper">
+                            <button onclick="changePackMultiplier(-1)">-</button>
+                            <input type="number" id="global-pack-multiplier" value="1" min="1" readonly>
+                            <button onclick="changePackMultiplier(1)">+</button>
+                        </div>
+                    </div>
+
+                    <span class="pack-total" id="pack-total-price">₦0.00</span>
+                </div>
+                <div class="pack-actions">
+
+                    <button class="btn-save-pack" onclick="savePackToBag()">Add Pack to Bag</button>
+                    <div>
+                        <button class="btn-save-preset" onclick="openCraveModal('createPresetModal')" title="Save as Preset">
+                            <span>Save as preset</span>
+                            <i class="bi bi-bookmark-heart"></i>
+                        </button>
+                        <button class="btn-close-pack" onclick="closePackBuilder()"><i class="bi bi-x-lg"></i></button>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="pack-size-selector" class="pack-size-selector hidden">
+                <span class="selector-label">Required Pack:</span>
+                <div class="size-options">
+                    
+                    {% for pack in pack_configs %}
+                    {% if pack.availability %}
+                    <div class="size-pill" onclick="selectPackSize(this, {{ pack.base_price }}, '{{ pack.get_size_name_display }}', {{ pack.max_capacity }}, {{ pack.max_overflow }}, {{ pack.id }}, '{% if pack.pack_image %}{{ pack.pack_image.url }}{% else %}placeholder{% endif %}')">
+                        <div class="pack-img-container">
+                            {% if pack.pack_image %}
+                                <img src="{{ pack.pack_image.url }}" alt="{{ pack.get_size_name_display }}">
+                            {% else %}
+                                <div class="pack-img-ph"><i class="bi bi-box-seam"></i></div>
+                            {% endif %}
+                        </div>
+                        <div class="pack-details">
+                            <span class="pack-name">{{ pack.get_size_name_display }}</span>
+                            <span class="pack-price">+₦{{ pack.base_price|intcomma }}</span>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% empty %}
+                    <div class="size-pill active" onclick="selectPackSize(this, 200, 'Standard Pack')">
+                        <span class="pack-name">Standard Pack</span> <span class="pack-price">+₦200</span>
+                    </div>
+                    {% endfor %}
+
+                </div>
+            </div>
+
+            <div class="pack-items-tray" id="pack-items-tray">
+                <div class="empty-tray-msg">Select items to add to this pack...</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- MOBILE RESPONSIVE ELEMENTS FOR CART -->
+    <div class="mobile-cart-overlay" id="mobile-cart-overlay" onclick="toggleMobileCart()"></div>
+    <button class="mobile-cart-fab" id="mobile-cart-fab" onclick="toggleMobileCart()">
+        <i class="bi bi-bag-fill"></i>
+        <span class="cart-fab-badge" id="cart-fab-badge">0</span>
+    </button>
+
+    <div class="terminal-cart">
+        <div class="cart-header">
+            <div>
+                <h3>Your Bag</h3>
+                <div class="courion-capacity-logic" style="margin-top: 6px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">
+                        <span style="white-space: nowrap;"><i class="bi bi-truck"></i> Courions</span>
+                        <span id="courion-status" style="min-width: 40px; text-align: right;">0 / 10</span>
+                    </div>
+                    <div style="width: 100%; height: 5px; background: #e2e8f0; border-radius: 10px; overflow: hidden;">
+                        <div id="courion-progress" style="width: 0%; height: 100%; background: #16a34a; transition: width 0.5s ease-in-out;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn-close-cart mobile-only" onclick="toggleMobileCart()" style="position: absolute; right: 20px; top: 20px; background: none; border: none; font-size: 1.5rem; color: #94a3b8; cursor: pointer;">
+                <i class="bi bi-x-lg"></i>
+            </button>
+
+            <button class="btn-show-presets" onclick="openCraveModal('presetsModal')">
+                <i class="bi bi-stars"></i> My Presets
+            </button>
+        </div>
+
+        <div class="cart-body" id="cart-items-container">
+            <div class="empty-cart-state">
+                <div class="empty-icon"><i class="bi bi-bag-x"></i></div>
+                <p>Your bag is empty.<br>Add some items to get started!</p>
+            </div>
+            
+        </div>
+
+        <div class="cart-footer">
+            <div class="cart-summary-row">
+                <span>Subtotal</span>
+                <span id="cart-subtotal">₦0.00</span>
+            </div>
+            
+            <div class="cart-summary-row" id="delivery-row">
+                <span>Standard Delivery <small id="cart-delivery-calc" style="color:var(--crave-primary); font-weight:700; margin-left:5px;"></small></span>
+                <span id="cart-delivery-price">₦0.00</span>
+            </div>
+
+            <div class="cart-summary-row" id="surcharge-row" style="display: none;">
+                 <span>Surcharge (High Influence)</span>
+                 <span id="surcharge-delivery-price" style="color: #ef4444; font-weight: 700;">+₦0.00</span>
+            </div>
+
+            <div id="wait-fee-row" style="display: none; justify-content: space-between; margin-bottom: 8px;">
+                <span style="font-size: 0.85rem; font-weight: 700; color: #b45309;">Rush Hour Wait Fee</span>
+                <span id="wait-fee-price" style="font-weight: 800; color: #d97706;"></span>
+            </div>
+            
+            <div class="cart-summary-row total">
+                <span>Total</span>
+                <span id="cart-total">₦0.00</span>
+            </div>
+
+            <button class="btn-checkout disabled" id="checkout-btn">
+                Checkout <i class="bi bi-arrow-right"></i>
+            </button>
+        </div>
+    </div>
+
+</div>
+
+<!-- Presets Modals -->
+<div id="presetsModal" class="crave-modal-overlay">
+    <div class="crave-modal-content">
+        <div class="crave-modal-header">
+            <h3><i class="bi bi-stars" style="color: var(--accent, #3b82f6);"></i> My Saved Presets</h3>
+            <button class="close-modal" onclick="closeCraveModal('presetsModal')">&times;</button>
+        </div>
+        <div class="crave-modal-body">
+            {% if user_presets %}
+                <div class="presets-list-modal">
+                    {% for preset in user_presets %}
+                    <div class="preset-card-modal">
+                        <div class="preset-info-modal">
+                            <h4>{{ preset.preset_name }}</h4>
+                            <span>{{ preset.items.count }} Items • ₦{{ preset.current_total_price|intcomma }}</span>
+                        </div>
+                        <button class="btn-inject-preset" onclick="injectPresetToCart({{ preset.id }}, this); closeCraveModal('presetsModal');">
+                            <i class="bi bi-plus-lg"></i> Add
+                        </button>
+
+                        <button class="btn-delete-preset" onclick="deletePreset({{ preset.id }}, this)" title="Delete Preset">
+                            <i class="bi bi-trash3"></i>
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-presets-state">
+                    <i class="bi bi-bookmark-star"></i>
+                    <h4>No Presets Found</h4>
+                    <p>You haven't saved any custom packs for {{ outlet.name }} yet.</p>
+                    <small>Build your favorite pack in the panel below and click the <b><i class="bi bi-bookmark-heart"></i> Save as Preset</b> button to easily order it next time!</small>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div id="createPresetModal" class="crave-modal-overlay">
+    <div class="crave-modal-content" style="max-width: 400px;">
+        <div class="crave-modal-header">
+            <h3>Save Pack as Preset</h3>
+            <button class="close-modal" onclick="closeCraveModal('createPresetModal')">&times;</button>
+        </div>
+        <div class="crave-modal-body">
+            <p style="font-size: 0.9rem; color: #64748b; margin-bottom: 15px;">Give your custom pack a memorable name so you can instantly re-order it next time!</p>
+            <input type="text" id="presetNameInput" placeholder="e.g., My Friday Lunch" style="width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 10px; outline: none; font-size: 0.95rem; margin-bottom: 20px;">
+            <button onclick="submitSavePreset({{ outlet.id }})" class="btn-save-pack" style="width: 100%; justify-content: center;" id="btn-submit-preset">Save Preset</button>
+        </div>
+    </div>
+</div>
+
+<div id="availabilityErrorModal" class="crave-modal-overlay">
+    <div class="crave-modal-content" style="max-width: 450px; border-top: 5px solid #ef4444;">
+        <div class="crave-modal-header">
+            <h3 style="color: #b91c1c;"><i class="bi bi-exclamation-octagon-fill"></i> Items Unavailable</h3>
+            <button class="close-modal" onclick="closeCraveModal('availabilityErrorModal')">&times;</button>
+        </div>
+        <div class="crave-modal-body">
+            <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 15px;">
+                Your order cannot be processed because the following items are out of stock or unavailable:
+            </p>
+            
+            <div id="availability-error-list" class="error-box">
+                </div>
+
+            <button onclick="closeCraveModal('availabilityErrorModal')" class="btn-save-pack" style="width: 100%; background: #64748b; margin-top: 20px; justify-content: center; border: none;">
+                Return to Bag
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- TERMINAL GENDER PROMPT MODAL -->
+<div id="genderPromptModal" class="crave-modal-overlay">
+    <div class="crave-modal-content" style="max-width: 400px; border-top: 5px solid #2D1B69;">
+        <div class="crave-modal-header">
+            <h3 style="color: #1e3a8a;"><i class="bi bi-person-half"></i> Select Gender</h3>
+            <button class="close-modal" onclick="closeCraveModal('genderPromptModal')">&times;</button>
+        </div>
+        <div class="crave-modal-body">
+            <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 20px; line-height: 1.5;">
+                For accurate routing, select your gender below. We only recognize two options... Apologies if yours is missing! 😔
+            </p>
+            
+            <div style="margin-bottom: 25px;">
+                <label style="font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 8px; display: block;">Gender</label>
+                <select id="terminal_prompt_gender" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 10px; outline: none; font-size: 0.95rem; background: white; cursor: pointer;">
+                    <option value="" disabled selected>Select your gender...</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                </select>
+            </div>
+
+            <button onclick="submitTerminalGender()" class="btn-save-pack" style="width: 100%; justify-content: center; background: #2D1B69; border: none; padding: 12px; font-size: 1rem;" id="btn-terminal-gender">
+                Save & Continue to Checkout
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- NEEDED FOR WAIT_FEE IMPLEMENTATION -->
+<script>
+    
+</script>
+
+<style>
+    /* --- NEW: CUSTOM WAIT FEE TOOLTIP --- */
+    .crave-tooltip-wrapper {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        cursor: help;
+        margin-left: 5px;
+    }
+    .crave-tooltip-text {
+        visibility: hidden;
+        opacity: 0;
+        width: 240px;
+        background-color: #1e293b;
+        color: #f8fafc;
+        text-align: left;
+        border-radius: 8px;
+        padding: 12px;
+        position: absolute;
+        z-index: 1000;
+        bottom: 150%;
+        right: -10px; /* Anchors it to the right side of the screen */
+        box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        font-size: 0.75rem;
+        font-weight: 500;
+        line-height: 1.5;
+        transition: opacity 0.2s ease, transform 0.2s ease;
+        transform: translateY(5px);
+        pointer-events: none; /* Prevents flickering */
+    }
+    .crave-tooltip-text::after {
+        content: "";
+        position: absolute;
+        top: 100%;
+        right: 15px; /* Aligns the little arrow directly under the icon */
+        border-width: 6px;
+        border-style: solid;
+        border-color: #1e293b transparent transparent transparent;
+    }
+    .crave-tooltip-wrapper:hover .crave-tooltip-text {
+        visibility: visible;
+        opacity: 1;
+        transform: translateY(0);
+    }
+    .error-box {
+        background: #fff5f5;
+        border: 1px solid #feb2b2;
+        border-radius: 8px;
+        padding: 12px;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+    .error-item-msg {
+        color: #c53030;
+        font-weight: 600;
+        font-size: 0.85rem;
+        margin-bottom: 4px;
+        display: flex;
+        justify-content: space-between;
+    }
+</style>
+
+</main>
+{% csrf_token %}
+{% block extra_js %}
+<script src="{% static 'js/luxa_crave/outlet_terminal.js' %}"></script>
+<script>
+
+    window.CURRENT_OUTLET_NAME = '{{ outlet.name|escapejs }}';
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // 1. ABSOLUTE LOCK: If this has already run on this page load, stop immediately.
+        if (window.hasInjectedPreset) return; 
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const injectPresetId = urlParams.get('inject_preset');
+        
+        if (injectPresetId) {
+            // Lock the gate for any future checks
+            window.hasInjectedPreset = true; 
+            
+            // 2. CLEANUP INSTANTLY: Remove the parameter from the URL right now, 
+            // before the timeout starts, to prevent double-firing.
+            const url = new URL(window.location);
+            url.searchParams.delete('inject_preset');
+            window.history.replaceState({}, document.title, url);
+
+            // 3. INJECT: Now we safely wait for the JS to load before injecting
+            setTimeout(() => {
+                if (typeof injectPresetToCart === 'function') {
+                    const dummyBtn = document.createElement('button');
+                    injectPresetToCart(injectPresetId, dummyBtn);
+                }
+            }, 600);
+        }
+    });
+</script>
+
+{% endblock %}
+
+{% endblock %}

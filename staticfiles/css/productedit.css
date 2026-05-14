@@ -1,0 +1,96 @@
+#main {
+    display: flex;
+    color: #333;
+    padding: 30px;
+    width: 90%;
+    justify-self: center;
+    flex-direction: column;
+}
+
+h2 {
+    margin: 20px 0;
+    color: black;
+}
+
+header {
+    display: flex;
+    justify-content: left;
+    align-items: center;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #eaeaea;
+    margin-bottom: 30px;
+}
+
+.top {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    padding: 30px 20px;
+    background-color: white;
+    border-radius: 25px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+}
+
+.top img {
+    width: 250px;
+    border-radius: 25px;
+    background-color: #f0edff;
+    padding: 20px;
+}
+
+.top h3 {
+    margin-top: 15px;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.info-box {
+    border: 1px solid #eee;
+    border-radius: 10px;
+    padding: 20px 20px;
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    box-shadow: 0 0 10px rgba(0,0,0,0.05);
+}
+
+.info-box label {
+    font-size: 18px;
+    color: #000;
+    margin-bottom: 15px;
+    font-weight: 550;
+}
+
+.info-box input, .info-box textarea {
+    border: 2px solid transparent;
+    background: #f6f5ff;
+    outline: none;
+    font-size: 17px;
+    color: #333;
+    resize: none;
+    padding: 7px 10px;
+    border-radius: 10px;
+}
+
+.info-box input:focus, .info-box textarea:focus {
+    border: 2px solid #960ffa;
+}
+
+.savebtn {
+    background: #960ffa;
+    align-self: center;
+    color: white;
+    width: fit-content;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 14px;
+    cursor: pointer;
+    margin-top: 30px;
+}

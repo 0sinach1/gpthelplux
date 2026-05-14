@@ -1,0 +1,68 @@
+{% extends "luxa_crave/base_crave.html" %}
+{% load static %}
+{% load hosts %}
+{% load humanize %}
+
+{% block title %}
+    {{ university.name }} Outlets
+{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/luxa_crave/outlet_sections_style.css' %}">
+{% endblock %}
+
+{% block content %}
+<main class="crave-content">
+    <section class="outlet-section-page">
+        
+        <div class="outlet-page-header">
+            <div class="header-text">
+                <h1>{{ university.name }} Cafeterias & Outlets</h1>
+                <p>Pick an outlet to begin building your custom pack and checkout in minutes.</p>
+            </div>
+            <a href="{% url 'crave_dashboard' %}" class="btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+
+        <div class="outlet-grid">
+            {% if outlets %}
+                {% for outlet in outlets %}
+                <a href="{% url 'outlet_terminal' outlet.id %}" class="outlet-card">
+                    <i class="bi bi-shop decorative-icon"></i>
+                    
+                    <div class="outlet-card-top">
+                        <div class="icon-circle">
+                            <span class="material-symbols-outlined" style="align-self: center;">
+                                {{ outlet.icon_url }}
+                            </span>
+                        </div>
+                        {% if outlet.is_currently_open %}
+                            <span class="pill on"><i class="bi bi-circle-fill" style="font-size: 8px; margin-right: 4px;"></i> Open</span>
+                        {% else %}
+                            <span class="pill off"><i class="bi bi-circle-fill" style="font-size: 8px; margin-right: 4px;"></i> Closed</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="outlet-card-body">
+                        <h3>{{ outlet.name }}</h3>
+                        <p class="outlet-desc">{{ outlet.description|default:'House meals, staples and essentials for your hostel.'|truncatechars:70 }}</p>
+                    </div>
+
+                    <div class="outlet-footer">
+                        <span><i class="bi bi-geo-alt-fill"></i> {{ university.name }}</span>
+                        <span><i class="bi bi-clock-fill"></i> {{ outlet.time_open|default:'09:00' }} - {{ outlet.time_closed|default:'18:00' }}</span>
+                    </div>
+                </a>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon"><i class="bi bi-shop-window"></i></div>
+                    <h3>No outlets found</h3>
+                    <p>There are no configured outlets for this campus yet. Please check back later or contact support.</p>
+                </div>
+            {% endif %}
+        </div>
+    </section>
+</main>
+{% endblock %}

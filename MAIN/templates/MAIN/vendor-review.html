@@ -1,0 +1,148 @@
+{% extends "MAIN/base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Vendor Reviews{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static '/css/vendrev.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="reviews-heading">
+        <h2 class="reviews-title">Customer Reviews</h2>
+        <p class="reviews-description">What customers are saying about this vendor</p>
+    </div>
+    <div class="reviews-wrapper">
+        <div class="reviews-section">
+            <div class="reviews-content">
+                <div class="rating-summary">
+                    <div class="overall-rating">4.8</div>
+                    <div class="stars-display">
+                        <span class="star-filled">★</span>
+                        <span class="star-filled">★</span>
+                        <span class="star-filled">★</span>
+                        <span class="star-filled">★</span>
+                        <span class="star-filled">★</span>
+                    </div>
+                    <div class="total-reviews">1247 reviews</div>
+
+                    <div class="rating-breakdown">
+                        <div class="rating-row">
+                            <span class="rating-stars">5 ★</span>
+                            <div class="rating-bar-container">
+                                <div class="rating-bar-fill" style="width: 79%;"></div>
+                            </div>
+                            <span class="rating-count">987</span>
+                        </div>
+                        <div class="rating-row">
+                            <span class="rating-stars">4 ★</span>
+                            <div class="rating-bar-container">
+                                <div class="rating-bar-fill" style="width: 15%;"></div>
+                            </div>
+                            <span class="rating-count">189</span>
+                        </div>
+                        <div class="rating-row">
+                            <span class="rating-stars">3 ★</span>
+                            <div class="rating-bar-container">
+                                <div class="rating-bar-fill" style="width: 4%;"></div>
+                            </div>
+                            <span class="rating-count">45</span>
+                        </div>
+                        <div class="rating-row">
+                            <span class="rating-stars">2 ★</span>
+                            <div class="rating-bar-container">
+                                <div class="rating-bar-fill" style="width: 1.4%;"></div>
+                            </div>
+                            <span class="rating-count">18</span>
+                        </div>
+                        <div class="rating-row">
+                            <span class="rating-stars">1 ★</span>
+                            <div class="rating-bar-container">
+                                <div class="rating-bar-fill" style="width: 0.6%;"></div>
+                            </div>
+                            <span class="rating-count">8</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="reviews-list">
+                    <div class="review-card">
+                        <div class="review-header">
+                            <div class="reviewer-info">
+                                <div class="reviewer-avatar">👩‍🦰</div>
+                                <div class="reviewer-details">
+                                    <div class="reviewer-name">Chinwe Okafor</div>
+                                    <div class="review-rating">
+                                        <div class="review-stars">
+                                            <span class="review-star">★</span>
+                                            <span class="review-star">★</span>
+                                            <span class="review-star">★</span>
+                                            <span class="review-star">★</span>
+                                            <span class="review-star">★</span>
+                                        </div>
+                                        <span class="verifi-badge">Verified Purchase</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="review-date">Oct 15, 2025</div>
+                        </div>
+                        <p class="review-text">Excellent service! The product arrived earlier than expected and was exactly as described. The vendor was very responsive to my questions.</p>
+                    </div>
+
+                    <div class="review-card">
+                        <div class="review-header">
+                            <div class="reviewer-info">
+                                <div class="reviewer-avatar" style="background: linear-gradient(135deg, #4facfe, #00f2fe);">👨</div>
+                                <div class="reviewer-details">
+                                    <div class="reviewer-name">Adebayo Adeyemi</div>
+                                    <div class="review-rating">
+                                        <div class="review-stars">
+                                            <span class="review-star">★</span>
+                                            <span class="review-star">★</span>
+                                            <span class="review-star">★</span>
+                                            <span class="review-star">★</span>
+                                            <span class="review-star empty">★</span>
+                                        </div>
+                                        <span class="verifi-badge">Verified Purchase</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="review-date">Oct 10, 2025</div>
+                        </div>
+                        <p class="review-text">Great quality products and fair prices. Only minor issue was the packaging could be better, but the items were undamaged.</p>
+                    </div>
+
+                    <div class="review-card">
+                        <div class="review-header">
+                            <div class="reviewer-info">
+                                <div class="reviewer-avatar" style="background: linear-gradient(135deg, #fa709a, #fee140);">👩</div>
+                                <div class="reviewer-details">
+                                    <div class="reviewer-name">Chukwuemeka Nwosu</div>
+                                    <div class="review-rating">
+                                        <div class="review-stars">
+                                            <span class="review-star">★</span>
+                                            <span class="review-star">★</span>
+                                            <span class="review-star">★</span>
+                                            <span class="review-star">★</span>
+                                            <span class="review-star">★</span>
+                                        </div>
+                                        <span class="verifi-badge">Verified Purchase</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="review-date">Sep 28, 2025</div>
+                        </div>
+                        <p class="review-text">Fantastic vendor! They helped me choose the right product for my needs and provided detailed technical information. Highly recommended!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block luxaslide %}
+{% endblock %}

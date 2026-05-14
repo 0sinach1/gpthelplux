@@ -1,0 +1,462 @@
+/* =========================================
+   CRAVE INTRO PAGE STYLES
+   ========================================= */
+
+.crave-content {
+    padding: 30px;
+    flex-grow: 1;
+    margin-top: 70px;
+}
+
+/* --- INTRO WRAPPER --- */
+.intro-wrapper {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding-bottom: 50px;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+    width: 100%;
+}
+
+/* Animations */
+.fade-in-up {
+    animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- HERO SECTION --- */
+.intro-hero {
+    background: linear-gradient(135deg, rgb(113, 34, 170) 0%, #0f041b 100%);
+    border-radius: 24px;
+    padding: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 40px;
+    color: white;
+    box-shadow: 0 15px 40px rgba(45, 26, 17, 0.15);
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-content {
+    flex: 1;
+    max-width: 600px;
+    z-index: 2;
+}
+
+.hero-badge {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.2);
+    padding: 6px 16px;
+    border-radius: 30px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: inline-block;
+    margin-bottom: 20px;
+    color: #e7e0d8;
+}
+
+.hero-content h1 {
+    font-size: 3.5rem;
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 20px;
+}
+
+.hero-content p {
+    font-size: 1.1rem;
+    color: #e7e0d8;
+    line-height: 1.6;
+    margin-bottom: 30px;
+}
+
+.btn-primary-hero {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: limegreen;
+    color: white;
+    padding: 16px 32px;
+    border-radius: 14px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    text-decoration: none;
+}
+
+.btn-primary-hero:hover {
+    background: rgb(29, 158, 29);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(34, 197, 94, 0.3);
+}
+
+/* Hero Graphic & Floating Elements */
+.hero-graphic {
+    position: relative;
+    width: 250px;
+    height: 250px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+}
+
+.graphic-circle {
+    width: 180px;
+    height: 180px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px dashed rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 5rem;
+    color: white;
+    box-shadow: 0 0 50px rgba(34, 197, 94, 0.2);
+}
+
+.float-icon {
+    position: absolute;
+    background: white;
+    color: var(--crave-primary);
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    animation: float 4s ease-in-out infinite;
+}
+
+.fi-1 { top: 0; left: 10px; animation-delay: 0s; }
+.fi-2 { bottom: 20px; left: -20px; animation-delay: 1.5s; }
+.fi-3 { top: 40px; right: -10px; animation-delay: 3s; color: var(--luxa-purple); }
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-15px); }
+}
+
+/* --- CONTINUOUS SCROLL FEATURES --- */
+.intro-features-container {
+    width: 100%;
+    overflow: hidden;
+    padding: 20px 0;
+    position: relative;
+    mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+}
+
+.intro-features-track {
+    display: flex;
+    width: max-content;
+    animation: marqueeScroll 35s linear infinite;
+}
+
+.intro-features-container:hover .intro-features-track {
+    animation-play-state: paused;
+}
+
+.features-group {
+    display: flex;
+    gap: 30px;
+    padding-right: 30px; 
+}
+
+.feature-card {
+    background: white;
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 10px 30px rgba(45, 26, 17, 0.03);
+    border: 1px solid var(--border-color);
+    transition: all 0.3s;
+    width: 320px;
+    flex-shrink: 0;
+}
+
+.feature-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 35px rgba(45, 26, 17, 0.08);
+    border-color: rgba(34, 197, 94, 0.3);
+}
+
+.feature-icon {
+    width: 60px;
+    height: 60px;
+    background: #f4fbf7;
+    color: var(--crave-primary);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+}
+
+.feature-card h3 {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--crave-dark);
+    margin-bottom: 10px;
+}
+
+.feature-card p {
+    font-size: 0.9rem;
+    color: var(--text-light);
+    line-height: 1.6;
+}
+
+@keyframes marqueeScroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); } 
+}
+
+/* --- STEPS SECTION --- */
+.intro-steps-section {
+    background: white;
+    border-radius: 24px;
+    padding: 50px;
+    border: 1px solid var(--border-color);
+    text-align: center;
+}
+
+.section-heading {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--crave-dark);
+    margin-bottom: 40px;
+}
+
+.steps-container {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+}
+
+.step-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+}
+
+.step-number {
+    width: 50px;
+    height: 50px;
+    background: #0f041b;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    font-weight: 800;
+    margin-bottom: 20px;
+    border: 4px solid white;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    position: relative;
+}
+
+.step-item h4 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--crave-dark);
+    margin-bottom: 10px;
+}
+
+.step-item p {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    max-width: 80%;
+}
+
+.step-connector {
+    flex: 1;
+    height: 2px;
+    background: dashed 2px var(--border-color);
+    margin-top: 25px;
+    z-index: 1;
+}
+
+/* =========================================
+   TRUE NATIVE-APP MOBILE RESPONSIVENESS
+   ========================================= */
+@media (max-width: 780px) {
+    
+    /* Overall Spacing: Kill side margins so it fills the phone */
+    .crave-content {
+        padding: 15px 10px; 
+        margin-top: 70px;
+        width: 100vw;
+        overflow-x: hidden;
+    }
+
+    .intro-wrapper {
+        gap: 20px; 
+        padding-bottom: 20px;
+        width: 100%;
+    }
+
+    /* 1. Hero Section - Tight Card Look */
+    .intro-hero {
+        flex-direction: column;
+        text-align: center;
+        padding: 35px 20px 25px 20px;
+        gap: 15px;
+        border-radius: 20px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    
+    .hero-content {
+        max-width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .hero-badge {
+        font-size: 0.7rem;
+        padding: 5px 12px;
+        margin-bottom: 15px;
+    }
+
+    .hero-content h1 {
+        font-size: 1.8rem; /* Dramatically shrunk for mobile readability */
+        line-height: 1.2;
+        margin-bottom: 10px;
+    }
+    
+    .hero-content p {
+        font-size: 0.9rem;
+        margin-bottom: 20px;
+        padding: 0 10px; /* Brings text inward off the edges */
+    }
+
+    .hero-actions {
+        width: 100%;
+    }
+
+    .btn-primary-hero {
+        width: 100%; /* Full span button, highly touchable */
+        justify-content: center;
+        padding: 16px;
+        font-size: 1rem;
+        border-radius: 14px; 
+    }
+    
+    /* Graphic Fix - Minimized heavily */
+    .hero-graphic { 
+        margin-top: 15px; 
+        width: 100%; 
+        max-width: 160px;
+        height: 160px; 
+    }
+    
+    .graphic-circle { 
+        width: 120px; 
+        height: 120px; 
+        font-size: 2.5rem; 
+    }
+    
+    .float-icon { 
+        width: 35px; 
+        height: 35px; 
+        font-size: 1rem; 
+    }
+
+    .fi-1 { left: 0%; top: 5%; }
+    .fi-2 { left: -5%; bottom: 5%; }
+    .fi-3 { right: 0%; top: 15%; }
+
+    /* 2. Feature Cards (Marquee) */
+    .intro-features-container {
+        padding: 10px 0;
+        width: 100%;
+        max-width: 100vw;
+        box-sizing: border-box;
+    }
+
+    .feature-card {
+        width: 240px; /* Thinner cards to fit screen comfortably */
+        padding: 20px;
+    }
+
+    .feature-icon {
+        width: 45px;
+        height: 45px;
+        font-size: 1.4rem;
+        margin-bottom: 12px;
+        border-radius: 12px;
+    }
+
+    .feature-card h3 { font-size: 1.05rem; margin-bottom: 8px; }
+    .feature-card p { font-size: 0.8rem; line-height: 1.4; }
+
+    /* 3. Steps Section */
+    .intro-steps-section {
+        padding: 35px 20px;
+        border-radius: 20px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .section-heading {
+        font-size: 1.4rem;
+        margin-bottom: 25px;
+    }
+
+    .steps-container {
+        flex-direction: column;
+        gap: 0; 
+        align-items: center;
+    }
+
+    .step-item {
+        width: 100%;
+        padding-bottom: 40px; 
+        position: relative;
+    }
+    
+    .step-item:last-child { padding-bottom: 0; }
+    .step-connector { display: none; }
+
+    /* Create Mobile Vertical Dashed Line */
+    .step-item::after {
+        content: '';
+        position: absolute;
+        top: 45px; 
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 2px;
+        border-left: 2px dashed var(--border-color);
+        z-index: 1;
+    }
+
+    .step-item:last-child::after { display: none; }
+
+    .step-number {
+        width: 45px;
+        height: 45px;
+        font-size: 1.1rem;
+        margin-bottom: 15px;
+        z-index: 2; 
+    }
+
+    .step-item h4 { font-size: 1.05rem; margin-bottom: 6px; }
+    .step-item p { font-size: 0.85rem; max-width: 100%; }
+}

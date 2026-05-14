@@ -1,0 +1,279 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Manage Your Products{% endblock %}
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'MAIN/css/vendor.css' %}" />
+{% endblock %}
+
+{% block category_bar %}{% endblock %}
+
+{% block content %}
+<div class="container page-wrapper">
+  <div class="dashboard-layout">
+
+    {# ── Sidebar ── #}
+    {% include 'partials/account_sidebar.html' with active_nav='product_management' %}
+
+    {# ── Main ── #}
+    <div>
+
+      {# Page header #}
+      <div class="pm-page-header">
+        <div class="pm-page-header__left">
+          <h1>Manage Your Products</h1>
+          <p>
+            {{ product_count|default:"0" }} product{{ product_count|pluralize }} listed
+            {% if last_updated %}&middot; Last updated {{ last_updated|date:"M d, Y" }}{% endif %}
+          </p>
+        </div>
+        <div class="pm-page-header__actions">
+          <button class="btn btn--ghost" id="bulkActionsBtn">Bulk Actions</button>
+          <a href="{% url 'add_product' vendor.id %}" class="btn btn--primary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+            </svg>
+            Add New Product
+          </a>
+        </div>
+      </div>
+
+      {# Filter row #}
+      <div class="pm-filter-row">
+        <div class="pm-search-wrap">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/>
+          </svg>
+          <input
+            class="pm-search-input"
+            type="search"
+            id="pmSearch"
+            placeholder="Search products..."
+            value="{{ request.GET.q }}"
+          />
+        </div>
+
+        <div class="filter-chips">
+          <button class="chip active" data-filter="all">All Products</button>
+          <button class="chip" data-filter="live">Live</button>
+          <button class="chip" data-filter="suspended">Suspended</button>
+          <button class="chip" data-filter="draft">Draft</button>
+        </div>
+      </div>
+
+      {# Table #}
+      <div class="card" style="padding:0; overflow:hidden;">
+        <table class="luxa-table" id="productsTable">
+          <thead>
+            <tr>
+              <th style="width:36px;">
+                <input type="checkbox" id="selectAll" style="accent-color:var(--clr-accent);" />
+              </th>
+              <th>Product Name</th>
+              <th>Price</th>
+              <th>Stock</th>
+              <th>Visibility</th>
+              <th>Listed</th>
+              <th>Manage</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for product in products %}
+              <tr data-status="{{ product.status|lower }}">
+                <td>
+                  <input type="checkbox" class="row-check" style="accent-color:var(--clr-accent);" />
+                </td>
+                <td>
+                  <div>
+                    <p class="pm-product-name">{{ product.name }}</p>
+                    <span class="pm-product-category">{{ product.category.name }}</span>
+                  </div>
+                </td>
+                <td style="font-weight:600; white-space:nowrap;">
+                  ₦{{ product.price|floatformat:2 }}
+                </td>
+                <td>
+                  <div class="stock-bar">
+                    <div class="stock-bar__track">
+                      <div class="stock-bar__fill
+                        {% if product.stock > 10 %}stock-bar__fill--high
+                        {% elif product.stock > 3 %}stock-bar__fill--medium
+                        {% else %}stock-bar__fill--low{% endif %}"
+                        style="width:{% if product.initial_stock %}{% widthratio product.stock product.initial_stock 100 %}{% else %}50{% endif %}%">
+                      </div>
+                    </div>
+                    <span>{{ product.stock }} units</span>
+                  </div>
+                </td>
+                <td>
+                  <span class="badge badge--{{ product.status|lower }}">
+                    {{ product.get_status_display }}
+                  </span>
+                </td>
+                <td class="text-sm text-muted" style="white-space:nowrap;">
+                  {{ product.created_at|date:"M d, Y" }}
+                </td>
+                <td>
+                  <div class="pm-manage-btns">
+                    <a href="{% url 'edit_product' product.id %}"
+                       class="btn btn--icon"
+                       title="Edit product">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/>
+                      </svg>
+                    </a>
+                    <a href="{% url 'delete_product' product.id %}"
+                       class="btn btn--icon"
+                       style="color:var(--clr-cancelled);"
+                       title="Delete product"
+                       onclick="return confirm('Delete {{ product.name }}?')">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/>
+                      </svg>
+                    </a>
+                    {% if product.status == 'live' %}
+                      <a href="{% url 'suspend_product' product.id %}" class="btn btn--warning btn--sm">Suspend</a>
+                    {% elif product.status == 'suspended' %}
+                      <a href="{% url 'relist_product' product.id %}" class="btn btn--success btn--sm">Re-list</a>
+                    {% else %}
+                      <a href="{% url 'publish_product' product.id %}" class="btn btn--primary btn--sm">Publish</a>
+                    {% endif %}
+                  </div>
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="7" style="text-align:center; padding:48px 16px;">
+                  <p style="color:var(--clr-text-3); margin-bottom:var(--sp-4);">
+                    You haven't listed any products yet.
+                  </p>
+                  <a href="{% url 'add_product' vendor.id %}" class="btn btn--primary">
+                    + Add Your First Product
+                  </a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {# Pagination #}
+      {% if products %}
+        <div class="pm-pagination-row">
+          <span class="pm-pagination-count">
+            Showing {{ products|length }} of {{ product_count }} product{{ product_count|pluralize }}
+          </span>
+          <div class="pagination">
+            {% if page_obj.has_previous %}
+              <a href="?page={{ page_obj.previous_page_number }}" class="page-btn" aria-label="Previous">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/>
+                </svg>
+              </a>
+            {% else %}
+              <button class="page-btn" disabled>
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/>
+                </svg>
+              </button>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+              <a href="?page={{ num }}"
+                 class="page-btn {% if page_obj.number == num %}active{% endif %}">
+                {{ num }}
+              </a>
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+              <a href="?page={{ page_obj.next_page_number }}" class="page-btn" aria-label="Next">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/>
+                </svg>
+              </a>
+            {% else %}
+              <button class="page-btn" disabled>
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/>
+                </svg>
+              </button>
+            {% endif %}
+          </div>
+        </div>
+      {% endif %}
+
+    </div>{# /main #}
+  </div>{# /dashboard-layout #}
+</div>
+
+{# ── Mobile product cards (shown only on mobile) ── #}
+<style>
+@media (max-width:768px) {
+  .dashboard-layout > div:last-child > .card { display: none; }
+  .pm-pagination-row { display: none; }
+  #mobileProductList { display: block; }
+}
+@media (min-width:769px) {
+  #mobileProductList { display: none; }
+}
+</style>
+
+<div id="mobileProductList" class="container" style="padding-bottom:var(--sp-8);">
+  <div class="flex items-center justify-between mb-4">
+    <div>
+      <h2 style="font-size:20px;">My Products</h2>
+      <p class="text-sm text-muted">{{ product_count }} listed</p>
+    </div>
+    <a href="{% url 'add_product' vendor.id %}" class="mobile-add-btn">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+      </svg>
+      + Add
+    </a>
+  </div>
+
+  <div class="filter-chips mb-4">
+    <button class="chip active" data-filter="all">All</button>
+    <button class="chip" data-filter="live">Live</button>
+    <button class="chip" data-filter="suspended">Suspended</button>
+  </div>
+
+  {% for product in products %}
+    <div class="mobile-product-card" data-status="{{ product.status|lower }}">
+      <div class="mobile-product-card__header">
+        <div>
+          <p class="mobile-product-card__name">{{ product.name }}</p>
+          <span class="pm-product-category">{{ product.category.name }}</span>
+        </div>
+        <span class="badge badge--{{ product.status|lower }}">{{ product.get_status_display }}</span>
+      </div>
+      <p class="mobile-product-card__price">₦{{ product.price|floatformat:2 }}</p>
+      <p class="mobile-product-card__stock">{{ product.stock }} units</p>
+      <div class="mobile-product-card__footer">
+        <span class="mobile-product-card__date">{{ product.created_at|date:"M d, Y" }}</span>
+        <div class="mobile-product-card__actions">
+          <a href="{% url 'edit_product' product.id %}" class="btn btn--icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"/>
+            </svg>
+          </a>
+          <a href="{% url 'delete_product' product.id %}" class="btn btn--icon" style="color:var(--clr-cancelled);">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/>
+            </svg>
+          </a>
+          {% if product.status == 'live' %}
+            <a href="{% url 'suspend_product' product.id %}" class="btn btn--warning btn--sm">Suspend</a>
+          {% elif product.status == 'suspended' %}
+            <a href="{% url 'relist_product' product.id %}" class="btn btn--success btn--sm">Re-list</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'MAIN/js/vendor.js' %}" defer></script>
+{% endblock %}

@@ -1,0 +1,854 @@
+/* --- LAYOUT & HEADER --- */
+.checkout-wrapper {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding-bottom: 50px;
+}
+
+.checkout-header {
+    margin-top: 80px;
+    margin-bottom: 30px;
+}
+
+.checkout-header h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--crave-dark);
+    margin-bottom: 5px;
+}
+
+.checkout-header p {
+    color: var(--text-light);
+    font-size: 0.95rem;
+}
+
+/* Animations */
+.fade-in-up { animation: fadeInUp 0.4s ease-out forwards; }
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- CHECKOUT GRID --- */
+.checkout-grid {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 30px;
+    align-items: start;
+}
+
+.checkout-panel {
+    background: white;
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 10px 30px rgba(45, 26, 17, 0.03);
+    padding: 30px;
+}
+
+/* --- LEFT PANEL: SHIPPING FORM --- */
+.panel-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 25px;
+    gap: 10px;
+}
+
+.panel-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.panel-title h3 {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--crave-dark);
+    margin: 0;
+}
+
+.panel-subtitle {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    font-weight: 600;
+}
+
+.form-group {
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.form-group label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-light);
+    margin-bottom: 8px;
+    letter-spacing: 0.5px;
+}
+
+.form-group input, 
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1.5px solid var(--border-color);
+    border-radius: 12px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.95rem;
+    color: var(--crave-dark);
+    outline: none;
+    transition: all 0.2s;
+    background: #fdfbf7;
+}
+
+.form-group input:focus, 
+.form-group textarea:focus,
+.form-group select:focus {
+    border-color: var(--crave-primary);
+    background: white;
+    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.1);
+}
+
+.form-group small {
+    font-size: 0.75rem;
+    color: #a8a096;
+    margin-top: 6px;
+}
+
+/* --- TOGGLE SWITCH (CHECKOUT) --- */
+.crave-switch {
+    position: relative;
+    display: inline-block;
+    width: 46px;
+    height: 26px;
+}
+.crave-switch input { opacity: 0; width: 0; height: 0; }
+
+.crave-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #cbd5e1;
+    transition: .4s;
+    border-radius: 30px;
+}
+
+.crave-slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+input:checked + .crave-slider {
+    background-color: var(--luxa-purple, #960ffa); /* Matches the checkout page styling */
+}
+
+input:checked + .crave-slider:before {
+    transform: translateX(20px);
+}
+
+.crave-slider.disabled-slider {
+    background-color: #e2e8f0;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* --- DISABLED FORM STATE --- */
+.disabled-form {
+    opacity: 0.5;
+    filter: grayscale(80%);
+    pointer-events: none; /* Prevents clicks/edits on customer form */
+    transition: all 0.3s ease;
+}
+
+/* --- RIGHT PANEL: ORDER SUMMARY --- */
+.summary-title {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--crave-dark);
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.summary-items-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.summary-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.si-image {
+    width: 50px;
+    height: 50px;
+    background: #f4fbf7;
+    color: var(--crave-primary);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+.si-details {
+    flex-grow: 1;
+}
+
+.si-details h4 {
+    margin: 0 0 4px 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--crave-dark);
+}
+
+.si-details span {
+    font-size: 0.8rem;
+    color: var(--text-light);
+}
+
+.si-price {
+    font-weight: 800;
+    font-size: 0.95rem;
+    color: var(--crave-dark);
+}
+
+/* Cost Breakdown */
+.cost-breakdown {
+    border-top: 1px solid var(--border-color);
+    padding-top: 20px;
+    margin-bottom: 20px;
+}
+
+.cost-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    font-size: 0.9rem;
+    color: var(--text-light);
+}
+
+.total-row {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px dashed var(--border-color);
+    align-items: center;
+}
+
+.total-row span:first-child {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--crave-dark);
+}
+
+.total-price {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--luxa-purple); /* Using Luxa purple to match your screenshot */
+}
+
+/* --- VIP TOGGLE SWITCH --- */
+.vip-switch {
+    position: relative;
+    display: inline-block;
+    width: 56px;
+    height: 32px;
+    flex-shrink: 0; /* Prevents the switch from squishing on small screens */
+}
+
+.vip-switch input { 
+    opacity: 0; 
+    width: 0; 
+    height: 0; 
+}
+
+.vip-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #e2e8f0;
+    transition: .4s;
+    border-radius: 34px;
+    border: 1px solid #cbd5e1;
+}
+
+.vip-slider:before {
+    position: absolute;
+    content: "";
+    height: 24px;
+    width: 24px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+.vip-switch input:checked + .vip-slider {
+    background-color: #f59e0b; /* VIP Gold */
+    border-color: #d97706;
+}
+
+.vip-switch input:checked + .vip-slider:before {
+    transform: translateX(24px); /* Moves exactly to the other side */
+}
+
+/* Payment & Button */
+.secure-payment-badge {
+    background: #eef2ff; /* Very light tint */
+    border-radius: 12px;
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.secure-payment-badge i {
+    color: var(--luxa-purple);
+    font-size: 1.2rem;
+}
+
+.secure-payment-badge div {
+    display: flex;
+    flex-direction: column;
+}
+
+.secure-payment-badge strong {
+    font-size: 0.85rem;
+    color: #3730a3;
+}
+
+.secure-payment-badge span {
+    font-size: 0.75rem;
+    color: #4f46e5;
+}
+
+.btn-complete-order {
+    width: 100%;
+    background: var(--crave-dark);
+    color: white;
+    padding: 18px;
+    border-radius: 12px;
+    border: none;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.3s;
+}
+
+.btn-complete-order:hover {
+    background: #1a0f0a;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(45, 26, 17, 0.2);
+}
+
+.return-link {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.return-link a {
+    color: var(--text-light);
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: color 0.2s;
+}
+
+.return-link a:hover {
+    color: var(--crave-dark);
+}
+
+/* MODAL STYLING */
+/* --- KYC & PIN MODALS --- */
+.kyc-modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.kyc-modal-overlay.active {
+    display: flex;
+    opacity: 1;
+}
+
+.kyc-modal {
+    background: white;
+    width: 90%;
+    max-width: 420px;
+    border-radius: 24px;
+    padding: 30px;
+    text-align: center;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.2);
+    transform: translateY(20px);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.kyc-modal-overlay.active .kyc-modal {
+    transform: translateY(0);
+}
+
+.kyc-icon-circle {
+    width: 60px; height: 60px;
+    background: #f0fdf4;
+    color: var(--crave-primary, #22c55e);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.8rem;
+    margin: 0 auto 15px auto;
+}
+
+.kyc-title {
+    font-size: 1.3rem; 
+    font-weight: 800; 
+    color: var(--crave-dark); 
+    margin-bottom: 10px;
+}
+
+.kyc-text {
+    font-size: 0.9rem; 
+    color: var(--text-light); 
+    line-height: 1.5; 
+    margin-bottom: 25px;
+}
+
+.kyc-actions {
+    display: flex; 
+    flex-direction: column; 
+    gap: 10px;
+}
+
+.btn-kyc-primary {
+    background: var(--crave-primary, #22c55e); 
+    color: white; 
+    border: none; 
+    padding: 15px;
+    border-radius: 12px; 
+    font-size: 1rem;
+    font-weight: 700; 
+    cursor: pointer; 
+    transition: 0.2s;
+    display: block;
+}
+
+.btn-kyc-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(34, 197, 94, 0.25);
+}
+
+.btn-kyc-secondary {
+    background: #f1f5f9; 
+    color: #475569; 
+    border: none; 
+    padding: 15px;
+    border-radius: 12px; 
+    font-size: 1rem;
+    font-weight: 700; 
+    cursor: pointer; 
+    transition: 0.2s;
+}
+
+.btn-kyc-secondary:hover {
+    background: #e2e8f0;
+}
+
+/* --- DUAL CHECKOUT BUTTONS --- */
+.btn-complete-safe {
+    background: linear-gradient(135deg, #9539cb, #7e22ce);
+    color: white; padding: 16px; border-radius: 12px; border: none;
+    font-size: 1.05rem; font-weight: 800; cursor: pointer; text-align: center;
+    transition: all 0.3s; box-shadow: 0 8px 20px rgba(149, 57, 203, 0.25);
+    position: relative; overflow: hidden; width: 100%;
+}
+.btn-complete-safe:hover { transform: translateY(-2px); box-shadow: 0 12px 25px rgba(149, 57, 203, 0.35); }
+.btn-complete-fast {
+    background: #1e293b; color: white; padding: 16px; border-radius: 12px; border: none;
+    font-size: 1.05rem; font-weight: 700; cursor: pointer; text-align: center;
+    transition: all 0.3s; width: 100%;
+}
+.btn-complete-fast:hover { background: #0f172a; transform: translateY(-2px); }
+
+/* --- UPGRADED LUXA ENGINE (v3.0) OVERLAY --- */
+.engine-window {
+    width: 95%; 
+    max-width: 600px; /* Wider than the old 500px, but still contained */
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+    transform: translateY(20px);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+#terminal-overlay.active .engine-window { 
+    transform: translateY(0); 
+}
+
+.engine-header {
+    background: #f8fafc; padding: 12px 20px; display: flex; 
+    align-items: center; justify-content: space-between; border-bottom: 1px solid #e2e8f0;
+}
+
+.engine-title {
+    color: #64748b; font-size: 0.75rem; font-weight: 800; letter-spacing: 1px;
+}
+
+.engine-body { 
+    padding: 30px; 
+}
+
+.engine-radar {
+    width: 60px; height: 60px; background: #f3e8ff; color: #9539cb; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; font-size: 1.8rem;
+    margin: 0 auto 15px auto;
+    animation: engine-pulse-purple 2s infinite;
+}
+
+@keyframes engine-pulse-purple {
+    0% { box-shadow: 0 0 0 0 rgba(149, 57, 203, 0.3); }
+    70% { box-shadow: 0 0 0 15px rgba(149, 57, 203, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(149, 57, 203, 0); }
+}
+
+.engine-logs {
+    background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 12px; padding: 20px;
+    height: 180px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px;
+}
+
+.engine-log-line {
+    display: flex; align-items: flex-start; gap: 12px; font-size: 0.95rem; font-weight: 600; color: #334155;
+    animation: engineFadeIn 0.4s ease-out forwards;
+    opacity: 0; 
+    transform: translateY(10px);
+}
+
+/* THE FIX: The actual animation to make the logs visible! */
+@keyframes engineFadeIn {
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.engine-log-line i { 
+    font-size: 1.1rem; margin-top: -2px; 
+}
+
+@media (max-width: 768px) {
+    .engine-body { padding: 20px 15px; }
+    .engine-logs { height: 150px; padding: 15px; }
+}
+
+/* --- MINI REBUILD TRAY --- */
+.rebuild-item-pill {
+    display: flex; align-items: center; justify-content: space-between;
+    background: white; border: 1px solid #e2e8f0; padding: 10px; border-radius: 10px; margin-bottom: 8px;
+}
+.rebuild-item-pill.sold-out {
+    background: #fef2f2; border-color: #fecaca;
+}
+.rebuild-item-pill.sold-out .pill-name { color: #ef4444; text-decoration: line-through; }
+
+/* --- UPGRADED MINI REBUILD UI --- */
+.rebuild-header-flex {
+    display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 15px;
+}
+.rebuild-bag-total {
+    font-size: 1.2rem; font-weight: 900; color: #9539cb;
+}
+.rebuild-pack-card {
+    background: white; border: 1px solid #e2e8f0; border-radius: 12px;
+    padding: 15px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+}
+.rebuild-pack-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 12px; font-size: 0.9rem; font-weight: 800; color: #1e293b;
+}
+
+/* Alternatives Carousel */
+.alts-wrapper {
+    margin-top: 10px; padding-top: 10px; border-top: 1px dashed #cbd5e1;
+}
+.alts-title {
+    font-size: 0.75rem; font-weight: 800; color: #059669; text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; gap: 5px;
+}
+.alts-scroll-container {
+    display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px;
+}
+.alt-mini-card {
+    min-width: 140px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px; flex-shrink: 0; display: flex; flex-direction: column; gap: 5px;
+}
+.alt-mini-img {
+    width: 100%; height: 60px; object-fit: cover; border-radius: 6px;
+}
+.alt-mini-name { font-size: 0.8rem; font-weight: 700; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.alt-mini-price { font-size: 0.85rem; font-weight: 800; color: #9539cb; }
+.btn-alt-add {
+    background: #1e293b; color: white; border: none; border-radius: 6px; padding: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: 0.2s;
+}
+.btn-alt-add:hover { background: #22c55e; }
+
+/* --- NEW: CUSTOM WAIT FEE TOOLTIP --- */
+.crave-tooltip-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    cursor: help;
+    margin-left: 5px;
+}
+.crave-tooltip-text {
+    visibility: hidden;
+    opacity: 0;
+    width: 240px;
+    background-color: #1e293b;
+    color: #f8fafc;
+    text-align: left;
+    border-radius: 8px;
+    padding: 12px;
+    position: absolute;
+    z-index: 1000;
+    bottom: 150%;
+    right: -10px; /* Anchors it to the right side of the screen */
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1.5;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    transform: translateY(5px);
+    pointer-events: none; /* Prevents flickering */
+}
+.crave-tooltip-text::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    right: 15px; /* Aligns the little arrow directly under the icon */
+    border-width: 6px;
+    border-style: solid;
+    border-color: #1e293b transparent transparent transparent;
+}
+.crave-tooltip-wrapper:hover .crave-tooltip-text {
+    visibility: visible;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* =========================================
+   TRUE MOBILE RESPONSIVENESS: CHECKOUT
+   ========================================= */
+@media (max-width: 1024px) {
+    /* 1. Strip Wasted Screen Space */
+    .checkout-wrapper {
+        padding: 10px 15px 40px 15px;
+    }
+
+    .checkout-header {
+        margin-top: 80px;
+        margin-bottom: 20px;
+    }
+
+    .checkout-header h1 {
+        font-size: 1.6rem;
+        margin-bottom: 5px;
+    }
+
+    .checkout-header p {
+        font-size: 0.85rem;
+    }
+
+    /* 2. Switch Grid to Column Layout (Form first, Total at bottom) */
+    .checkout-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    /* 3. Condense Panels */
+    .checkout-panel {
+        padding: 20px 15px;
+        border-radius: 16px;
+    }
+
+    .panel-header { margin-bottom: 15px; }
+    .panel-title h3 { font-size: 1.05rem; }
+    .panel-subtitle { font-size: 0.75rem; }
+
+    /* 4. Form Adjustments */
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+
+    .form-group { margin-bottom: 15px; }
+
+    .form-group input, 
+    .form-group textarea,
+    .form-group select {
+        padding: 12px 14px;
+        font-size: 1rem; /* CRITICAL: Prevents iOS Safari from auto-zooming on tap! */
+        border-radius: 10px;
+    }
+
+    /* 5. Summary Panel Adjustments */
+    .summary-title {
+        font-size: 1.05rem;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+    }
+
+    .summary-item { gap: 12px; }
+    
+    .si-image {
+        width: 45px;
+        height: 45px;
+        font-size: 1.1rem;
+        border-radius: 10px;
+    }
+
+    .si-details h4 { font-size: 0.9rem; }
+    .si-price { font-size: 0.9rem; }
+
+    .cost-breakdown { padding-top: 15px; margin-bottom: 15px; }
+    .cost-row { font-size: 0.85rem; margin-bottom: 10px; }
+    
+    .total-row {
+        margin-top: 15px;
+        padding-top: 15px;
+    }
+    .total-row span:first-child { font-size: 1.1rem; }
+    .total-price { font-size: 1.3rem; }
+
+    /* 6. Secure Badge & Button */
+    .secure-payment-badge {
+        padding: 12px;
+        margin-bottom: 15px;
+        border-radius: 10px;
+    }
+    .secure-payment-badge i { font-size: 1rem; }
+    .secure-payment-badge strong { font-size: 0.8rem; }
+    .secure-payment-badge span { font-size: 0.7rem; }
+
+    .btn-complete-order {
+        padding: 16px;
+        font-size: 1.05rem;
+        border-radius: 12px;
+    }
+
+    /* 7. KYC & Modals Adjustments */
+    .kyc-modal {
+        width: 95%;
+        padding: 25px 20px;
+    }
+    .kyc-title { font-size: 1.2rem; }
+    .kyc-text { font-size: 0.85rem; margin-bottom: 20px; }
+    
+    /* Overriding the inline 1fr 1fr grid inside the Profile Edit Modal */
+    .profile-edit-form > div[style*="grid-template-columns"] {
+        grid-template-columns: 1fr !important;
+        gap: 15px !important;
+        margin-bottom: 15px !important;
+    }
+    
+    /* Make the PIN Input fit the mobile screen beautifully */
+    #checkout_pin_input {
+        width: 100% !important;
+        font-size: 1.8rem !important;
+        letter-spacing: 15px !important;
+        box-sizing: border-box;
+    }
+}
+
+/* =========================================
+   TRUE MOBILE RESPONSIVENESS: ENGINE & MODALS
+   ========================================= */
+@media (max-width: 768px) {
+    /* 1. Terminal Overlay Fix */
+    .terminal-window {
+        width: 95%;
+        margin: 0 auto;
+    }
+    #terminal-logs {
+        height: 180px !important; /* Prevents it from taking the whole screen */
+    }
+    
+    /* 2. Rebuild Bag Modal Fix */
+    #modal-mini-rebuild .kyc-modal {
+        width: 95%;
+        max-height: 85vh; /* STRICT CONSTRAINT: Keep it on screen */
+        display: flex;
+        flex-direction: column;
+        padding: 20px 15px;
+    }
+    
+    /* This ensures the scrolling happens INSIDE the box, not on the page */
+    #mini-pack-builder-container {
+        max-height: 40vh !important; 
+        padding: 5px;
+        overflow-y: auto;
+    }
+
+    /* 3. Rebuild Item Pill Shrinkage */
+    .rebuild-pack-card {
+        padding: 12px;
+    }
+
+    .rebuild-item-pill {
+        padding: 8px;
+    }
+
+    .rebuild-item-pill img {
+        width: 28px !important; 
+        height: 28px !important;
+    }
+
+    .pill-name {
+        font-size: 0.8rem !important;
+    }
+    
+    /* 4. Alternative Carousel Adjustments */
+    .alt-mini-card {
+        min-width: 120px; /* Slimmer for better side-scrolling */
+        padding: 6px;
+    }
+    
+    .alt-mini-img {
+        height: 50px;
+    }
+    
+    .alt-mini-name {
+        font-size: 0.75rem;
+    }
+    
+    .btn-alt-add {
+        padding: 4px 8px;
+        font-size: 0.7rem;
+    }
+}

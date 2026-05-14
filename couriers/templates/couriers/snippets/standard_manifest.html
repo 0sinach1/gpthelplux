@@ -1,0 +1,195 @@
+{% load humanize %}
+{% load static %}
+
+<div class="order-modal-header" style="margin-bottom: 20px;">
+    <div class="om-title">
+        <h3>Order Details</h3>
+        <span class="om-id">#{{ order.order_id }}</span>
+    </div>
+    <div style="text-align:right;">
+        <div style="font-size:0.8rem; color:#999;">Created</div>
+        <div style="font-weight:600; font-size:0.9rem;">{{ order.created_at|date:"M d, Y" }}</div>
+    </div>
+</div>
+
+{# --- CUSTOMER HEADER (MATCHES CARD STYLE) --- #}
+<div class="customer-corner-box" 
+     onclick="openCustomerSlider('{{ order.id }}')"
+     style="display: flex; align-items: center; padding: 15px; background: #f8fafc; border-radius: 18px; margin-bottom: 20px; border: 1px solid #f1f5f9; cursor: pointer; transition: transform 0.2s;"
+     onmouseover="this.style.transform='scale(1.01)'" 
+     onmouseout="this.style.transform='scale(1)'">
+
+    {# --- AVATAR + KYC BADGE --- #}
+    <div style="position: relative; flex-shrink: 0;">
+        <div style="width: 58px; height: 58px; border-radius: 50%; overflow: hidden; border: 2.5px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+            {% if order.order_source.customer.profile_picture %}
+                <img src="{{ order.order_source.customer.profile_picture.url }}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='/static/images/user.png'">
+            {% else %}
+                <img src="/static/images/user.png" style="width: 100%; height: 100%; object-fit: cover;">
+            {% endif %}
+        </div>
+        
+        {# --- UNIVERSAL KYC CHECK --- #}
+        {# This checks the dictionary first, then falls back to the actual profile status #}
+        {% if data.is_kyc_approved or order.order_source.customer.kyc_profile.status == 'APPROVED' %}
+        <div style="position: absolute; bottom: 0px; right: 0px; background: #9539cb; color: white; font-size: 0.55rem; padding: 2px 6px; border-radius: 6px; font-weight: 900; border: 2px solid white;">
+            KYC
+        </div>
+        {% endif %}
+    </div>
+
+    <div style="margin-left: 15px; flex-grow: 1;">
+        <div style="font-size: 0.65rem; color: #94a3b8; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">
+            Customer
+        </div>
+        <div style="font-size: 1.1rem; font-weight: 900; color: #1e293b; line-height: 1.1;">
+            {{ order.order_source.customer.full_name }}
+        </div>
+    </div>
+
+    <div style="text-align: right;">
+        <div style="font-size: 0.65rem; color: #94a3b8; font-weight: 800; text-transform: uppercase; margin-bottom: 2px;">Status</div>
+        <div style="font-weight: 800; color: #9539cb; font-size: 0.85rem;">{{ order.status|title }}</div>
+    </div>
+</div>
+
+{# --- LOCATION BOX --- #}
+<div class="om-location-box">
+    <div class="loc-row">
+        <div class="loc-icon">🏪</div>
+        <div class="loc-data">
+            <h6>PICK UP LOCATION</h6>
+            {% for pid, loc in order.pickup_locations.items %}
+                {% if forloop.first %}
+                <p>{{ loc.address }}</p>
+                {% endif %}
+            {% empty %}
+                <p>Central Hub (Default)</p>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="loc-row">
+        <div class="loc-icon">📍</div>
+        <div class="loc-data">
+            <h6>DELIVERY LOCATION</h6>
+            <p>{{ order.delivery_location.address }}</p>
+            <small>{{ order.delivery_location.city }}, {{ order.delivery_location.state }}</small>
+        </div>
+    </div>
+</div>
+
+{# --- PRODUCT LIST SECTION --- #}
+<h4 style="margin: 20px 0 10px 0; font-size:0.9rem; color:#666; text-transform:uppercase;">Items</h4>
+<div class="om-product-list">
+    {% for pid, p_data in order.products.items %}
+    <div class="om-product-item">
+        {% if p_data.image %}
+            <img src="{{ p_data.image }}" class="om-p-img">
+        {% else %}
+            <div class="om-p-img"></div>
+        {% endif %}
+        
+        <div class="om-p-details">
+            <div class="om-p-name">{{ p_data.name }}</div>
+            <div class="om-p-qty">Qty: <strong>{{ p_data.quantity }}</strong></div>
+            
+            <div class="om-p-config">
+                {% for c_pid, c_data in order.product_configurations.items %}
+                    {% if c_pid == pid %}
+                        {% for key, value in c_data.items %}
+                            <span class="config-tag">{{ key }}: {{ value }}</span>
+                        {% endfor %}
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{# --- THE HIDDEN DATA FOR THE SLIDER --- #}
+<template id="cust-template-{{ order.id }}">
+    {% with c=order.order_source.customer %}
+    <div class="cust-header-bg">
+        {% if c.kyc_profile.selfie %}
+            <img src="{{ c.kyc_profile.selfie.url }}" class="cust-avatar">
+        {% elif c.profile_picture %}
+            <img src="{{ c.profile_picture.url }}" class="cust-avatar">
+        {% else %}
+            <div class="cust-avatar" style="display:flex; align-items:center; justify-content:center; font-size:2rem; color:#ccc; background:white; margin:0 auto 15px;">
+                {{ c.first_name|slice:":1" }}{{ c.last_name|slice:":1" }}
+            </div>
+        {% endif %}
+        
+        <div class="cust-name">
+            {% if c.kyc_profile %}
+                {{ c.kyc_profile.full_name_on_id }}
+            {% else %}
+                {{ c.get_full_name|default:"Guest Customer" }}
+            {% endif %}
+        </div>
+        <div class="cust-username">@{{ c.username }}</div>
+    </div>
+
+    <div class="cust-body">
+        <div class="contact-row">
+            <div class="c-icon">✉️</div>
+            <div class="c-detail">
+                <h6>Email Address</h6>
+                <p>{{ c.user_account.email }}</p>
+            </div>
+        </div>
+
+        <!-- NEW: SOCIAL MEDIA ROW -->
+        {% if kyc and kyc.social_media_handle %}
+        <div class="contact-row">
+            <div class="c-icon">💬</div>
+            <div class="c-detail">
+                <h6>Social Media</h6>
+                <p style="display: flex; align-items: center; gap: 6px;">
+                    {% if kyc.social_media_platform == 'INSTAGRAM' %}
+                        Instagram <i class="bi bi-instagram" style="color: #E1306C;"></i> {{ kyc.social_media_handle }}
+                    {% elif kyc.social_media_platform == 'WHATSAPP' %}
+                        WhatsApp <i class="bi bi-whatsapp" style="color: #25D366;"></i> {{ kyc.social_media_handle }}
+                    {% else %}
+                        {{ kyc.get_social_media_platform_display }} <i class="bi bi-person-lines-fill"></i> {{ kyc.social_media_handle }}
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="contact-row">
+            <div class="c-icon">ℹ️</div>
+            <div class="c-detail">
+                <h6>Extra Instructions by student customer</h6>
+                <p>{{ data.extra_info }}</p>
+            </div>
+        </div>
+        
+        {% if not is_proxy_active %}
+        <!-- UPDATED: ACTION BUTTONS (Switched to Flex-wrap to accommodate 3 buttons beautifully) -->
+        <div class="c-actions" style="display: flex; flex-wrap: wrap;">
+            {% if c.phone_number %}
+            <a href="tel:{{ c.phone_number }}" class="btn-contact">📞 Call</a>
+            {% endif %}
+            <a href="mailto:{{ c.user_account.email }}" class="btn-contact">✉️ Email</a>
+
+            <!-- NEW: DYNAMIC SOCIAL ACTION BUTTON -->
+            {% if kyc and kyc.social_media_handle %}
+                {% if kyc.social_media_platform == 'WHATSAPP' %}
+                    <a href="https://wa.me/{{ kyc.social_media_handle|cut:'+'|cut:' ' }}" class="btn-contact" target="_blank">
+                        <i class="bi bi-whatsapp" style="color: #25D366;"></i> Message
+                    </a>
+                {% elif kyc.social_media_platform == 'INSTAGRAM' %}
+                    <!-- Cuts out the '@' just in case the user typed it in the DB -->
+                    <a href="https://instagram.com/{{ kyc.social_media_handle|cut:'@'|cut:' ' }}" class="btn-contact" target="_blank">
+                        <i class="bi bi-instagram" style="color: #E1306C;"></i> DM
+                    </a>
+                {% endif %}
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+    {% endwith %}
+</template>

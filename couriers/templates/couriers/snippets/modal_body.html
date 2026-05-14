@@ -1,0 +1,160 @@
+{% load humanize %}
+{% load static %}
+
+<div class="order-modal-header">
+    <div class="om-title">
+        <h3>Order Details</h3>
+        <span class="om-id">{{ order.order_id }}</span>
+    </div>
+    <div style="text-align:right;">
+        <div style="font-size:0.8rem; color:#999;">Created</div>
+        <div style="font-weight:600; font-size:0.9rem;">{{ order.created_at|date:"M d, Y" }}</div>
+    </div>
+</div>
+
+<div class="customer-corner-box" onclick="openCustomerModal('{{ order.order_id }}')">
+    <div>
+        <div class="cc-label">Customer</div>
+        <div class="cc-value">
+            {% if order.order_source.customer.kyc_profile %}
+                {{ order.order_source.customer.kyc_profile.full_name }}
+            {% else %}
+                {{ order.order_source.customer.full_name|default:"Customer" }}
+            {% endif %}
+        </div>
+    </div>
+    <div style="text-align:right;">
+        <div class="cc-label"></div>
+        <div class="cc-value" style="color:var(--primary-color);">{{ order.status|title }}</div>
+    </div>
+</div>
+
+<div class="om-location-box">
+    <div class="loc-row">
+        <div class="loc-icon">🏪</div>
+        <div class="loc-data">
+            <h6>PICK UP LOCATION</h6>
+            {% for pid, loc in order.pickup_locations.items %}
+                {% if forloop.first %}
+                <p>{{ loc.address }}</p>
+                {% endif %}
+            {% empty %}
+                <p>Central Hub (Default)</p>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="loc-row">
+        <div class="loc-icon">📍</div>
+        <div class="loc-data">
+            <h6>DELIVERY LOCATION</h6>
+            <p>{{ order.delivery_location.address }}</p>
+            <small>{{ order.delivery_location.city }}, {{ order.delivery_location.state }}</small>
+        </div>
+    </div>
+</div>
+
+<h4 style="margin: 20px 0 10px 0; font-size:0.9rem; color:#666; text-transform:uppercase;">
+    {% if is_campus %}Order Manifest (Bundles){% else %}Items{% endif %}
+</h4>
+
+<div class="om-manifest-container">
+    {% if is_campus %}
+        {% include 'couriers/snippets/campus_manifest.html' with data=order.engine_view.display_data %}
+    {% else %}
+        <div class="om-product-list">
+            {% for pid, p_data in order.products.items %}
+            <div class="om-product-item">
+                {% if p_data.image %}
+                    <img src="{{ p_data.image }}" class="om-p-img">
+                {% else %}
+                    <div class="om-p-img"></div>
+                {% endif %}
+                <div class="om-p-details">
+                    <div class="om-p-name">{{ p_data.name }}</div>
+                    <div class="om-p-qty">Qty: <strong>{{ p_data.quantity }}</strong></div>
+                    <div class="om-p-config">
+                        {% for c_pid, c_data in order.product_configurations.items %}
+                            {% if c_pid == pid %}
+                                {% for key, value in c_data.items %}
+                                    <span class="config-tag">{{ key }}: {{ value }}</span>
+                                {% endfor %}
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+
+<template id="loaded-customer-data">
+{% with c=order.order_source.customer %}
+                                    
+<div class="cust-header-bg">
+    {% if c.kyc_profile.selfie %}
+        <img src="{{ c.kyc_profile.selfie.url }}" class="cust-avatar">
+    {% elif c.profile_picture %}
+        <img src="{{ c.profile_picture.url }}" class="cust-avatar">
+    {% else %}
+        <div class="cust-avatar" style="display:flex; align-items:center; justify-content:center; font-size:2rem; color:#ccc; margin:0 auto 15px;">
+            {{ c.first_name|slice:":1" }}{{ c.last_name|slice:":1" }}
+        </div>
+    {% endif %}
+    
+    <div class="cust-name">
+        {% if c.kyc_profile %}
+            {{ c..kyc_profile.full_name}}
+        {% else %}
+            {{ c.full_name|default:"Guest Customer" }}
+        {% endif %}
+    </div>
+    <div class="cust-username">@{{ c.user_account.username }}</div>
+</div>
+
+<div class="cust-body">
+    
+    <div class="contact-row">
+        <div class="c-icon">📍</div>
+        <div class="c-detail">
+            <h6>Delivery Address</h6>
+            <p>{{ order.delivery_location.address }}</p>
+            <small style="color:#666;">{{ order.delivery_location.city }}, {{ order.delivery_location.state }}</small>
+        </div>
+    </div>
+
+    <div class="contact-row">
+        <div class="c-icon">📞</div>
+        <div class="c-detail">
+            <h6>Phone Number</h6>
+            <p>{{ c.phone_number|default:"Not Provided" }}</p>
+        </div>
+    </div>
+
+    <div class="contact-row">
+        <div class="c-icon">✉️</div>
+        <div class="c-detail">
+            <h6>Email Address</h6>
+            <p>{{ c.email }}</p>
+        </div>
+    </div>
+
+    {% if c.phone_number or c.email %}
+    <div class="c-actions">
+        {% if c.phone_number %}
+        <a href="tel:{{ c.phone_number }}" class="btn-contact">
+            <span>📞</span> Call
+        </a>
+        {% endif %}
+        
+        {% if c.email %}
+        <a href="mailto:{{ c.email }}" class="btn-contact">
+            <span>✉️</span> Email
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+</div>
+{% endwith %}
+</template>

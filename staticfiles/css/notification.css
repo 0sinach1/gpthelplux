@@ -1,0 +1,101 @@
+#main {
+    width: 100%;
+}
+
+#inboxcont {
+    display: flex;
+    flex-direction: column;
+    margin: 30px auto;
+    width: 76%;
+    padding: 30px;
+    background-color: white;
+    border-radius: 20px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+}
+
+#inboxcont h1 {
+    width: 100%;
+    padding: 10px 0 15px 0;
+}
+
+.line {
+    width: 106%;
+    align-self: center;
+    height: 1px;
+    background-color: #eee;
+}
+
+#type {
+    display: flex;
+    flex-direction: row;
+    border-bottom: 1px solid #eee;
+}
+
+#type span {
+    font-size: 18px;
+    padding: 20px 20px 15px 20px;
+    cursor: pointer;
+}
+
+.active-type {
+    border-bottom: 1.2px solid #6a3aff;
+}
+
+#readmsgs {
+    margin: 20px;
+}
+
+.unread {
+    display: flex;
+    flex-direction: column;
+}
+
+.read {
+    display: none;
+    flex-direction: column;
+}
+
+.unread .msg {
+    border: 1.5px solid #6a3aff;
+}
+
+.read .msg {
+    border: 1px solid #ccc;
+}
+
+.msg {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 7px;
+    padding: 10px 20px;
+    margin-bottom: 10px;
+}
+
+.msg div {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.mark-read {
+    font-size: 10px;
+    width: fit-content;
+    background-color: #6a3aff;
+    border-color: #6a3aff;
+}
+
+.date {
+    width: fit-content;
+    padding: 5px;
+    background-color: white;
+    border: 0.8px solid #ccc;
+    border-radius: 5px;
+    font-size: 10px;
+    color: #7e7e7e;
+}
+
+.trash {
+    width: 17px;
+}

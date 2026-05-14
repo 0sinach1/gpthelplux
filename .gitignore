@@ -1,0 +1,45 @@
+# Python
+*.pyc
+__pycache__/
+.Python
+venv/
+pip-log.txt
+pip-delete-this-directory.txt
+LUXA_ECOMMERCE/settings.py
+
+# Django
+*.log
+*.pot
+*.mo
+db.sqlite3
+media/
+products/ # If you are collecting product files to a specific directory that shouldn't be tracked.
+local_settings.py # Or any other file containing sensitive local configurations.
+environments3d/
+products3d/
+
+# NPM NodeJS
+node_modules/
+dist/
+
+
+# IDEs and Editors
+.idea/
+.vscode/
+*.swp
+*~
+.DS_Store
+
+# Database
+.sql
+
+# Operating System
+Thumbs.db
+
+# Virtual Environment (if not named venv or env)
+# For example, if your virtual environment is named my_env:
+# my_env/
+
+# Environment Variables
+.env
+settings.py

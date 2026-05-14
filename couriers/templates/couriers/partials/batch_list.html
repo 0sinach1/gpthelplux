@@ -1,0 +1,65 @@
+{# --- 1. THE UNIVERSAL RADAR --- #}
+{% if assignments.forming %}
+<div class="radar-container" style="margin-bottom: 25px;">
+    <div class="radar-circle" style="animation-delay: 0s;"></div>
+    <div class="radar-circle" style="animation-delay: 1.2s;"></div>
+    <div class="scan-line"></div>
+    
+    <div class="radar-content">
+        <div style="font-size: 2.5rem; margin-bottom: 10px;">📦</div>
+        <h3 style="color: white; font-weight: 900; margin: 0; letter-spacing: 3px; font-size: 1.2rem;">GROUPING BATCH</h3>
+        <p style="color: #d6d6d6; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; margin-top: 8px; letter-spacing: 1px;">
+            Incoming job detected. Optimizing your route...
+        </p>
+    </div>
+</div>
+{% endif %}
+
+{# --- 2. THE REVEAL: Assigned batches --- #}
+{% for item in assignments.new %}
+<div class="batch-wrapper">
+    
+    {% if item.campus_orders.all %}
+        {# --- CAMPUS CARD --- #}
+        {% with campus_ref=item.campus_orders.first %}
+        <div class="new-batch-card campus-batch">
+            <div class="nb-header">
+                <span class="nb-network">CAMPUS NETWORK</span>
+                <span class="nb-status">READY</span>
+            </div>
+            
+            <div>
+                <div class="nb-title">{{ campus_ref.raw_order.building.name }}</div>
+                <div class="nb-count">Orders Ready: {{ item.campus_orders.count }}</div>
+            </div>
+
+            <button class="btn-start-batch" onclick="startBatch('{{ item.batch_id }}', true)">
+                Accept & Start Pickup
+            </button>
+        </div>
+        {% endwith %}
+
+    {% else %}
+        {# --- STANDARD CARD --- #}
+        <div class="new-batch-card standard-batch" onclick="toggleBatch('{{ item.batch_id }}')">
+            <div class="nb-header">
+                <span class="nb-network">STANDARD NETWORK</span>
+                <span class="nb-status">READY</span>
+            </div>
+            
+            <div class="nb-count">Orders Ready: {{ item.orders.count }}</div>
+            
+            <button class="btn-start-batch" onclick="event.stopPropagation(); startBatch('{{ item.batch_id }}', false)">
+                Start Batch
+            </button>
+        </div>
+    {% endif %}
+
+</div>
+{% empty %}
+    {% if not assignments.forming %}
+        <div style="text-align:center; padding:60px 20px; color:#94a3b8;">
+            <p style="font-weight: 600; font-size: 0.9rem;">No assignments currently.</p>
+        </div>
+    {% endif %}
+{% endfor %}

@@ -1,0 +1,39 @@
+{% load humanize %}
+{% for order in orders %}
+<tr class="clickable-row" 
+    hx-get="{% url 'escrow_campus_order_details' order.pk %}" 
+    hx-target="#order-details-content"
+    onclick="openOrderModal()">
+    
+    <td><span style="font-family: monospace; font-size: 0.85rem; font-weight: 600; color: var(--primary);">{{ order.order_number }}</span></td>
+    
+    <td>
+        <div style="font-weight: 600; font-size: 0.9rem;">{{ order.customer.user_account.first_name }} {{ order.customer.user_account.last_name }}</div>
+        <div style="font-size: 0.75rem; color: var(--text-muted);">@{{ order.customer.user_account.username }}</div>
+    </td>
+    
+    <td style="color: var(--text-muted); font-size: 0.85rem;">{{ order.order_date|date:"M d, H:i" }}</td>
+    
+    <td style="text-align: center;"><span class="badge" style="background: #e2e8f0; color: #334155;">{{ order.total_physical_packs_db }}</span></td>
+    
+    <td>₦{{ order.delivery_fee|intcomma }}</td>
+    <td style="font-weight: 700;">₦{{ order.total_order_cost|intcomma }}</td>
+    
+    <td>
+        {% if order.status == 'delivered' or order.status == 'completed' %}
+            <span class="badge badge-credit">DELIVERED</span>
+        {% elif order.status == 'cancelled' or order.status == 'refunded' %}
+            <span class="badge badge-debit">CANCELLED</span>
+        {% else %}
+            <span class="badge badge-lock">{{ order.status|upper }}</span>
+        {% endif %}
+    </td>
+</tr>
+{% empty %}
+<tr>
+    <td colspan="7" style="text-align: center; padding: 40px; color: var(--text-muted);">
+        <i class="bi bi-inbox" style="font-size: 2rem; display: block; margin-bottom: 10px;"></i>
+        No orders found matching that query.
+    </td>
+</tr>
+{% endfor %}

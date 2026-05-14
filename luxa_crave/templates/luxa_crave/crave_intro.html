@@ -1,0 +1,132 @@
+{% extends "luxa_crave/base_crave.html" %}
+{% load static %}
+{% load hosts %}
+
+{% block title %}
+    Welcome to Luxa Campus Services
+{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/luxa_crave/crave_intro.css' %}">
+{% endblock %}
+
+{% block content %}
+<main class="crave-content">
+<div class="intro-wrapper fade-in-up">
+    
+    <div class="intro-hero">
+        <div class="hero-content">
+            <div class="hero-badge">About Luxa Crave</div>
+            <h1>Satisfy Your Campus Cravings.</h1>
+            <p>We are bridging the gap between you and your favorite meals, products and services. Luxa Campus brings the best cafeterias, marts, and essential outlets straight to your fingertips with lightning-fast delivery and secure escrow payments.</p>
+            
+            <div class="hero-actions">
+                <a href="{% url 'crave_outlet_sections' %}" class="btn-primary-hero" id="explore-outlet">
+                    Explore Outlets <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+        <div class="hero-graphic">
+            <div class="graphic-circle">
+                <i class="bi bi-shop"></i>
+            </div>
+            <div class="float-icon fi-1"><i class="bi bi-cup-hot-fill"></i></div>
+            <div class="float-icon fi-2"><i class="bi bi-bag-heart-fill"></i></div>
+            <div class="float-icon fi-3"><i class="bi bi-box-seam-fill"></i></div>
+        </div>
+    </div>
+
+    <div class="intro-features-container">
+        <div class="intro-features-track">
+            
+            <div class="features-group">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="bi bi-lightning-charge-fill"></i></div>
+                    <h3>Lightning Fast</h3>
+                    <p>Get your food and essentials delivered to your dorm or class in 10-15 minutes. No more standing in long cafeteria queues.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="bi bi-box-seam-fill"></i></div>
+                    <h3>Smart Pack Builder</h3>
+                    <p>Customize your meals perfectly. Group items into custom takeaway packs, add side dishes, and see your exact delivery calculation.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="bi bi-shield-lock-fill"></i></div>
+                    <h3>Secure Escrow</h3>
+                    <p>Your funds are safe. We use a locked escrow wallet system, ensuring your money is only released when your food arrives safely.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="bi bi-person-check-fill"></i></div>
+                    <h3>Trusted Proxy</h3>
+                    <p>Busy in class or studying? Set up a trusted proxy to securely receive your campus deliveries on your behalf when you are away.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="bi bi-bookmark-heart-fill"></i></div>
+                    <h3>1-Click Presets</h3>
+                    <p>Save your ultimate meal combinations as custom presets. Re-order your regular favorites instantly without building a new pack every time.</p>
+                </div>
+            </div>
+
+            <div class="features-group" aria-hidden="true">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="bi bi-lightning-charge-fill"></i></div>
+                    <h3>Lightning Fast</h3>
+                    <p>Get your food and essentials delivered to your dorm or class in 10-15 minutes. No more standing in long cafeteria queues.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="bi bi-box-seam-fill"></i></div>
+                    <h3>Smart Pack Builder</h3>
+                    <p>Customize your meals perfectly. Group items into custom takeaway packs, add side dishes, and see your exact delivery calculation.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="bi bi-shield-lock-fill"></i></div>
+                    <h3>Secure Escrow</h3>
+                    <p>Your funds are safe. We use a locked escrow wallet system, ensuring your money is only released when your food arrives safely.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="bi bi-person-check-fill"></i></div>
+                    <h3>Trusted Proxy</h3>
+                    <p>Busy in class or studying? Set up a trusted proxy to securely receive your campus deliveries on your behalf when you are away.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="bi bi-bookmark-heart-fill"></i></div>
+                    <h3>1-Click Presets</h3>
+                    <p>Save your ultimate meal combinations as custom presets. Re-order your regular favorites instantly without building a new pack every time.</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="intro-steps-section">
+        <h2 class="section-heading">How It Works</h2>
+        <div class="steps-container">
+            <div class="step-item">
+                <div class="step-number">1</div>
+                <h4>Select Campus</h4>
+                <p>Choose your university and browse available cafeterias and marts.</p>
+            </div>
+            <div class="step-connector"></div>
+            <div class="step-item">
+                <div class="step-number">2</div>
+                <h4>Build Your Delivery Bag</h4>
+                <p>Drag, drop, and bundle your favorite meals into custom packs.</p>
+            </div>
+            <div class="step-connector"></div>
+            <div class="step-item">
+                <div class="step-number">3</div>
+                <h4>Checkout & Enjoy</h4>
+                <p>Pay securely with your wallet and track your fast delivery.</p>
+            </div>
+        </div>
+    </div>
+
+</div>
+</main>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    
+</script>
+{% endblock %}

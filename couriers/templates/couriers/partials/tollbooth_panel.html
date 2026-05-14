@@ -1,0 +1,379 @@
+<style>
+    .tb-container { background: #f8fafc; border-radius: 16px; padding: 20px; border: 2px solid #e2e8f0; margin-top: 20px; }
+    
+    .tb-outlet-card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 2px solid transparent; transition: all 0.3s ease; }
+    .tb-outlet-card.standby { opacity: 0.65; border-color: #e2e8f0; }
+    
+    .tb-outlet-card.active-outlet { 
+        opacity: 1; border-color: #3b82f6; 
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2), 0 8px 20px rgba(59, 130, 246, 0.15); 
+        transform: scale(1.02); 
+    }
+    
+    .tb-outlet-card.partial-standby { 
+        opacity: 0.85; border-color: #f59e0b; background: #fffbeb; 
+        border-width: 2px; border-style: dashed;
+    }
+    
+    .tb-outlet-card.cleared { opacity: 0.6; border-color: #10b981; }
+    .tb-outlet-card.locked-permanently { opacity: 0.6; filter: grayscale(10%); }
+    
+    .tb-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed #e2e8f0; padding-bottom: 10px; margin-bottom: 10px; }
+    
+    .btn-arrive { background: #1e293b; color: white; border: none; padding: 8px 15px; border-radius: 8px; font-weight: 800; font-size: 0.8rem; cursor: pointer; transition: 0.2s; }
+    .btn-arrive:hover { background: #334155; }
+    .btn-arrive.active { background: #3b82f6; color: white; pointer-events: none; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3); }
+    .btn-arrive.cleared { background: #10b981; color: white; pointer-events: none; }
+    .btn-arrive.locked-permanently { background: #059669; color: white; pointer-events: none !important; cursor: not-allowed; }
+    
+    .btn-arrive.partial { background: #f59e0b; color: white; box-shadow: 0 4px 10px rgba(245, 158, 11, 0.2); }
+    .btn-arrive.partial:hover { background: #d97706; }
+    
+    .tb-order-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 15px 12px; background: #f1f5f9; border-radius: 10px; margin-bottom: 12px; border: 1px solid #e2e8f0; }
+    .tb-badge { font-size: 0.7rem; font-weight: 800; padding: 4px 8px; border-radius: 6px; text-align: center; }
+    .tb-badge.waiting { background: #fef3c7; color: #d97706; display: none; }
+    .tb-badge.purchased { background: #dcfce7; color: #16a34a; display: none; }
+    
+    .btn-purchase { background: white; border: 1px solid #cbd5e1; color: #64748b; padding: 10px 14px; border-radius: 8px; font-weight: 900; font-size: 0.8rem; cursor: pointer; transition: 0.2s; width: 100%; margin-top: 5px; pointer-events: none; opacity: 0.5; }
+    
+    .btn-purchase.unlocked { border-color: #3b82f6; color: #3b82f6; opacity: 1; pointer-events: auto; }
+    .btn-purchase.unlocked:hover { background: #eff6ff; }
+    
+    .btn-purchase.done { background: #10b981; color: white; border-color: #10b981; opacity: 1; pointer-events: auto; }
+    .btn-purchase.done:hover { background: #059669; } 
+    
+    .btn-purchase.locked-forever { background: #059669; color: white; border-color: #059669; opacity: 0.8; pointer-events: none !important; cursor: not-allowed; }
+
+    #btn-final-transit { width: 100%; color: white; border: none; padding: 16px; border-radius: 12px; font-size: 1rem; font-weight: 900; letter-spacing: 0.5px; cursor: pointer; transition: 0.3s; margin-top: 10px; }
+    #btn-final-transit.unlocked { background: #8b5cf6; box-shadow: 0 10px 20px rgba(139, 92, 246, 0.3); }
+    #btn-final-transit.locked { background: #3b82f6; box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3); }
+</style>
+
+<div class="tb-container" id="tollbooth-main">
+    <h3 style="margin: 0 0 15px 0; font-size: 1.1rem; color: #1e293b; display: flex; align-items: center; gap: 8px;">
+        <i class="bi bi-shield-lock-fill" style="color: #8b5cf6;"></i> Security Tollbooth
+    </h3>
+
+    {% regroup item.campus_orders.all|dictsort:"engine_view.engine_payload.delivery_point.outlet_name" by engine_view.engine_payload.delivery_point.outlet_name as outlet_groups %}
+    
+    {% for outlet in outlet_groups %}
+    <div class="tb-outlet-card outlet-card {% if outlet.list.0.ticked_at_outlet %}active-outlet{% else %}standby{% endif %}" 
+         id="card-{{ forloop.counter }}"
+         data-outlet-name="{{ outlet.grouper }}">
+         
+        <div class="tb-header">
+            <h4 style="margin: 0; color: #334155; font-weight: 900; font-size: 1rem;">{{ outlet.grouper }}</h4>
+            <button class="btn-arrive" id="btn-arrive-{{ forloop.counter }}" onclick="triggerArrival('{{ forloop.counter }}')">
+                📍 I HAVE ARRIVED
+            </button>
+        </div>
+
+        <div class="tb-orders-list">
+            {% for order in outlet.list %}
+            {% if order.status not in 'completed,delivered,cancelled,refunded,pending_cancellation' %}
+            
+            {% with is_purchased=order.ticked_purchased %}
+            <div class="tb-order-row tb-order-tracker">
+                
+                <div style="flex: 1; padding-right: 15px;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                        <div>
+                            <div style="font-weight: 900; color: #1e293b; font-size: 1.05rem; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                                <i class="bi bi-person-circle" style="color: #94a3b8;"></i> 
+                                {{ order.customer.user_account.first_name|default:"Customer" }} {{ order.customer.user_account.last_name }}
+                            </div>
+                            <div style="font-size: 0.8rem; color: #ef4444; font-weight: 800; display: flex; align-items: center; gap: 5px;">
+                                <i class="bi bi-geo-alt-fill"></i>
+                                {{ order.building.name|default:"Campus Location" }}
+                            </div>
+                        </div>
+                        <div style="font-size: 0.75rem; color: #64748b; font-weight: 800; background: #e2e8f0; padding: 4px 8px; border-radius: 8px; height: fit-content;">
+                            {{ order.total_physical_packs_db }} Courions
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        {% for pack in order.packs.all %}
+                            {% with first_item=pack.items.first %}
+                            <div style="background: white; border: 1px solid #e2e8f0; border-left: 4px solid #8b5cf6; border-radius: 8px; padding: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                                <div style="font-size: 0.7rem; font-weight: 900; color: #8b5cf6; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; display: flex; justify-content: space-between; align-items: center;">
+                                    <span>
+                                        <i class="bi bi-box-seam-fill"></i> PHYSICAL PACK {{ forloop.counter }}
+                                        {% if first_item.product.section.name %}
+                                            <span style="color: #94a3b8; margin-left: 4px;">• {{ first_item.product.section.name }}</span>
+                                        {% endif %}
+                                    </span>
+                                    <span style="background: #f1f5f9; color: #475569; padding: 3px 6px; border-radius: 4px; font-size: 0.65rem;">
+                                        {{ pack.pack_size_config|default:pack.pack_size|default:"Standard Pack" }}
+                                    </span>
+                                </div>
+                                {% for p_item in pack.items.all %}
+                                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px; font-size: 0.85rem;">
+                                        <span style="font-weight: 900; color: #3b82f6; font-size: 0.95rem;">{{ p_item.quantity }}x</span> 
+                                        <span style="color: #334155; font-weight: 700;">{{ p_item.product }}</span>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            {% endwith %}
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div style="display: flex; flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 5px; width: 110px;">
+                    <span class="tb-badge waiting" id="badge-wait-{{ order.pk }}" {% if is_purchased %}style="display:none;"{% endif %}>⏳ WAITING</span>
+                    <span class="tb-badge purchased" id="badge-done-{{ order.pk }}" {% if is_purchased %}style="display:block;"{% endif %}>✅ SECURED</span>
+                    
+                    {% if is_purchased %}
+                        <button class="btn-purchase purchase-group-{{ forloop.parentloop.counter }} done locked-forever" id="btn-purch-{{ order.pk }}">
+                            🔒 SECURED
+                        </button>
+                    {% else %}
+                        <button class="btn-purchase purchase-group-{{ forloop.parentloop.counter }} {% if outlet.list.0.ticked_at_outlet %}unlocked{% endif %}" id="btn-purch-{{ order.pk }}" onclick="togglePurchased('{{ order.pk }}', this)">
+                            PURCHASED
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+            {% endwith %}
+            
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+
+    <button id="btn-final-transit" class="locked" onclick="submitFinalTransit()">
+        ✅ NOTHING TO UPDATE, PROCEED
+    </button>
+</div>
+
+<script>
+    let initialStates = {};
+    let initialActiveCardId = null;
+
+    function evaluateCardState(card) {
+        const totalBtns = card.querySelectorAll('.btn-purchase').length;
+        const lockedBtns = card.querySelectorAll('.btn-purchase.locked-forever').length;
+        const doneBtns = card.querySelectorAll('.btn-purchase.done').length; 
+        const arriveBtn = card.querySelector('.btn-arrive');
+
+        if (totalBtns > 0 && totalBtns === lockedBtns) {
+            card.classList.remove('active-outlet', 'standby', 'partial-standby');
+            card.classList.add('cleared', 'locked-permanently');
+            arriveBtn.innerText = "🔒 OUTLET CLEARED";
+            arriveBtn.className = "btn-arrive locked-permanently";
+            return;
+        }
+
+        if (totalBtns > 0 && totalBtns === doneBtns) {
+            card.classList.remove('active-outlet', 'standby', 'partial-standby');
+            card.classList.add('cleared');
+            arriveBtn.innerText = "✅ OUTLET CLEARED"; 
+            arriveBtn.className = "btn-arrive cleared";
+            return;
+        }
+
+        if (card.classList.contains('active-outlet')) {
+            card.classList.remove('standby', 'partial-standby', 'cleared');
+            arriveBtn.innerText = "📍 CURRENT LOCATION";
+            arriveBtn.className = "btn-arrive active";
+            return;
+        }
+
+        if (doneBtns > 0 && doneBtns < totalBtns) {
+            card.classList.remove('active-outlet', 'standby', 'cleared');
+            card.classList.add('partial-standby');
+            arriveBtn.innerText = "↩️ RETURN LATER";
+            arriveBtn.className = "btn-arrive partial";
+            return;
+        }
+
+        card.classList.remove('active-outlet', 'partial-standby', 'cleared');
+        card.classList.add('standby');
+        arriveBtn.innerText = "📍 I HAVE ARRIVED";
+        arriveBtn.className = "btn-arrive"; 
+    }
+
+    function setExclusiveActiveLocation(targetCard) {
+        document.querySelectorAll('.outlet-card').forEach(card => {
+            if (card === targetCard) {
+                card.classList.add('active-outlet');
+                
+                card.querySelectorAll('.btn-purchase:not(.locked-forever)').forEach(pBtn => {
+                    if (!pBtn.classList.contains('done')) {
+                        pBtn.classList.add('unlocked');
+                    }
+                });
+            } else {
+                card.classList.remove('active-outlet');
+                
+                card.querySelectorAll('.btn-purchase:not(.locked-forever)').forEach(pBtn => {
+                    pBtn.classList.remove('unlocked');
+                });
+            }
+            
+            // 🌍 THE FIX: If the outlet has 0 active orders left, completely erase it from the UI!
+            if (card.querySelectorAll('.tb-order-row').length === 0) {
+                card.style.display = 'none';
+                card.classList.remove('outlet-card'); // Prevents it from accidentally becoming active
+                return; 
+            }
+
+            evaluateCardState(card);
+        });
+        checkVaultDoor(); 
+    }
+
+    function initTollboothUI() {
+        // 🌍 THE FIX: 1. Erase empty outlets immediately before doing any logic
+        document.querySelectorAll('.tb-outlet-card').forEach(card => {
+            if (card.querySelectorAll('.tb-order-row').length === 0) {
+                card.style.display = 'none';
+                card.classList.remove('outlet-card', 'active-outlet'); // Strip classes so JS ignores it
+            }
+        });
+
+        // 2. Setup the remaining valid buttons
+        document.querySelectorAll('.btn-purchase').forEach(btn => {
+            initialStates[btn.id] = btn.classList.contains('done');
+        });
+        
+        const activeCard = document.querySelector('.outlet-card.active-outlet');
+        if (activeCard) {
+            initialActiveCardId = activeCard.id;
+            
+            activeCard.querySelectorAll('.btn-purchase:not(.locked-forever)').forEach(pBtn => {
+                if (!pBtn.classList.contains('done')) {
+                    pBtn.classList.add('unlocked');
+                }
+            });
+        }
+
+        // 3. Evaluate only the surviving cards
+        document.querySelectorAll('.outlet-card').forEach(card => {
+            evaluateCardState(card);
+        });
+        checkVaultDoor();
+    }
+
+    // 🚀 Run instantly! No more waiting for a page reload!
+    initTollboothUI();
+
+    function triggerArrival(cardId) {
+        const targetCard = document.getElementById(`card-${cardId}`);
+        const totalBtns = targetCard.querySelectorAll('.btn-purchase').length;
+        const doneBtns = targetCard.querySelectorAll('.btn-purchase.done').length;
+        
+        if (targetCard.classList.contains('locked-permanently') || (totalBtns > 0 && totalBtns === doneBtns)) {
+            return; 
+        }
+        setExclusiveActiveLocation(targetCard);
+    }
+
+    function togglePurchased(orderId, btnElement) {
+        if (btnElement.classList.contains('locked-forever')) return;
+        
+        const parentCard = btnElement.closest('.outlet-card');
+
+        if (btnElement.classList.contains('done')) {
+            btnElement.classList.remove('done');
+            btnElement.classList.add('unlocked');
+            btnElement.innerText = "PURCHASED";
+            document.getElementById(`badge-wait-${orderId}`).style.display = 'block';
+            document.getElementById(`badge-done-${orderId}`).style.display = 'none';
+        } else {
+            btnElement.classList.add('done');
+            btnElement.classList.remove('unlocked');
+            btnElement.innerText = "SECURED"; 
+            document.getElementById(`badge-wait-${orderId}`).style.display = 'none';
+            document.getElementById(`badge-done-${orderId}`).style.display = 'block';
+        }
+
+        const totalBtns = parentCard.querySelectorAll('.btn-purchase').length;
+        const doneBtns = parentCard.querySelectorAll('.btn-purchase.done').length;
+
+        if (totalBtns > 0 && totalBtns === doneBtns) {
+            parentCard.classList.remove('active-outlet'); 
+        } else {
+            if (!parentCard.classList.contains('active-outlet')) {
+                setExclusiveActiveLocation(parentCard);
+                return; 
+            }
+        }
+
+        evaluateCardState(parentCard);
+        checkVaultDoor();
+    }
+
+    function checkVaultDoor() {
+        const vaultBtn = document.getElementById('btn-final-transit');
+        let hasChanges = false;
+        
+        document.querySelectorAll('.btn-purchase').forEach(btn => {
+            if (initialStates[btn.id] !== btn.classList.contains('done')) {
+                hasChanges = true;
+            }
+        });
+
+        const currentActiveCard = document.querySelector('.outlet-card.active-outlet');
+        const currentActiveId = currentActiveCard ? currentActiveCard.id : null;
+        if (currentActiveId !== initialActiveCardId) {
+            hasChanges = true;
+        }
+
+        vaultBtn.disabled = false;
+
+        if (hasChanges) {
+            vaultBtn.innerHTML = "🔒 SAVE UPDATES & RECALCULATE";
+            vaultBtn.className = "unlocked";
+        } else {
+            vaultBtn.innerHTML = "✅ NOTHING TO UPDATE, PROCEED";
+            vaultBtn.className = "locked";
+        }
+    }
+
+    function submitFinalTransit() {
+        const vaultBtn = document.getElementById('btn-final-transit');
+        vaultBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SAVING & RECALCULATING...';
+        vaultBtn.disabled = true;
+
+        let securedOrderIds = [];
+        document.querySelectorAll('.btn-purchase.done').forEach(btn => {
+            securedOrderIds.push(btn.id.replace('btn-purch-', ''));
+        });
+
+        let activeOutletName = null;
+        const currentActiveCard = document.querySelector('.outlet-card.active-outlet');
+        if (currentActiveCard) {
+            activeOutletName = currentActiveCard.getAttribute('data-outlet-name');
+        }
+
+        fetch("/couriers/api/tollbooth-transit/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]') ? document.querySelector('[name=csrfmiddlewaretoken]').value : '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ 
+                batch_id: "{{ item.batch_id }}",
+                secured_orders: securedOrderIds,
+                active_outlet: activeOutletName 
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            }
+            else {
+                alert("Sync Error: " + data.error);
+                checkVaultDoor(); 
+            }
+        })
+        .catch(err => {
+            console.error("Tollbooth Error:", err);
+            alert("Network error occurred.");
+            checkVaultDoor(); 
+        });
+    }
+</script>

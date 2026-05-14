@@ -1,0 +1,112 @@
+{% extends 'couriers/courierbase.html' %}
+{% load static %}
+
+{% block title %}Verify Delivery Authorization{% endblock %}
+
+{% block content %}
+<div style="min-height: calc(100vh - 70px); background: #f8f9fa; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;">
+    
+    <div style="background: white; width: 100%; max-width: 400px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.08); overflow: hidden;">
+        
+        <div style="background: #1e293b; color: white; padding: 30px 20px; text-align: center;">
+            <div style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; margin-bottom: 5px;">Delivery Authorization</div>
+            <h2 style="margin: 0;">
+            {# 1. Check Campus Path: order -> outlet -> university -> profile_id #}
+            {% if order.order_id %}
+            {# CAMPUS ORDER: Use the new professional_id property #}
+            {{ order.professional_id }}
+                
+            {% elif order.public_order_id %}
+                {# 2. This is a STANDARD Order - Show Snipped ID #}
+                Order #{{ order.public_order_id|slice:":12" }}
+            {% else %}
+                {# 3. Fallback - Snip whatever ID is available #}
+                Order #{{ order.order_id|slice:":12" }}
+            {% endif %}
+        </h2>
+        </div>
+
+        <div style="padding: 30px 20px; text-align: center;">
+            
+            {% if messages %}
+                {% for message in messages %}
+                    <div style="color: #e53e3e; background: #fff5f5; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-weight: 600; border: 1px solid #feb2b2;">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <div id="pin-section">
+                <p style="color: #475569; font-size: 1rem; margin-bottom: 30px;">
+                    Hand device to <strong>{% if order.customer.first_name %}{{ order.customer.first_name }} {{ order.customer.last_name }}{% else %}{{ order.customer.user_account.username }}{% endif %}</strong> to enter their secure 4-digit PIN.
+                </p>
+
+                <form method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="auth_method" value="pin">
+                    <input type="password" name="pin" id="courier_pin_input" maxlength="4" pattern="\d{4}" required autofocus
+                           style="width: 100%; max-width: 250px; padding: 15px; border: 3px solid #e2e8f0; border-radius: 12px; font-size: 2.5rem; letter-spacing: 20px; text-align: center; margin-bottom: 30px; outline: none;"
+                           placeholder="••••">
+                    
+                    <button type="submit" style="width: 100%; background: #22c55e; color: white; border: none; padding: 18px; border-radius: 12px; font-weight: 800; font-size: 1.1rem; cursor: pointer;">
+                        VERIFY PIN
+                    </button>
+                </form>
+
+                {% if order.is_auth_ready %}
+                <div style="margin-top: 15px; text-align: right;">
+                    <button type="button" onclick="toggleAuth('seed')" style="background: none; border: none; color: #3b82f6; font-size: 0.85rem; cursor: pointer; text-decoration: underline;">
+                        Use Seed Phrase instead?
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+
+            <div id="seed-section" style="display: none;">
+                <p style="color: #475569; font-size: 1rem; margin-bottom: 30px;">
+                    Enter the <strong>Seed Phrase</strong> provided by the authorized proxy.
+                </p>
+
+                <form method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="auth_method" value="seed">
+                    <input type="text" name="pin" required
+                           style="width: 100%; padding: 15px; border: 3px solid #9539cb; border-radius: 12px; font-size: 1.2rem; text-align: center; margin-bottom: 30px; outline: none;"
+                           placeholder="Enter phrase here...">
+                    
+                    <button type="submit" style="width: 100%; background: #9539cb; color: white; border: none; padding: 18px; border-radius: 12px; font-weight: 800; font-size: 1.1rem; cursor: pointer;">
+                        VERIFY SEED PHRASE
+                    </button>
+                </form>
+
+                <div style="margin-top: 15px; text-align: left;">
+                    <button type="button" onclick="toggleAuth('pin')" style="background: none; border: none; color: #64748b; font-size: 0.85rem; cursor: pointer;">
+                        ← Back to PIN
+                    </button>
+                </div>
+            </div>
+
+            <div style="margin-top: 20px;">
+                <a href="{% url 'courier_dashboard' %}" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; font-weight: 600;">
+                    Cancel & Return
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleAuth(mode) {
+    const pinSection = document.getElementById('pin-section');
+    const seedSection = document.getElementById('seed-section');
+
+    if (mode === 'seed') {
+        pinSection.style.display = 'none';
+        seedSection.style.display = 'block';
+    } else {
+        pinSection.style.display = 'block';
+        seedSection.style.display = 'none';
+    }
+}
+</script>
+{% endblock %}

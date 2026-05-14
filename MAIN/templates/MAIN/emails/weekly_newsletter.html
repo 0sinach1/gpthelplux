@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        /* Base Resets */
+        body { margin: 0; padding: 0; background-color: #f4f4f7; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+        
+        /* Container */
+        .email-wrapper { width: 100%; background-color: #f4f4f7; padding: 40px 0; }
+        .email-content { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        
+        /* Sections */
+        .header { background-color: #000000; padding: 25px; text-align: center; }
+        .body-content { padding: 40px; color: #475569; line-height: 1.6; font-size: 16px; }
+        
+        /* Typography */
+        h1 { margin: 0 0 20px; color: #1e293b; font-size: 22px; font-weight: 700; }
+        p { margin: 0 0 20px; }
+        
+        /* Buttons */
+        .btn-primary { display: inline-block; background-color: #960ffa; color: #ffffff !important; padding: 14px 30px; border-radius: 8px; text-decoration: none; font-weight: bold; text-align: center; }
+        .btn-crave { display: inline-block; background-color: #db2777; color: #ffffff !important; padding: 14px 30px; border-radius: 8px; text-decoration: none; font-weight: bold; text-align: center; margin-top: 10px; }
+        .btn-secondary { color: #960ffa; text-decoration: underline; font-weight: 600; }
+
+        /* KYC Alert Box */
+        .kyc-box { background-color: #fef2f2; border-left: 4px solid #ef4444; padding: 15px; margin: 20px 0; border-radius: 4px; font-size: 14px; color: #991b1b; }
+
+        /* Footer */
+        .footer { padding: 30px; text-align: center; color: #94a3b8; font-size: 12px; background-color: #f4f4f7; }
+        .social-links { margin-bottom: 15px; }
+        .footer a { color: #94a3b8; text-decoration: none; margin: 0 5px; }
+    </style>
+</head>
+<body>
+    <div class="email-wrapper">
+        <div class="email-content">
+            
+            <div class="header">
+                <img src="https://luxa-media.s3.eu-north-1.amazonaws.com/static/LUXA.png" alt="LUXA" style="height: 45px; vertical-align: middle;">
+            </div>
+
+            <div class="body-content">
+                <h1>Your Weekly Luxa Update 💎</h1>
+                
+                <p>Good day,</p>
+                <p>
+                    Thank you for being a valued member of the Luxa community! We are committed to making your shopping experience seamless and your campus life much easier.
+                </p>
+                
+                <div style="background-color: #fdf2f8; border: 1px solid #fbcfe8; padding: 25px; border-radius: 8px; margin: 30px 0; text-align: center;">
+                    <h2 style="color: #be185d; margin-top: 0; font-size: 20px;">Hungry? Let us handle that. 🍔</h2>
+                    <p style="color: #831843; font-size: 15px; margin-bottom: 20px;">
+                        Got a mid-day craving or pulling a late-night study session? <strong>Luxa Crave</strong> is now officially live! We are bringing your campus cafeteria favorites and essential snacks right to your hostel door.
+                    </p>
+                    <a href="https://crave.luxa.ng/" class="btn-crave" target="_blank">Explore Luxa Crave &rarr;</a>
+                </div>
+
+                {% if kyc_status != 'APPROVED' %}
+                <div class="kyc-box">
+                    <strong>⚠️ Important Delivery Reminder:</strong>
+                    <p style="margin: 5px 0 0 0;">
+                        To ensure your packages and food orders are delivered securely without delay, please verify your identity.
+                        <br>
+                        <a href="https://luxa.ng/kyc/submit/" class="btn-secondary" target="_blank">Complete KYC Verification &rarr;</a>
+                    </p>
+                </div>
+                {% endif %}
+
+                <p>
+                    If you find this interesting and have more questions, we are on all socials. Don't hesitate to reach out to us. Do well to have a great week!
+                </p>
+
+                <p style="text-align: center; margin-top: 35px;">
+                    <a href="https://luxa.ng/" class="btn-primary" target="_blank">Visit The Main Store</a>
+                </p>
+                
+                <p style="text-align: center; margin-top: 20px; font-size: 14px; color: #64748b;">
+                    — The Luxa Team 💎
+                </p>
+            </div>
+
+        </div>
+
+        <div class="footer">
+            <p>&copy; {% now "Y" %} Luxa.ng. All rights reserved.</p>
+            <p>
+                <a href="https://luxa.ng/privacy/" target="_blank">Privacy Policy</a> • <a href="https://luxa.ng/help/" target="_blank">Support</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

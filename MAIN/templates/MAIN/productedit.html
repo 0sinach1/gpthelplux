@@ -1,0 +1,85 @@
+{% extends "MAIN/base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Edit {{ product.name }} | Product Management{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static '/css/productedit.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="pe-page-container">
+    
+    <div class="pe-breadcrumb">
+        <a href="{% url 'vendash' %}">Vendor Dashboard</a> &rsaquo; 
+        <a href="{% url 'manage_product' %}">Product Management</a> &rsaquo; 
+        <span>Edit Product</span>
+    </div>
+
+    <header class="pe-header">
+        <div class="pe-header-text">
+            <h1>Edit Product</h1>
+            <p>Update the details, pricing, and media for your existing product.</p>
+        </div>
+    </header>
+
+    <div class="pe-main-layout">
+        <form method="post" enctype="multipart/form-data" id="product-edit-form">
+            {% csrf_token %}
+
+            <div class="form-card identity-card">
+                <div class="identity-image">
+                    {% if product.main_image %}
+                        <img src="{{ product.main_image.url }}" alt="{{ product.name }}">
+                    {% else %}
+                        <div class="img-placeholder"><i class="fas fa-box-open"></i></div>
+                    {% endif %}
+                </div>
+                <div class="identity-details">
+                    <span class="category-badge">{{ product.category.name|default:"Uncategorized" }}</span>
+                    <h2>{{ product.name }}</h2>
+                    <p>Make sure to save your changes at the bottom of the page before leaving.</p>
+                </div>
+            </div>
+
+            <div class="form-card">
+                <div class="card-header">
+                    <div class="ch-icon"><i class="fas fa-sliders-h"></i></div>
+                    <h2>Product Details</h2>
+                </div>
+                
+                <div class="form-grid">
+                    {% for field in form %}
+                        <div class="form-group">
+                            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            
+                            {{ field }}
+                            
+                            {% if field.help_text %}
+                                <small class="help-text">{{ field.help_text }}</small>
+                            {% endif %}
+                            
+                            {% if field.errors %}
+                                <div class="field-error">
+                                    <i class="fas fa-exclamation-circle"></i> {{ field.errors|striptags }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="step-actions">
+                <a href="{% url 'manage_product' %}" class="btn-prev">&larr; Cancel</a>
+                <button type="submit" class="btn-submit">Save Changes <i class="fas fa-check" style="margin-left: 5px;"></i></button>
+            </div>
+
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block luxaslide %}
+{% endblock %}

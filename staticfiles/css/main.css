@@ -1,0 +1,278 @@
+/* CSS for base html */
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    font-family: "Hanken Grotesk Light", Verdana, Roboto;
+    background-color: #f7f6fb !important;
+    width: 100%;
+}
+
+main {
+    position: relative;
+    width: 100%;
+}
+
+#nav_bar {
+    display: grid;
+    width: 100%;
+    position: sticky;
+    grid-template-columns: 30% 40% 30%;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    background-color: #fff;
+    border-bottom: 1px solid #bbbbbb;
+    box-shadow: 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+    padding: 15px 0px;
+    top: 0;
+    left: 0;
+    z-index: 500;
+}
+
+.luxalogo {
+    width: 90px;
+}
+
+#search_bar {
+    position: relative;
+    width: 600px;
+    margin: 20px auto;
+}
+
+#search {
+    display: flex;
+    width: 100%;
+    height: 50px;
+    padding: 10px 5px 10px 10px;
+    border: 1px solid #960ffa;
+    border-radius: 25px;
+    transition: all 0.3s ease-in-out;
+    background-color: aliceblue;
+}
+
+#search:focus {
+    box-shadow: 0 0 4px #960ffa;
+    background-color: aliceblue;
+    outline: none;
+}
+
+.search_btn {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color:#960ffa;
+    border-radius: 25px;
+    padding: 7.5px 15px;
+    cursor: pointer;
+    border: none;
+    color: white; 
+}
+
+.suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background: white;
+    border: 1px solid #ccc;
+    border-top: none;
+    max-height: 200px;
+    overflow-y: auto;
+    border-radius: 0 0 10px 10px;
+    z-index: 1000;
+}
+
+.suggestions div {
+    padding: 10px;
+    cursor: pointer;
+}
+
+.suggestions div:hover {
+    background-color: #f0f0f0;
+}
+
+.hidden {
+    display: none;
+}
+
+#nav_logo {
+    position: relative;
+    display: flex;
+    padding: 5px 10px 5px 10px;
+    left: 20%;
+}
+
+#user_btns {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    justify-self: center;
+    align-self: center;
+    top: 10%;
+}
+
+#user_btns li {
+    list-style-type: none;
+}
+
+.navicons {
+    position: relative;
+    margin-right: 20px;
+}
+
+.navicons a {
+    display: flex;
+    text-decoration: none;
+    color: #000000;
+    justify-content: baseline;
+}
+
+.navicons span {
+    display: none;
+    position: fixed;
+    top: 50px;
+    right: 60px;
+    padding: 3.5px 8px;
+    border-radius: 50%;
+    background-color: #960ffa;
+    font-weight: 550;
+    font-size: 12px;
+}
+
+.nav_icon {
+    position: relative;
+    width: 20px;
+    height: 20px;
+    transition: color 0.8s ease;
+    margin-right: 5px;
+}
+
+.nav_icon:hover {
+    color: #007bff;
+}
+
+.userdropdown {
+    list-style: none;
+    position: absolute;
+    top: 120%;
+    width: 170px;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 10px 10px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px); 
+    transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
+}
+
+.userdropdown::before {
+    content: "";
+    position: absolute;
+    top: -8px; /* just above the box */
+    left: 20px; /* adjust horizontally as needed */
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 8px solid white; /* color matches dropdown background */
+    filter: drop-shadow(0 -1px 1px rgba(0,0,0,0.1)); /* subtle shadow for realism */
+}
+
+.navicons:hover .userdropdown {
+    visibility: visible;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.dropdownli {
+    padding: 0 0 3px 3px;
+    margin-bottom: 6px;
+    color: #000;
+}
+
+.dropdownli a {
+    text-decoration: none;
+    color: black;
+}
+
+.dropdownli:hover a {
+    color: rgb(119, 32, 212);
+}
+
+#main_body {
+    z-index: 5;
+}
+
+#bottomnav {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    background-color: #0c0013;
+    padding: 50px 0 80px 15px;
+    margin-top: 40px;
+    color: white;
+}
+
+.navli {
+    list-style-type: none;
+    padding-left: 0;
+    margin-top: 20px;
+}
+
+.navli li {
+    margin-bottom: 20px;
+}
+
+.navli a {
+    text-decoration: none;
+    color: #ffffff;
+}
+
+.navli a:hover {
+    color: #960ffa;
+}
+
+#btmlogo {
+    position: relative;
+    top: -30px;
+}
+
+#about p {
+    width: 55%;
+}
+
+#social_links {
+    margin-top: 20px;
+}
+
+.socialicons {
+    width: 40px;
+}
+
+/* Styling for Product viewing page */
+
+
+@media only screen and (max-width: 480px){
+    #nav_bar {
+        display: grid;
+        width: 100%;
+        position: sticky;
+        grid-template-columns: 30% 40% 30%;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+        background-color: #fff;
+        border-bottom: 1px solid #bbbbbb;
+        top: 0;
+        left: 0;
+        z-index: 500;
+    }  
+
+}

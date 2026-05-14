@@ -1,0 +1,298 @@
+{% load humanize %}
+{% if is_campus %}
+
+{# --- 1. SETUP THE VARIABLES FOR EASY ACCESS --- #}
+{% with c=data.customer %}
+{% with kyc=c.kyc_profile %} 
+{% with profile=c.crave_profile %}
+{% with proxy=profile.default_proxy %}
+{% with is_proxy_active=profile.proxy_enabled %}
+
+    <div class="campus-logic-wrapper" style="padding: 5px;">
+        
+        {# --- 2. CUSTOMER / PROXY HEADER TRIGGER --- #}
+        <div class="customer-corner-box" 
+        onclick="openCustomerSlider('{{ order.id }}')"
+        style="display: flex; align-items: center; justify-content: space-between; padding: 15px; background: #f8fafc; border-radius: 18px; margin-bottom: 20px; border: 1px solid #f1f5f9; cursor: pointer; transition: transform 0.2s;"
+        onmouseover="this.style.transform='scale(1.01)'" 
+        onmouseout="this.style.transform='scale(1)'">
+            
+            {% if is_proxy_active and proxy %}
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <div style="position: relative;">
+                        {% if proxy.proxy_photo %}
+                            <img src="{{ proxy.proxy_photo.url }}" class="zoomable" 
+                            onclick="zoomImage(this.src); event.stopPropagation();"
+                            style="width: 55px; height: 55px; border-radius: 50%; object-fit: cover; border: 2px solid #8b5cf6;">
+                        {% else %}
+                            <img src="/static/images/user.png" class="zoomable" 
+                                onclick="zoomImage(this.src); event.stopPropagation();"
+                                style="width: 55px; height: 55px; border-radius: 50%; object-fit: cover; border: 2px solid #8b5cf6;">
+                        {% endif %}
+                        <div style="position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%); background: #8b5cf6; color: white; font-size: 0.5rem; font-weight: 900; padding: 2px 6px; border-radius: 10px; white-space: nowrap;">PROXY</div>
+                    </div>
+                    <div>
+                        <div style="font-weight: 800; color: #1e293b; font-size: 0.95rem;">{{ proxy.proxy_name|default:"Proxy Configured" }}</div>
+                        <div style="font-size: 0.7rem; color: #64748b; font-weight: 700; margin-top: 3px; background: #e2e8f0; padding: 2px 6px; border-radius: 6px; display: inline-block;">
+                            For: @{{ c.user_account.username }}
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <div style="position: relative; flex-shrink: 0;">
+                        <div style="width: 58px; height: 58px; border-radius: 50%; overflow: hidden; border: 2.5px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+                            {% if c.profile_picture %}
+                                <img src="{{ c.profile_picture.url }}" 
+                                    class="zoomable" 
+                                    onclick="zoomImage(this.src); event.stopPropagation();"
+                                    style="width: 100%; height: 100%; object-fit: cover;">
+                            {% else %}
+                                <img src="/static/images/user.png" style="width: 100%; height: 100%; object-fit: cover;">
+                            {% endif %}
+                        </div>
+                        {% if data.is_kyc_approved %}
+                        <div style="position: absolute; bottom: 0px; right: 0px; background: #9539cb; color: white; font-size: 0.55rem; padding: 2px 6px; border-radius: 6px; font-weight: 900; border: 2px solid white;">
+                            KYC
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <div style="font-size: 0.65rem; color: #94a3b8; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">
+                            Customer
+                        </div>
+                        <div style="font-size: 1.1rem; font-weight: 900; color: #1e293b; line-height: 1.1;">
+                            {{ c.full_name|default:c.user_account.username }}
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <div style="text-align: right;">
+                <div style="font-size: 0.65rem; color: #94a3b8; font-weight: 800; text-transform: uppercase; margin-bottom: 2px;">Network</div>
+                <div style="font-weight: 800; color: #9539cb; font-size: 0.85rem;">CAMPUS</div>
+            </div>
+        </div>
+
+        {# --- 3. CAMPUS LOGIC WRAPPER ALERT --- #}
+        {% if is_proxy_active and proxy %}
+        <div style="background: #f5f3ff; border: 1px dashed #a78bfa; padding: 12px; border-radius: 12px; margin-bottom: 20px; display: flex; gap: 10px; align-items: flex-start;">
+            <span style="font-size: 1.2rem;">🔐</span>
+            <div>
+                <div style="color: #6d28d9; font-weight: 800; font-size: 0.75rem; text-transform: uppercase;">Proxy Verification Required</div>
+                <div style="color: #4c1d95; font-size: 0.8rem; font-weight: 600; margin-top: 3px;">Ask <strong>{{ proxy.proxy_name }}</strong> for the Seed Phrase upon arrival.</div>
+            </div>
+        </div>
+        {% endif %}
+
+        {# --- OUTLET SECTION --- #}
+        <div style="text-align: center; margin-bottom: 25px; display: flex; flex-direction: column; align-items: center; gap: 8px;">
+            <div style="font-size: 0.6rem; color: #94a3b8; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">
+                Purchase Outlet
+            </div>
+            <span style="background: #eef2ff; color: #4338ca; padding: 8px 20px; border-radius: 50px; font-size: 0.85rem; font-weight: 900; text-transform: uppercase; border: 1px solid #c7d2fe; display: inline-flex; align-items: center; gap: 6px;">
+                🏪 {{ data.outlet_name }}
+            </span>
+        </div>
+
+        <h6 style="color: #64748b; font-weight: 800; text-transform: uppercase; font-size: 0.65rem; margin-bottom: 12px; letter-spacing: 1px;">
+            Delivery Manifest
+        </h6>
+
+        {# --- BUNDLE CARDS --- #}
+        {% for bundle in data.bundles %}
+        <div class="bundle-card" style="border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 15px; background: #fff; overflow: hidden;">
+            <div style="padding: 12px 15px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    {% if bundle.show_pack_header %}
+                        <span style="font-size: 0.9rem; font-weight: 800; color: #1e293b;">Pack {{ forloop.counter }}</span>
+                        <span style="font-size: 0.75rem; color: #64748b;">({{ bundle.pack_name }} - ₦{{ bundle.pack_price|intcomma }})</span>
+                    {% else %}
+                        <span style="font-size: 0.9rem; font-weight: 800; color: #1e293b;">Bundle {{ forloop.counter }}</span>
+                        <span style="background: #fee2e2; color: #ef4444; padding: 2px 6px; border-radius: 4px; font-size: 0.6rem; font-weight: 800; margin-left: 5px; text-transform: uppercase;">
+                            No Physical Pack
+                        </span>
+                    {% endif %}
+                </div>
+                <span style="color: #2779fc; font-weight: 900; font-size: 1.2rem;">x{{ bundle.multiplier }}</span>
+            </div>
+
+            <div style="padding: 12px 15px;">
+                {% for item in bundle.items %}
+                <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 6px;">
+                    <span style="color: #64748b;">{{ item.qty }}x {{ item.name }}</span>
+                    <span style="color: #64748b;">₦{{ item.ind_items_cost|intcomma }}</span>
+                </div>
+                {% endfor %}
+
+                <div style="margin-top: 10px; padding-top: 8px; border-top: 1px dashed #f1f5f9; text-align: right;">
+                    <div style="font-size: 0.85rem; font-weight: 500;">Total Items Cost: ₦{{ bundle.total_items_cost|intcomma }}</div>
+                    <span style="font-size: 0.75rem; color: #94a3b8;">Items + Pack Fee included in total</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        {# --- TOTALS --- #}
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; text-align: center; margin-top: 20px;">
+            <div style="font-size: 0.6rem; color: #64748b; text-transform: uppercase; font-weight: 800; margin-bottom: 5px;">
+                Total Volume: {{ data.Volume }} Courions
+            </div>
+            <div style="font-size: 1.5rem; font-weight: 900; color: #1e293b;">
+                ₦{{ data.manifest_total|intcomma }}
+            </div>
+        </div>
+    </div>
+
+    {# --- 4. THE HIDDEN SLIDER TEMPLATE (Customer + Proxy Logic) --- #}
+    <template id="cust-template-{{ order.id }}">
+        
+        <div class="cust-header-bg" style="{% if is_proxy_active and proxy %}padding: 20px 25px; text-align: left;{% endif %}">
+            {% if is_proxy_active and proxy %}
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <span class="proxy-badge" style="background: rgba(255,255,255,0.2);">Original Customer</span>
+                        <div class="cust-name" style="font-size: 1.1rem; margin-top: 5px; margin-bottom: 0;">{{ c.full_name|default:c.user_account.username }}</div>
+                    </div>
+                    {% if kyc and kyc.selfie %}
+                        <img src="{{ kyc.selfie.url }}" class="zoomable" 
+                            onclick="zoomImage(this.src); event.stopPropagation();"style="width: 45px; height: 45px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); object-fit: cover; margin:0;">
+                    {% elif c.profile_picture %}
+                        <img src="{{ c.profile_picture.url }}" class="zoomable" 
+                            onclick="zoomImage(this.src); event.stopPropagation();"style="width: 45px; height: 45px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); object-fit: cover; margin:0;">
+                    {% else %}
+                        <img src="/static/images/user.png" style="width: 45px; height: 45px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); object-fit: cover; margin:0;">
+                    {% endif %}
+                </div>
+            {% else %}
+                {% if kyc and kyc.selfie %}
+                    <img src="{{ kyc.selfie.url }}" class="cust-avatar zoomable" 
+                        onclick="zoomImage(this.src); event.stopPropagation();">
+                {% elif c.profile_picture %}
+                    <img src="{{ c.profile_picture.url }}" class="cust-avatar zoomable" 
+                        onclick="zoomImage(this.src); event.stopPropagation();">
+                {% else %}
+                    <div class="cust-avatar" style="display:flex; align-items:center; justify-content:center; font-size:2rem; color:#ccc; background:white; margin:0 auto 15px;">
+                        {{ c.first_name|slice:":1" }}{{ c.last_name|slice:":1" }}
+                    </div>
+                {% endif %}
+                
+                <div class="cust-name">
+                    {% if kyc %}
+                        {{ kyc.full_name_on_id }}
+                    {% else %}
+                        {{ c.full_name|default:"Guest Customer" }}
+                    {% endif %}
+                </div>
+                <div class="cust-username">@{{ c.user_account.username }}</div>
+            {% endif %}
+        </div>
+
+        <div class="cust-body" style="{% if is_proxy_active and proxy %}padding: 15px 25px; flex: none;{% endif %}">
+            <div class="contact-row">
+                <div class="c-icon">✉️</div>
+                <div class="c-detail">
+                    <h6>Email Address</h6>
+                    <p>{{ c.user_account.email }}</p>
+                </div>
+            </div>
+
+            <!-- NEW: SOCIAL MEDIA ROW -->
+            {% if kyc.social_media_handle or c.social_media_handle %}
+            <div class="contact-row">
+                <div class="c-icon">💬</div>
+                <div class="c-detail">
+                    <h6>Social Media</h6>
+                    <p style="display: flex; align-items: center; gap: 6px;">
+                        {% if kyc.social_media_platform == 'INSTAGRAM' or c.social_media_platform == 'INSTAGRAM' %}
+                            <i class="bi bi-instagram" style="color: #E1306C;"></i> {{ kyc.social_media_handle|default:c.social_media_handle }}
+                        {% elif kyc.social_media_platform == 'WHATSAPP' or c.social_media_platform == 'WHATSAPP' %}
+                            <i class="bi bi-whatsapp" style="color: #25D366;"></i> {{ kyc.social_media_handle|default:c.social_media_handle }}
+                        {% else %}
+                            <i class="bi bi-person-lines-fill"></i> {{ kyc.social_media_handle|default:c.social_media_handle }}
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="contact-row">
+                <div class="c-icon">ℹ️</div>
+                <div class="c-detail">
+                    <h6>Extra Instructions by student customer</h6>
+                    <p>{{ data.extra_info }}</p>
+                </div>
+            </div>
+            
+            {% if not is_proxy_active %}
+            <!-- UPDATED: ACTION BUTTONS (Switched to Flex-wrap to accommodate 3 buttons beautifully) -->
+            <div class="c-actions" style="display: flex; flex-wrap: wrap;">
+                {% if c.phone_number %}
+                <a href="tel:{{ c.phone_number }}" class="btn-contact">📞 Call</a>
+                {% endif %}
+                <a href="mailto:{{ c.user_account.email }}" class="btn-contact">✉️ Email</a>
+
+                <!-- NEW: DYNAMIC SOCIAL ACTION BUTTON -->
+                {% if kyc.social_media_handle or c.social_media_handle %}
+                    {% if kyc.social_media_platform == 'WHATSAPP' or c.social_media_platform == 'WHATSAPP' %}
+                        <a href="https://wa.me/{{ kyc.social_media_handle|default:c.social_media_handle|cut:'+'|cut:' ' }}" class="btn-contact" target="_blank">
+                            <i class="bi bi-whatsapp" style="color: #25D366;"></i> Message
+                        </a>
+                    {% elif kyc.social_media_platform == 'INSTAGRAM' or c.social_media_platform == 'INSTAGRAM' %}
+                        <!-- Cuts out the '@' just in case the user typed it in the DB -->
+                        <a href="https://instagram.com/{{ kyc.social_media_handle|default:c.social_media_handle|cut:'@'|cut:' ' }}" class="btn-contact" target="_blank">
+                            <i class="bi bi-instagram" style="color: #E1306C;"></i> DM
+                        </a>
+                    {% endif %}
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="proxy-section {% if not is_proxy_active or not proxy %}disabled{% endif %}">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h4 style="margin: 0; font-weight: 900; color: #1e293b; font-size: 1rem;">Authorized Proxy</h4>
+                {% if is_proxy_active and proxy %}
+                    <span class="proxy-badge">Active</span>
+                {% else %}
+                    <span class="proxy-badge" style="background: #94a3b8;">Inactive</span>
+                {% endif %}
+            </div>
+
+            {% if proxy %}
+                <div class="contact-row" style="align-items: center;">
+                    {% if proxy.proxy_photo %}
+                        <img src="{{ proxy.proxy_photo.url }}" class="zoomable" 
+                            onclick="zoomImage(this.src); event.stopPropagation();" style="width: 55px; height: 55px; border-radius: 50%; object-fit: cover; border: 2px solid #e2e8f0;">
+                    {% else %}
+                        <img src="/static/images/user.png" style="width: 55px; height: 55px; border-radius: 50%; object-fit: cover; border: 2px solid #e2e8f0;">
+                    {% endif %}
+                    <div class="c-detail" style="margin-left: 10px;">
+                        <h6>Proxy Name</h6>
+                        <p style="font-size: 1.1rem; color: #8b5cf6;">{{ proxy.proxy_name }}</p>
+                    </div>
+                </div>
+
+                <div class="contact-row">
+                    <div class="c-icon">📍</div>
+                    <div class="c-detail">
+                        <h6>Proxy Drop-off Location</h6>
+                        <p>{{ proxy.proxy_building.name|default:"Building Not Set" }}</p>
+                        <small style="color:#64748b;">{{ proxy.proxy_address|default:"No specific address" }}</small>
+                    </div>
+                </div>
+            {% else %}
+                <p style="color: #64748b; font-size: 0.85rem; text-align: center; margin-top: 20px; font-weight: 600;">No proxy configured by student.</p>
+            {% endif %}
+        </div>
+
+    </template>
+
+{# --- 5. CLOSE THE VARIABLE BLOCKS --- #}
+{% endwith %}
+{% endwith %}
+{% endwith %}
+{% endwith %}
+{% endwith %}
+
+{% endif %}

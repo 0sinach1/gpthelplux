@@ -1,0 +1,22 @@
+{% extends "MAIN/base.html" %}
+
+{% block content %}
+<div style="min-height: 70vh; display: flex; align-items: center; justify-content: center;">
+    <div style="background: white; padding: 40px; border-radius: 16px; width: 100%; max-width: 450px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.05);">
+        <i class="fas fa-paper-plane" style="font-size: 3rem; color: #960ffa; margin-bottom: 20px;"></i>
+        <h2>Reset Wallet PIN</h2>
+        <p style="color: #64748b; margin-bottom: 30px;">
+            We will send a secure reset link to <strong>{{ user.email }}</strong>.
+        </p>
+        
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" style="width: 100%; background: #960ffa; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 700; cursor: pointer;">
+                Send Reset Link
+            </button>
+        </form>
+        
+        <a href="{% url 'validate_wallet_pin' %}" style="display: block; margin-top: 20px; color: #666; text-decoration: none;">Cancel</a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,891 @@
+{% load static %}
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escrow Control Center | LUXA Admin</title>
+    <link rel="icon" type="image/png" sizes="50x50" href="{% static '/images/titlelogo.png' %}" >
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{% static 'css/couriers/wallet_manager.css' %}">
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+</head>
+<body>
+    <div id="sidebar-overlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h2><i class="bi bi-shield-lock-fill"></i> LUXA</h2>
+            <span>Management Console</span>
+        </div>
+        
+        <div class="nav-menu">
+            <div class="nav-item active" onclick="switchView('user-ledger', this)">
+                <i class="bi bi-person-vcard"></i> User Ledger
+            </div>
+            <div class="nav-item" onclick="switchView('fund-mover', this)">
+                <i class="bi bi-arrow-left-right"></i> Fund Mover
+            </div>
+            <div class="nav-item" onclick="switchView('order-medic', this)">
+                <i class="bi bi-heart-pulse"></i> Order Medic (Refunds)
+            </div>
+            <div class="nav-item" onclick="switchView('campus-orders', this)">
+                <i class="bi bi-box-seam"></i> Campus Orders
+            </div>
+            <div class="nav-item" onclick="switchView('delivery-batches', this)">
+                <i class="bi bi-truck"></i> Delivery Batches
+            </div>
+            <div class="nav-item" onclick="switchView('wallet-directory', this)">
+                <i class="bi bi-wallet2"></i> Wallet Directory
+            </div>
+            <div class="nav-item" onclick="switchView('platform-earnings', this)">
+                <i class="bi bi-bank"></i> Platform Earnings (Admin)
+            </div>
+            <div class="nav-item" onclick="switchView('global-ledger', this)">
+                <i class="bi bi-globe"></i> All Transactions
+            </div>
+        </div>
+
+        <div class="admin-profile">
+            <div class="admin-avatar">{{ request.user.username|make_list|first|upper }}</div>
+            <div>
+                <div style="font-weight: 600; font-size: 0.9rem;">{{ request.user.username }}</div>
+                <div style="font-size: 0.75rem; color: #94a3b8;">Escrow Admin</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="top-header">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <button class="mobile-menu-btn" onclick="toggleSidebar()">
+                    <i class="bi bi-list"></i>
+                </button>
+                <h3 id="current-view-title">User Ledger & Auditing</h3>
+            </div>
+            
+            <a href="{% url 'courier_dashboard' %}" class="btn" style="background: var(--bg-main); border: 1px solid var(--border); color: var(--text-main); padding: 8px 15px; font-size: 0.85rem;">
+                <i class="bi bi-box-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+
+        <div id="view-user-ledger" class="view-panel active">
+            
+            <div class="card" style="margin-bottom: 25px;">
+                <h4 style="margin-bottom: 15px; font-size: 0.9rem; color: var(--text-muted);">Search Database</h4>
+                
+                <form class="search-bar" id="user-search-form" 
+                      hx-get="{% url 'escrow_search_user' %}" 
+                      hx-target="#user-profile-result" 
+                      hx-indicator="#search-spinner">
+                    <div class="input-group autocomplete-wrapper">
+                        <i class="bi bi-search"></i>
+                        <input type="text" name="q" id="ledger_search_input" class="form-control" 
+                               placeholder="Enter Email, Username, or Full Name..." required autocomplete="off"
+                               hx-get="{% url 'escrow_user_autocomplete' %}" 
+                               hx-target="#autocomplete-results" 
+                               hx-trigger="keyup changed delay:300ms">
+                               
+                        <div id="autocomplete-results"></div>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="min-width: 150px;">
+                        <span class="btn-text">Lookup User</span>
+                        <i id="search-spinner" class="htmx-indicator bi bi-arrow-repeat fa-spin" style="display:none; font-size: 1.2rem;"></i>
+                    </button>
+                </form>
+            </div>
+
+            <div id="user-profile-result">
+                <div style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
+                    <div style="width: 80px; height: 80px; background: #f1f5f9; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                        <i class="bi bi-database-search" style="font-size: 2rem; color: #94a3b8;"></i>
+                    </div>
+                    <h3 style="font-size: 1.1rem; color: #1e293b; margin-bottom: 5px;">Awaiting Search</h3>
+                    <p style="font-size: 0.85rem;">Enter a user's details above to load their financial ledger.</p>
+                </div>
+            </div>
+
+            <div id="user-profile-result">
+                
+                
+            </div>
+        </div>
+
+        <div id="view-wallet-directory" class="view-panel">
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 25px;">
+                <div id="dir-total-available" class="card" style="border-left: 4px solid #10b981;">
+                    <div style="color: #64748b; font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">Total Available</div>
+                    <div style="font-size: 1.5rem; font-weight: 800; color: #1e293b; margin-top: 5px;">₦0.00</div>
+                </div>
+                <div id="dir-total-locked" class="card" style="border-left: 4px solid #f59e0b;">
+                    <div style="color: #64748b; font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">Total Locked Escrow</div>
+                    <div style="font-size: 1.5rem; font-weight: 800; color: #1e293b; margin-top: 5px;">₦0.00</div>
+                </div>
+                <div id="dir-total-pending" class="card" style="border-left: 4px solid #3b82f6;">
+                    <div style="color: #64748b; font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">Total Pending Clearing</div>
+                    <div style="font-size: 1.5rem; font-weight: 800; color: #1e293b; margin-top: 5px;">₦0.00</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title" style="margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center;">
+                    <div><i class="bi bi-people-fill" style="color: var(--primary); margin-right: 8px;"></i> Global Wallet Directory</div>
+                    
+                    <form id="wallet-dir-filter-form" style="display: flex; gap: 10px; margin: 0;">
+                        <select name="wallet_type" class="form-select" style="width: auto; padding: 8px 15px; font-weight: 600;"
+                                hx-get="{% url 'escrow_wallet_directory_api' %}" 
+                                hx-target="#wallet-directory-body" 
+                                hx-include="#wallet-dir-filter-form"
+                                hx-trigger="change">
+                            <option value="all">All Wallets</option>
+                            <option value="CUSTOMER">Customer Wallets</option>
+                            <option value="VENDOR">Vendor Wallets</option>
+                            <option value="COURIER">Courier Earnings</option>
+                            <option value="COURIER_ADVANCE">Courier Advance</option>
+                        </select>
+
+                        <div class="input-group" style="width: 280px;">
+                            <i class="bi bi-search"></i>
+                            <input type="text" name="q" class="form-control" placeholder="Search Username or Email..." 
+                                   hx-get="{% url 'escrow_wallet_directory_api' %}" 
+                                   hx-target="#wallet-directory-body" 
+                                   hx-include="#wallet-dir-filter-form"
+                                   hx-trigger="keyup changed delay:500ms">
+                        </div>
+                    </form>
+                </div>
+
+                <div class="table-container">
+                    <table style="width: 100%;">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Wallet Type</th>
+                                <th>Available (₦)</th>
+                                <th>Locked (₦)</th>
+                                <th>Pending (₦)</th>
+                                <th>Created</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="wallet-directory-body" 
+                               hx-get="{% url 'escrow_wallet_directory_api' %}" 
+                               hx-include="#wallet-dir-filter-form"
+                               hx-trigger="load, every 60s">
+                            <tr><td colspan="7" style="text-align: center; padding: 30px;"><i class="bi bi-arrow-repeat fa-spin"></i> Loading Database...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="view-panel" id="view-platform-earnings">
+    
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+                <div>
+                    <h2>Platform Earnings Vault</h2>
+                    <p style="color: #64748b; font-size: 0.9rem;">Analyze revenue generated from delivery fees and escrow commissions.</p>
+                </div>
+                
+                <form id="earnings-filter-form" style="display: flex; gap: 10px;">
+                    <select name="source" class="form-select" hx-get="{% url 'escrow_platform_earnings_api' %}" hx-target="#earnings-table-body" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px; outline: none; cursor: pointer;">
+                        <option value="all">All Platforms</option>
+                        <option value="crave">Luxa Crave (Campus)</option>
+                        <option value="main">Main Store</option>
+                    </select>
+                    <select name="time" class="form-select" hx-get="{% url 'escrow_platform_earnings_api' %}" hx-target="#earnings-table-body" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px; outline: none; cursor: pointer;">
+                        <option value="today">Today</option>
+                        <option value="week">Past 7 Days</option>
+                        <option value="month">Past 30 Days</option>
+                        <option value="all" selected>All Time</option>
+                    </select>
+                </form>
+            </div>
+
+            <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); border: 1px solid #f1f5f9; margin-bottom: 25px;">
+                <div style="margin-bottom: 20px;">
+                    <span style="font-size: 0.85rem; color: #64748b; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;">Total Revenue (Filtered)</span>
+                    <h3 id="earnings-total-display" style="font-size: 2.2rem; color: #10b981; margin: 5px 0 0 0; font-weight: 800;">₦0.00</h3>
+                </div>
+                
+                <div style="height: 280px; width: 100%;">
+                    <canvas id="earningsChart"></canvas>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Date & Time</th>
+                            <th>Reference</th>
+                            <th>Description</th>
+                            <th>Amount</th>
+                            <th>Vault Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody id="earnings-table-body" hx-get="{% url 'escrow_platform_earnings_api' %}?time=all&source=all" hx-trigger="load">
+                        <tr><td colspan="5" style="text-align: center; padding: 30px;"><i class="bi bi-arrow-repeat fa-spin"></i> Loading Ledger...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="view-global-ledger" class="view-panel">
+            <div class="card">
+                <div class="card-title" style="margin-bottom: 25px;">
+                    <div>
+                        <i class="bi bi-globe" style="color: var(--primary); margin-right: 8px;"></i> Live Transaction Feed
+                    </div>
+                    
+                    <form id="global-filter-form" style="display: flex; gap: 10px;"
+                          hx-get="{% url 'escrow_global_transactions' %}" 
+                          hx-target="#global-ledger-body" 
+                          hx-trigger="change">
+                        
+                        <select name="wallet_type" class="form-select" style="width: auto; padding: 8px 15px; font-weight: 600;">
+                            <option value="all">All Wallets</option>
+                            <option value="CUSTOMER">Customer Wallets</option>
+                            <option value="COURIER">Courier Earnings</option>
+                            <option value="COURIER_ADVANCE">Courier Advance</option>
+                        </select>
+                        
+                        <select name="txn_type" class="form-select" style="width: auto; padding: 8px 15px; font-weight: 600;">
+                            <option value="all">All Actions</option>
+                            <option value="credits">Credits & Deposits</option>
+                            <option value="debits">Debits & Withdrawals</option>
+                            <option value="locks">Escrow Locks</option>
+                        </select>
+                    </form>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Date</th>
+                                <th>Ref / ID</th>
+                                <th>Wallet</th>
+                                <th>Type</th>
+                                <th>Amount</th>
+                                <th>Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody id="global-ledger-body" 
+                            hx-get="{% url 'escrow_global_transactions' %}" 
+                            hx-include="#global-filter-form"
+                            hx-trigger="load, every 30s">
+                            <tr>
+                                <td colspan="7" style="text-align: center; padding: 30px;"><i class="bi bi-arrow-repeat fa-spin"></i> Loading live feed...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-fund-mover" class="view-panel">
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-title"><i class="bi bi-arrow-left-right" style="color: var(--primary); margin-right: 8px;"></i> Execute Manual Transaction</div>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 25px;">Use this tool to manually compensate users or correct balances. A permanent WalletTransaction receipt will be generated.</p>
+                    
+                    <form id="fund-mover-form" onsubmit="event.preventDefault(); confirmTransaction();">
+                        {% csrf_token %}
+                        <div style="margin-bottom: 15px;">
+                            <label style="font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; display: block;">Target User Email/Username</label>
+                            <input type="text" id="target_user_input" class="form-control" required placeholder="e.g. user@landmark.edu.ng">
+                        </div>
+                        
+                        <div class="grid-2" style="margin-bottom: 15px; gap: 15px;">
+                            <div>
+                                <label style="font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; display: block;">Target Wallet</label>
+                                <select id="target_wallet_input" class="form-select" required>
+                                    <option value="CUSTOMER">Personal (Customer)</option>
+                                    <option value="COURIER">Earnings (Courier)</option>
+                                    <option value="COURIER_ADVANCE">Purchasing Advance</option>
+                                    <option value="ADMIN">Platform earnings</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; display: block;">Action Type</label>
+                                <select id="action_type_input" class="form-select" required>
+                                    <option value="CREDIT">Credit (Add Funds)</option>
+                                    <option value="DEBIT">Debit (Remove Funds)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 15px;">
+                            <label style="font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; display: block;">Amount (₦)</label>
+                            <input type="number" id="amount_input" class="form-control" required min="1" step="0.01" placeholder="0.00">
+                        </div>
+
+                        <div style="margin-bottom: 25px;">
+                            <label style="font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; display: block;">Admin Note / Reason (Visible to user)</label>
+                            <input type="text" id="admin_note_input" class="form-control" required placeholder="e.g. Fuel compensation for Batch #BCH-123">
+                        </div>
+
+                        <button type="submit" id="btn-execute-fund" class="btn btn-primary" style="width: 100%;">Execute Transaction</button>
+                    </form>
+                </div>
+                
+                <div>
+                    <div style="background: #eff6ff; border: 1px solid #bfdbfe; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                        <h4 style="color: #1d4ed8; margin-bottom: 10px; font-size: 0.95rem;"><i class="bi bi-info-circle-fill"></i> Auditing Notice</h4>
+                        <p style="font-size: 0.85rem; color: #1e3a8a; line-height: 1.5;">
+                            Every transaction executed here is permanently logged in the database with an <strong>ADMIN-MANUAL</strong> reference tag. It cannot be deleted or altered. Ensure the details are correct before executing.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-order-medic" class="view-panel">
+            <div class="card" style="max-width: 600px; margin: 0 auto;">
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <div style="width: 60px; height: 60px; background: var(--danger-light); color: var(--danger); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin: 0 auto 15px;">
+                        <i class="bi bi-heart-pulse-fill"></i>
+                    </div>
+                    <h3 style="font-size: 1.2rem;">Force Crave Refund</h3>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 5px;">Use this tool to forcefully refund a customer and clawback the courier's advance if an order gets stuck.</p>
+                </div>
+
+                <form id="order-medic-form" onsubmit="event.preventDefault(); confirmOrderMedic();">
+                    {% csrf_token %}
+                    <div style="margin-bottom: 20px;">
+                        <label style="font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; display: block; text-align: center;">Crave Order Number or ID</label>
+                        <input type="text" id="medic_order_input" class="form-control" required placeholder="e.g. ORD-12345678" style="text-align: center; font-size: 1.1rem; letter-spacing: 1px;">
+                    </div>
+                    
+                    <div style="background: #f8fafc; border: 1px dashed #cbd5e1; padding: 15px; border-radius: 8px; margin-bottom: 25px; font-size: 0.8rem; color: var(--text-muted);">
+                        <strong>What this script does:</strong>
+                        <ul style="margin-left: 20px; margin-top: 5px; line-height: 1.6;">
+                            <li>Unlocks Customer's Escrow and returns funds.</li>
+                            <li>Debits the Courier Advance Wallet if they were already paid.</li>
+                            <li>Sends the cancellation email to the customer.</li>
+                        </ul>
+                    </div>
+
+                    <button type="submit" id="btn-execute-medic" class="btn btn-danger" style="width: 100%;"><i class="bi bi-arrow-counterclockwise"></i> Execute Full Refund</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="view-campus-orders" class="view-panel">
+            <div class="card">
+                <div class="card-title" style="margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center;">
+                    <div><i class="bi bi-box-seam" style="color: var(--primary); margin-right: 8px;"></i> Campus Order Ledger</div>
+                    
+                    <form id="campus-orders-filter-form" style="display: flex; gap: 10px; margin: 0;">
+                        
+                        <select name="status" class="form-select" style="width: auto; padding: 8px 15px; font-weight: 600;"
+                                hx-get="{% url 'escrow_campus_orders_api' %}" 
+                                hx-target="#campus-orders-body" 
+                                hx-include="#campus-orders-filter-form"
+                                hx-trigger="change">
+                            <option value="all">All Statuses</option>
+                            <option value="pending">Pending</option>
+                            <option value="processing">Processing</option>
+                            <option value="assigned">Assigned</option>
+                            <option value="in_transit">In Transit</option>
+                            <option value="delivered">Delivered</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+
+                        <div class="input-group" style="width: 280px;">
+                            <i class="bi bi-search"></i>
+                            <input type="text" name="q" class="form-control" placeholder="Search Order # or Username..." 
+                                   hx-get="{% url 'escrow_campus_orders_api' %}" 
+                                   hx-target="#campus-orders-body" 
+                                   hx-include="#campus-orders-filter-form"
+                                   hx-trigger="keyup changed delay:500ms">
+                        </div>
+                    </form>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Customer</th>
+                                <th>Date</th>
+                                <th>Packs</th>
+                                <th>Delivery Fee</th>
+                                <th>Total Cost</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="campus-orders-body" 
+                            hx-get="{% url 'escrow_campus_orders_api' %}" 
+                            hx-include="#campus-orders-filter-form"
+                            hx-trigger="load, every 30s">
+                            <tr><td colspan="7" style="text-align: center; padding: 30px;"><i class="bi bi-arrow-repeat fa-spin"></i> Loading Orders...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-delivery-batches" class="view-panel">
+            <div class="card">
+                <div class="card-title" style="margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center;">
+                    <div><i class="bi bi-truck" style="color: var(--primary); margin-right: 8px;"></i> Delivery Batches</div>
+                    
+                    <form id="batches-filter-form" style="display: flex; gap: 10px; margin: 0;">
+                        <select name="status" class="form-select" style="width: auto; padding: 8px 15px; font-weight: 600;"
+                                hx-get="{% url 'escrow_delivery_batches_api' %}" 
+                                hx-target="#delivery-batches-body" 
+                                hx-include="#batches-filter-form"
+                                hx-trigger="change">
+                            <option value="all">All Active Statuses</option>
+                            <option value="forming">Forming</option>
+                            <option value="assigned">Assigned</option>
+                            <option value="in_transit">In Transit</option>
+                            <option value="completed">Completed</option>
+                        </select>
+
+                        <div class="input-group" style="width: 280px;">
+                            <i class="bi bi-search"></i>
+                            <input type="text" name="q" class="form-control" placeholder="Search Batch ID or Courier..." 
+                                   hx-get="{% url 'escrow_delivery_batches_api' %}" 
+                                   hx-target="#delivery-batches-body" 
+                                   hx-include="#batches-filter-form"
+                                   hx-trigger="keyup changed delay:500ms">
+                        </div>
+                    </form>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Batch ID</th>
+                                <th>Courier</th>
+                                <th>Volume</th>
+                                <th>Orders</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="delivery-batches-body" 
+                            hx-get="{% url 'escrow_delivery_batches_api' %}" 
+                            hx-include="#batches-filter-form"
+                            hx-trigger="load, every 30s">
+                            <tr><td colspan="7" style="text-align: center; padding: 30px;"><i class="bi bi-arrow-repeat fa-spin"></i> Loading Batches...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="batch-details-modal" class="escrow-modal-overlay" onclick="closeBatchModal(event)">
+            <div class="escrow-modal-content" style="max-width: 500px;" onclick="event.stopPropagation()">
+                <div style="background: var(--bg-main); padding: 15px 25px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="margin:0; font-size: 1.1rem; color: var(--text-main);"><i class="bi bi-truck"></i> Batch Management</h3>
+                    <span class="material-symbols-outlined" style="cursor:pointer; color: var(--text-muted); font-size: 1.5rem;" onclick="closeBatchModal(event)">close</span>
+                </div>
+                <div id="batch-details-content" style="padding: 25px; overflow-y: auto;"></div>
+            </div>
+        </div>
+
+        <div id="order-details-modal" class="escrow-modal-overlay" onclick="closeOrderModal(event)">
+            <div class="escrow-modal-content" onclick="event.stopPropagation()">
+                <div style="background: var(--bg-main); padding: 15px 25px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="margin:0; font-size: 1.1rem; color: var(--text-main);"><i class="bi bi-receipt-cutoff"></i> Manifest Details</h3>
+                    <span class="material-symbols-outlined" style="cursor:pointer; color: var(--text-muted); font-size: 1.5rem;" onclick="closeOrderModal(event)">close</span>
+                </div>
+                
+                <div id="order-details-content" style="padding: 25px; overflow-y: auto;"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        function switchView(viewId, navElement) {
+            // --- NEW: SAVE PREFERENCE TO BROWSER ---
+            localStorage.setItem('lastActiveAdminPanel', viewId);
+
+            // 1. Update active states on sidebar
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            navElement.classList.add('active');
+
+            // 2. Hide all panels
+            document.querySelectorAll('.view-panel').forEach(el => el.classList.remove('active'));
+            
+            // 3. Show target panel
+            document.getElementById('view-' + viewId).classList.add('active');
+
+            // 4. Update Header Title
+            document.getElementById('current-view-title').innerText = navElement.innerText.trim();
+
+            // 5. MOBILE FIX: Close sidebar after selection
+            if (window.innerWidth <= 900) {
+                document.querySelector('.sidebar').classList.remove('active');
+                document.getElementById('sidebar-overlay').classList.remove('active');
+            }
+        }
+
+        // --- NEW: RESTORE LAST ACTIVE PANEL ON PAGE LOAD ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedPanel = localStorage.getItem('lastActiveAdminPanel');
+            
+            if (savedPanel) {
+                // Find the sidebar button that corresponds to the saved panel
+                const targetNav = document.querySelector(`.nav-item[onclick*="${savedPanel}"]`);
+                
+                if (targetNav) {
+                    // Switch to the saved panel
+                    switchView(savedPanel, targetNav);
+                }
+            }
+        });
+
+        function confirmTransaction() {
+            // 1. Gather all inputs
+            const targetUser = document.getElementById('target_user_input').value;
+            const walletType = document.getElementById('target_wallet_input').value;
+            const actionType = document.getElementById('action_type_input').value;
+            const amount = document.getElementById('amount_input').value;
+            const adminNote = document.getElementById('admin_note_input').value;
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            // 2. Build a clear confirmation message
+            const actionWord = actionType === 'CREDIT' ? 'ADD' : 'REMOVE';
+            const msg = `Are you sure you want to ${actionWord} ₦${amount} to/from ${targetUser}'s wallet?\n\nReason: ${adminNote}`;
+            
+            if(confirm(msg)) {
+                // 3. UI Feedback (Spinning Button)
+                const btn = document.getElementById('btn-execute-fund');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="bi bi-arrow-repeat fa-spin"></i> Processing...';
+                btn.disabled = true;
+
+                // 4. Send to Backend
+                fetch("{% url 'escrow_manual_transaction' %}", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": csrfToken
+                    },
+                    body: JSON.stringify({
+                        target_user: targetUser,
+                        wallet_type: walletType,
+                        action_type: actionType,
+                        amount: amount,
+                        admin_note: adminNote
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if(data.success) {
+                        alert("✅ " + data.message);
+                        document.getElementById('fund-mover-form').reset();
+
+                        // --- NEW: INSTANTLY REFRESH THE LEDGER ---
+                        if (document.getElementById('global-filter-form')) {
+                            htmx.trigger('#global-filter-form', 'change');
+                        }
+                        
+                        // Bonus: If you want to automatically jump to their ledger to see it!
+                        if (window.jumpToUserLedger) {
+                            window.jumpToUserLedger(targetUser);
+                        }
+                    } else {
+                        alert("❌ Error: " + data.error);
+                    }
+                })
+                .catch(err => {
+                    alert("❌ Network Error: Could not connect to the server.");
+                    console.error(err);
+                })
+                .finally(() => {
+                    // Reset Button
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                });
+            }
+        }
+
+        function confirmOrderMedic() {
+            const orderInput = document.getElementById('medic_order_input').value.trim();
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            if (!orderInput) return;
+
+            // Strict confirmation warning
+            if (confirm(`⚠️ EMERGENCY OVERRIDE ⚠️\n\nAre you sure you want to forcefully cancel and refund Order ${orderInput}?\n\nThis will return the customer's money and claw back any courier advance.`)) {
+                
+                const btn = document.getElementById('btn-execute-medic');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="bi bi-arrow-repeat fa-spin"></i> Processing...';
+                btn.disabled = true;
+
+                fetch("{% url 'escrow_order_medic' %}", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": csrfToken
+                    },
+                    body: JSON.stringify({
+                        order_number: orderInput
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if(data.success) {
+                        alert("✅ " + data.message);
+                        document.getElementById('medic_order_input').value = ''; // clear input
+
+                        // --- NEW: INSTANTLY REFRESH TABLES ---
+                        if (document.getElementById('campus-orders-filter-form')) {
+                            htmx.trigger('#campus-orders-filter-form', 'change');
+                        }
+                        if (document.getElementById('global-filter-form')) {
+                            htmx.trigger('#global-filter-form', 'change');
+                        }
+                        if (document.getElementById('batches-filter-form')) {
+                            htmx.trigger('#batches-filter-form', 'change');
+                        }
+
+                    } else {
+                        alert("❌ Error: " + data.error);
+                    }
+                })
+                .catch(err => {
+                    alert("❌ Network Error: Could not connect to the server.");
+                    console.error(err);
+                })
+                .finally(() => {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                });
+            }
+        }
+
+        // Triggered when clicking a user in the live-search dropdown
+        function selectAutocompleteUser(username) {
+            // 1. Fill the input with the exact username
+            const input = document.getElementById('ledger_search_input');
+            if (input) {
+                input.value = username;
+                // Dispatch event so the browser recognizes the programmatic change
+                input.dispatchEvent(new Event('input')); 
+            }
+            
+            // 2. Hide the dropdown
+            const results = document.getElementById('autocomplete-results');
+            if (results) results.innerHTML = '';
+            
+            // 3. THE FIX: Grab the actual form element to pass into HTMX
+            const searchForm = document.getElementById('user-search-form');
+            if (searchForm) {
+                htmx.trigger(searchForm, 'submit');
+            }
+        }
+
+        function jumpToUserLedger(username) {
+            // 1. Switch the UI back to the User Ledger panel
+            const targetNav = document.querySelector('.nav-item[onclick*="user-ledger"]');
+            switchView('user-ledger', targetNav);
+
+            // 2. Find the search input and populate it
+            const searchInput = document.querySelector('#user-search-form input[name="q"]');
+            searchInput.value = username;
+
+            // 3. Programmatically trigger the HTMX search request
+            htmx.trigger('#user-search-form', 'submit');
+        }
+
+        function closeOrderModal(e) {
+            if(e) e.preventDefault();
+            document.getElementById('order-details-modal').classList.remove('active');
+        }
+        
+        function openOrderModal() {
+            document.getElementById('order-details-modal').classList.add('active');
+        }
+
+        function toggleSidebar() {
+            document.querySelector('.sidebar').classList.toggle('active');
+            document.getElementById('sidebar-overlay').classList.toggle('active');
+        }
+
+        function closeBatchModal(e) {
+            if(e) e.preventDefault();
+            document.getElementById('batch-details-modal').classList.remove('active');
+        }
+
+        function openBatchModal() {
+            document.getElementById('batch-details-modal').classList.add('active');
+        }
+
+        function confirmReassignBatch(batchId) {
+            const newCourierId = document.getElementById('new-courier-select').value;
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            if (!newCourierId) {
+                alert("Please select a new courier.");
+                return;
+            }
+
+            if (confirm(`Are you sure you want to forcefully reassign this batch?\n\nThis will safely claw back the advance from the current courier and transfer it to the new courier.`)) {
+                const btn = document.getElementById('btn-execute-reassign');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="bi bi-arrow-repeat fa-spin"></i> Processing...';
+                btn.disabled = true;
+
+                fetch("{% url 'escrow_reassign_batch_api' %}", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": csrfToken
+                    },
+                    body: JSON.stringify({ batch_id: batchId, new_courier_id: newCourierId })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        alert("✅ " + data.message);
+                        closeBatchModal();
+                        htmx.trigger('#batches-filter-form', 'change'); // Refresh table
+                    } else {
+                        alert("❌ Error: " + data.error);
+                    }
+                })
+                .catch(err => {
+                    alert("❌ Network Error: Could not connect to the server.");
+                    console.error(err);
+                })
+                .finally(() => {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                });
+            }
+        }
+
+        // Function for reassigning single orders
+        function confirmSingleOrderReassign(orderId) {
+            const targetId = document.getElementById('single-order-reassign-target').value;
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            if (!targetId) {
+                alert("Please select a target destination.");
+                return;
+            }
+
+            if (confirm(`⚠️ ESCROW OVERRIDE ⚠️\n\nAre you sure you want to rip this order from its current state and reassign it?\n\nThis will trigger an automatic ledger audit and clawback.`)) {
+                const btn = document.getElementById('btn-execute-single-reassign');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="bi bi-arrow-repeat fa-spin"></i> Recalculating Matrix...';
+                btn.disabled = true;
+
+                fetch("{% url 'escrow_reassign_single_order_api' %}", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": csrfToken
+                    },
+                    body: JSON.stringify({ order_id: orderId, target_id: targetId })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        alert("✅ " + data.message);
+                        closeOrderModal();
+                        htmx.trigger('#campus-orders-filter-form', 'change'); // Refresh the orders table
+                    } else {
+                        alert("❌ Error: " + data.error);
+                    }
+                })
+                .catch(err => {
+                    alert("❌ Network Error: Could not connect to the server.");
+                    console.error(err);
+                })
+                .finally(() => {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                });
+            }
+        }
+
+        // --- PLATFORM EARNINGS CHART LOGIC ---
+        let earningsChartInstance = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('earningsChart').getContext('2d');
+            
+            // Initialize empty chart with beautiful styles
+            earningsChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Revenue (₦)',
+                        data: [],
+                        backgroundColor: '#9539cb', // Your Luxa Primary
+                        hoverBackgroundColor: '#7a2fa3',
+                        borderRadius: 6,           // Creates the rounded tops you wanted
+                        borderSkipped: false,
+                        barPercentage: 0.5,        // Creates the clean spacing between columns
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { 
+                            beginAtZero: true, 
+                            grid: { borderDash: [4, 4], color: '#f1f5f9' },
+                            ticks: { color: '#64748b', font: {family: 'Poppins'} }
+                        },
+                        x: { 
+                            grid: { display: false },
+                            ticks: { color: '#64748b', font: {family: 'Poppins'} }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#1e293b',
+                            padding: 12,
+                            titleFont: {family: 'Poppins', size: 13},
+                            bodyFont: {family: 'Poppins', size: 14, weight: 'bold'},
+                            callbacks: {
+                                label: function(context) {
+                                    return ' ₦' + context.raw.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+
+        // The HTMX Listener: Catches the JSON payload from the Django view
+        document.body.addEventListener('updateEarningsChart', function(evt) {
+            const chartData = evt.detail;
+
+            // 1. Update the big Total Display number
+            const totalEl = document.getElementById('earnings-total-display');
+            totalEl.innerText = '₦' + chartData.total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+            // 2. Animate the Chart with the new data
+            if(earningsChartInstance) {
+                earningsChartInstance.data.labels = chartData.labels;
+                earningsChartInstance.data.datasets[0].data = chartData.data;
+                earningsChartInstance.update();
+            }
+        });
+        
+    </script>
+</body>
+</html>

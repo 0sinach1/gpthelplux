@@ -1,0 +1,7 @@
+{% load humanize %}
+
+<div class="balance-box" style="background:#fdfaf2; padding:20px; border-radius:12px; border:1px solid #f7ecd5; margin: 15px 0;">
+    <span style="font-size:1.2rem; color:#888;">₦</span>
+    <span class="amount" style="color:#d68910;">{{ advance_wallet.available_balance|intcomma }}</span>
+    <div style="color:#d68910; font-size:0.85rem; font-weight:600; margin-top:5px;">Available to Withdraw</div>
+</div>

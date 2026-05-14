@@ -1,0 +1,382 @@
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+.all {
+    margin-top: 50px;
+}
+
+#pro-nav {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    margin: 10px auto;
+    width: 80%;
+}
+
+#pro-nav a {
+    text-decoration: none;
+    color: #6a3aff;
+}
+
+.catcont {
+    width: 80%;
+    margin: 30px auto; /* Increased margin for better separation */
+    background-color: white;
+    box-shadow: 0 0 15px rgba(0,0,0,0.05); /* Softer shadow */
+    border-radius: 15px;
+    padding: 50px;
+}
+
+.morepro {
+    grid-column: 1 / span 2 ;
+    align-items: center;
+}
+
+.header2 {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.header-subtitle {
+    color: #888;
+    font-size: 13px;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+}
+
+.header-title {
+    font-size: 28px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #1a1a1a;
+}
+
+.carouse {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    position: relative;
+}
+
+/* NAVIGATION ARROWS */
+.nav-button {
+    width: 45px; /* Smaller, smarter buttons */
+    height: 45px;
+    padding: 12px;
+    border-radius: 50%;
+    margin: 0 10px;
+    background: #f5f5f5; /* Subtle background */
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.nav-button:hover {
+    background: #e0e0e0;
+    transform: scale(1.1);
+}
+
+/* --- GRID LOGIC SWAP START --- */
+
+/* 1. Categories Grid (Now the SCROLLING one) */
+.categories-grid {
+    display: flex;
+    flex-wrap: nowrap; /* Forces single line */
+    overflow-x: auto;
+    gap: 20px; /* Exact spacing requested */
+    padding: 10px 170px; /* Padding for shadow clearance */
+    scrollbar-width: none; /* Firefox hide scrollbar */
+    -ms-overflow-style: none; /* IE hide scrollbar */
+    scroll-behavior: smooth;
+    width: 100%;
+}
+
+.categories-grid::-webkit-scrollbar {
+    display: none; /* Chrome hide scrollbar */
+}
+
+.category-desc {
+    font-size: 16px;
+    color: #9c9c9c; /* Brand color accent */
+    font-weight: 700;
+    margin-top: 5px;
+}
+
+/* 2. Products Grid (Now the STATIONARY wrapping one) */
+.products-grid {
+    display: grid;
+    /* responsive columns: min 220px, max 1fr (fills available space) */
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 25px;
+    width: 100%;
+    margin-bottom: 20px;
+    /* This ensures that if you only have 2 items, they center nicely */
+    justify-content: center; 
+}
+
+/* --- CARD STYLING --- */
+
+.product-card {
+    width: 100%; 
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    border: none;
+    background: #fff;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    border-radius: 16px;
+    height: 100%;
+}
+
+.categories-grid .product-card {
+    min-width: 220px;
+    width: 220px;
+}
+
+
+.inner {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+.product-image {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: #f8fafc;
+    border-radius: 16px 16px 0 0;
+    position: relative;
+    height: 220px; /* Taller image area */
+}
+
+.product-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Ensures image fills box without stretching */
+}
+
+.product-image svg {
+    width: 50px;
+    height: 50px;
+    opacity: 0.2;
+}
+
+.description-text {
+    font-size: 13px;
+    color: #888;
+    font-weight: 400;
+}
+
+a {
+    text-decoration: none !important;
+}
+
+/* --- NEW MODERN STYLES FOR 3D PAGE --- */
+
+.explore-page-wrapper .main-layout {
+    /* Ensures everything aligns perfectly */
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+/* 1. SCROLLABLE CATEGORY PILLS */
+.category-scroll-container {
+    width: 100%;
+    position: relative;
+    /* Optional: Fade effect on sides if list is long */
+    mask-image: linear-gradient(to right, transparent, black 2%, black 98%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 2%, black 98%, transparent);
+}
+
+.d3categories-grid {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap; /* Forces single line */
+    overflow-x: auto; /* ENABLE SCROLL */
+    gap: 12px;
+    padding: 10px 5px; /* Padding for focus states */
+    
+    /* Hide Scrollbar */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE */
+}
+
+.d3categories-grid::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
+}
+
+/* The "Pill" Design */
+.cat-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 24px;
+    background-color: #f3f4f6;
+    color: #4b5563;
+    border-radius: 50px; /* Fully rounded */
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap; /* Prevents text breaking */
+    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+    border: 1px solid transparent;
+    cursor: pointer;
+    text-decoration: none;
+    user-select: none;
+}
+
+.cat-pill:hover {
+    background-color: #e5e7eb;
+    transform: translateY(-1px);
+}
+
+.cat-pill.active {
+    background-color: #6a3aff;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(106, 58, 255, 0.3);
+    transform: scale(1.05);
+}
+
+/* 2. CARD MODERNIZATION */
+
+.placeholder-img {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.placeholder-img svg {
+    width: 60px; height: 60px;
+}
+
+/* 3D Badge Overlay */
+.badge-3d {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(4px);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 800;
+    color: #6a3aff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.product-info {
+    padding: 18px;
+    background: white;
+    border-radius: 0 0 16px 16px;
+}
+
+.product-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 8px;
+}
+
+.product-price {
+    color: #6a3aff;
+    font-size: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    transition: gap 0.2s ease;
+}
+
+.product-card:hover .product-price {
+    gap: 8px; /* Arrow moves on hover */
+}
+
+/* Empty State */
+.empty-state {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    color: #94a3b8;
+    background: #f8fafc;
+    border-radius: 12px;
+    border: 2px dashed #e2e8f0;
+}
+
+.empty-icon {
+    font-size: 40px;
+    margin-bottom: 15px;
+    opacity: 0.7;
+}
+
+/* Responsive Fixes */
+@media (max-width: 768px) {
+    .d3categories-grid {
+        padding-bottom: 0; /* Tighter on mobile */
+    }
+    
+    .cat-pill {
+        padding: 8px 18px;
+        font-size: 13px;
+    }
+
+    .explore-page-wrapper .header2 {
+        margin-bottom: 25px;
+    }
+}
+
+/* Responsive adjustments */
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .catcont {
+        width: 95%;
+        padding: 15px;
+    }
+    
+    .products-grid {
+        /* Force 2 columns on mobile */
+        grid-template-columns: repeat(2, 1fr); 
+        gap: 15px;
+    }
+
+    .categories-grid {
+        padding: 10px 5px;
+        gap: 10px;
+    }
+    
+    /* On mobile, make the scrollable slider cards smaller */
+    .categories-grid .product-card {
+        min-width: 150px;
+        width: 150px;
+    }
+
+    .product-image {
+        height: 150px;
+    }
+    
+    .nav-button {
+        display: none; /* Hide arrows on mobile, just swipe */
+    }
+}

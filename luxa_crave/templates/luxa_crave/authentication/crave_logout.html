@@ -1,0 +1,82 @@
+{% load static %}
+{% load hosts %}
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logged Out | Luxa Crave</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="icon" type="image/png" sizes="50x50" href="{% static '/images/titlelogo.png' %}" >
+    <style>
+        :root {
+            --crave-primary: #2D1B69;
+            --text-dark: #2f3542;
+            --text-muted: #747d8c;
+        }
+        body {
+            margin: 0; font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            min-height: 100vh; display: flex; align-items: center; justify-content: center;
+        }
+        .logout-card {
+            background: white; width: 100%; max-width: 450px;
+            border-radius: 20px; padding: 50px 40px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.05); text-align: center;
+            box-sizing: border-box; margin: 20px; /* Prevents hugging the screen edges */
+        }
+        .icon-circle {
+            width: 80px; height: 80px; background: #f1f2f6; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2.5rem; color: var(--text-muted); margin: 0 auto 20px auto;
+        }
+        h2 { font-weight: 800; color: var(--text-dark); margin: 0 0 10px 0; font-size: 1.8rem; }
+        p { color: var(--text-muted); margin-bottom: 35px; line-height: 1.5; }
+        
+        .btn {
+            display: block; width: 100%; padding: 16px; border-radius: 12px;
+            font-size: 1.1rem; font-weight: 700; text-decoration: none;
+            transition: all 0.3s ease; box-sizing: border-box; margin-bottom: 15px;
+        }
+        .btn-crave {
+            background: var(--crave-primary); color: white; border: none;
+        }
+        .btn-crave:hover { background: #ff6b81; transform: translateY(-2px); }
+        
+        .btn-main {
+            background: white; color: var(--text-dark); border: 2px solid #dcdde1;
+        }
+        .btn-main:hover { border-color: var(--text-dark); background: #f8f9fa; transform: translateY(-2px); }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 480px) {
+            .logout-card {
+                padding: 40px 20px;
+                border-radius: 16px;
+            }
+            .icon-circle {
+                width: 60px; height: 60px; font-size: 1.8rem;
+            }
+            h2 { font-size: 1.5rem; }
+            p { font-size: 0.9rem; margin-bottom: 25px; }
+            .btn {
+                padding: 14px; font-size: 1rem; border-radius: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="logout-card">
+        <div class="icon-circle">
+            <i class="bi bi-box-arrow-right"></i>
+        </div>
+        <h2>See you later!</h2>
+        <p>You have been successfully logged out of your account.</p>
+
+        <a href="{% url 'crave_login' %}" class="btn btn-crave">Log back in to Crave</a>
+        <a href="{% host_url 'index' host 'default' %}" class="btn btn-main">Return to Main Store</a>
+    </div>
+</body>
+</html>

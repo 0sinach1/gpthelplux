@@ -1,0 +1,944 @@
+{% extends "MAIN/base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Customer Account page{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static '/css/customer.css' %}">
+{% endblock %}
+
+{% block content %}
+
+{% if user.vendor_profile and not user.vendor_profile.is_verified %}
+  <p id="pending_app">Vendor Application Pending...</p>
+{% endif %}
+
+<div class="main">
+  
+  <aside class="sidebar">
+    <div class="sidebar-profile desktop-only">
+        <div class="sidebar-user-header">
+            <div class="profilepic-small">
+                {% if customer.profile_picture %}
+                  <img src="{{ customer.profile_picture.url }}" alt="{{ customer.full_name }}" class="profilepic-small">
+                {% elif vendor.image %}
+                  <img src="{{ vendor.image.url }}" alt="{{ user.username }}" class="profilepic-small">
+                {% else %}
+                  <div class="avatar-placeholder" class="profilepic-small">{{ user.username|make_list|first|upper|default:"S" }}</div>
+                {% endif %}
+            </div>
+            <div class="user-titles">
+                <h4>{{ customer.first_name|default:user.username }} {{ customer.last_name|default:'' }}</h4>
+                <span>{{ user.email|default:"[email protected]" }}</span>
+            </div>
+        </div>
+        
+        <!-- <div class="reward-pill">
+            <i class="fas fa-star" style="color: #6a3aff;"></i>
+        </div> -->
+        
+        <div class="profile-completion">
+            <div class="comp-text">
+                <span>Profile completion</span>
+                <span>{{ profile_completion_percentage }}%</span>
+            </div>
+            <div class="comp-bar"><div class="comp-fill" style="width: {{ profile_completion_percentage }}%; transition: width 1s ease-in-out;"></div></div>
+        </div>
+    </div>
+
+    <div class="sidebar-menus">
+        <p class="menu-label desktop-only">MY ACCOUNT</p>
+        <ul class="menu top-nav-scroll">
+            <li class="sidebaritem active" data-target="dashboardpanel">
+                <i class="fas fa-th-large sideicon desktop-only"></i> <span>Dashboard</span>
+            </li>
+            <li class="sidebaritem" data-target="orderpanel">
+                <i class="fas fa-box sideicon desktop-only"></i> <span>My Orders</span>
+                <span class="badge desktop-only">{{ total_orders|default:0 }}</span>
+            </li>
+            <li class="sidebaritem" data-target="wishlistpanel">
+                <i class="fas fa-heart sideicon desktop-only"></i> <span>Wishlist</span>
+                <span class="badge desktop-only">{{ wishlist_count|default:0 }}</span>
+            </li>
+            <li class="sidebaritem" data-target="addresspanel">
+                <i class="fas fa-map-marker-alt sideicon desktop-only"></i> <span>Addresses</span>
+            </li>
+            
+            <li class="sidebaritem desktop-only">
+                <a href="/editprofile/" style="text-decoration:none; color:inherit; display:flex; align-items:center; width:100%; gap: 12px;">
+                    <i class="fas fa-user-edit sideicon"></i> <span>Edit Profile</span>
+                </a>
+            </li>
+
+            {% if not user.vendor_profile or not user.vendor_profile.is_verified %}
+            <li class="sidebaritem mobile-only vendor-nav-tab">
+                <a href="/vendorcreate/" data-verified="{{ user.customer_profile.is_verified|yesno:'true,false' }}" style="text-decoration:none; color:inherit; display:flex; align-items:center; width:100%; gap: 8px;">
+                    <i class="fas fa-store"></i> <span>Become a Vendor</span>
+                </a>
+            </li>
+            {% endif %}
+            
+            {% block mobile_vendor_tabs %}{% endblock %}
+        </ul>
+    </div>
+    
+    <div class="sidebar-bottom desktop-only">
+        {% block addedbtns %}
+        {% if not user.vendor_profile.is_verified %}
+        <a href="/vendorcreate/" id="become-vendor-link" class="vendor-promo-card" data-verified="{{ user.customer_profile.is_verified|yesno:'true,false' }}">
+            <div class="vend-icon"><i class="fas fa-store"></i></div>
+            <div class="vend-text">
+                <strong>Become a Vendor</strong>
+                <span>Start selling on Luxa</span>
+            </div>
+        </a>
+        {% endif %}
+        {% endblock %}
+    </div>
+  </aside>
+
+  <div class="main-content">
+      
+    <section class="dashboardpanel detpanel active" id="dashboardpanel">
+      <header class="header" style="margin-bottom: 10px;">
+        
+        <div class="header-info desktop-only" style="flex-direction: column;">
+          <span class="time-greeting">GOOD AFTERNOON</span>
+          <h1 class="main-greeting">
+              What's on your mind, <strong>{{ customer.first_name|capfirst|default:user.username|capfirst }}?</strong>
+          </h1>
+          <p class="header-stats-text">{{ total_orders|default:0 }} active orders · {{ wishlist_count|default:0 }} wishlist items</p>
+        </div>
+        <div class="header-actions desktop-only">
+          <a href="/editprofile/" class="btn-hdr-edit"><i class="fas fa-pen" style="margin-right: 5px;"></i> Edit Profile</a>
+          <a href="/logout/" class="btn-hdr-logout">Log Out</a>
+        </div>
+
+        <div class="mobile-banner-wrapper mobile-only">
+            <div class="m-banner-profile-row">
+                <div class="m-profile-details">
+                    <div class="m-avatar">
+                        {% if customer.profile_picture %}
+                            <img src="{{ customer.profile_picture.url }}">
+                        {% else %}
+                            {{ user.username|make_list|first|upper|default:"S" }}
+                        {% endif %}
+                    </div>
+                    <div class="m-greeting-text">
+                        <span class="m-time">Good afternoon</span>
+                        <h2 class="m-name">{{ customer.first_name|default:user.username }} {{ customer.last_name|default:'' }}</h2>
+                    </div>
+                </div>
+                <a href="/editprofile/" class="m-edit-btn"><i class="fas fa-pen"></i></a>
+            </div>
+            
+            <div class="m-banner-stats-grid">
+                <div class="m-stat-box" onclick="navigateToOrderTab('all')">
+                    <h3>{{ total_orders|default:0 }}</h3>
+                    <p>Total Orders</p>
+                </div>
+                <div class="m-stat-box" onclick="navigateToOrderTab('pending')">
+                    <h3>{{ pending_deliveries|default:0 }}</h3>
+                    <p>Pending Delivery</p>
+                </div>
+            </div>
+
+            <div class="m-banner-wishlist-bar" onclick="navigateToPanel('wishlistpanel')">
+                <span class="m-wl-label">Wishlist Items</span>
+                <span class="m-wl-value"><i class="far fa-heart" style="color: #a78bfa; margin-right: 5px;"></i> {{ wishlist_count|default:0 }} items</span>
+            </div>
+        </div>
+
+      </header>
+
+      <div class="stats-grid desktop-only">
+        <div class="stat-card clickable" onclick="navigateToOrderTab('all')">
+          <div class="stat-header">
+            <span class="stat-title">Total Orders</span>
+            <div class="stat-icon-wrap"><i class="fas fa-box" style="color: #1e124c;"></i></div>
+          </div>
+          <div class="stat-value">{{ total_orders|default:0 }}</div>
+          <div class="stat-footer success"><i class="fas fa-check"></i> {{ completed_orders.count|default:0 }} delivered</div>
+        </div>
+
+        <div class="stat-card clickable" onclick="navigateToOrderTab('pending')">
+          <div class="stat-header">
+            <span class="stat-title">Pending Deliveries</span>
+            <div class="stat-icon-wrap"><i class="fas fa-truck" style="color: #1e124c;"></i></div>
+          </div>
+          <div class="stat-value">{{ pending_deliveries|default:0 }}</div>
+          <div class="stat-footer warning"><i class="fas fa-truck-fast"></i> In progress</div>
+        </div>
+
+        <div class="stat-card clickable" onclick="navigateToPanel('wishlistpanel')">
+          <div class="stat-header">
+            <span class="stat-title">Wishlist Items</span>
+            <div class="stat-icon-wrap"><i class="far fa-heart" style="color: #1e124c;"></i></div>
+          </div>
+          <div class="stat-value">{{ wishlist_count|default:0 }}</div>
+          <div class="stat-footer danger">2 back in stock!</div> 
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-title">Reward Points</span>
+            <div class="stat-icon-wrap"><i class="far fa-star" style="color: #1e124c;"></i></div>
+          </div>
+          <div class="stat-value"> - - </div>
+          <div class="stat-footer neutral">&approx; {{ currency_symbol }} - -</div>
+        </div>
+      </div>
+
+      <div class="dashboard-bottom">
+        
+        <div class="dash-box">
+          <div class="dash-box-header">
+            <h3 class="dash-box-title">Recent Orders</h3>
+            <a href="{% url 'customer_orders' %}" class="dash-box-link">View all &rarr;</a>
+          </div>
+          
+          <div class="dash-list">
+            {% for order in recent_orders %}
+            <div class="order-list-item clickable-list-item" onclick="window.location.href='{% url 'customer_order_detail' order.public_order_id %}'">
+              <div class="order-list-left">
+                <div class="order-img-wrap">
+                  {% if order.sub_orders.first.items.first.product.main_image %}
+                    <img src="{{ order.sub_orders.first.items.first.product.main_image.url }}" alt="Product">
+                  {% else %}
+                    <img src="{% static '/images/icons/package.png' %}" style="width: 24px; opacity:0.5; object-fit: contain;">
+                  {% endif %}
+                </div>
+                <div class="order-info">
+                  <h4>{{ order.sub_orders.first.items.first.product.name|default:"Order "|add:order.public_order_id|truncatechars:35 }}</h4>
+                  <p>#LX-{{ order.public_order_id }} · {{ order.created_at|timesince }} ago</p>
+                </div>
+              </div>
+              
+              <div class="order-list-right">
+                <span class="order-price">{{ currency_symbol }}{{ order.total_amount|floatformat:0|intcomma }}</span>
+                {% if order.status == 'delivered' %}
+                    <span class="status-badge status-delivered">DELIVERED</span>
+                {% elif order.status == 'shipped' or order.status == 'in_transit' %}
+                    <span class="status-badge status-transit">IN TRANSIT</span>
+                {% else %}
+                    <span class="status-badge status-processing">{{ order.get_status_display|upper|default:"PROCESSING" }}</span>
+                {% endif %}
+              </div>
+            </div>
+            {% empty %}
+              <p style="color: #94a3b8; font-size: 0.9rem;">No recent orders found.</p>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="dash-box">
+          <div class="dash-box-header">
+            <h3 class="dash-box-title">Recommended</h3>
+          </div>
+
+          <div class="dash-list">
+            {% for product in recommended_products %}
+            <div class="rec-list-item clickable-list-item" onclick="window.location.href='{% url 'product_detail' product.slug %}'">
+              <div class="rec-list-left">
+                <div class="order-img-wrap" style="width: 55px; height: 55px;">
+                  {% if product.main_image %}
+                    <img src="{{ product.main_image.url }}" alt="{{ product.name }}">
+                  {% endif %}
+                </div>
+                <div class="rec-info">
+                  <h4>{{ product.name|truncatechars:25 }}</h4>
+                  <p>{{ product.category.name|default:"General" }}</p>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <span class="rec-price">{{ currency_symbol }}{{ product.price|floatformat:0|intcomma }}</span>
+                <i class="fas fa-chevron-right rec-arrow"></i>
+              </div>
+            </div>
+            {% empty %}
+               <p style="color: #94a3b8; font-size: 0.9rem;">Check back later for recommendations!</p>
+            {% endfor %}
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="detpanel" id="orderpanel">
+      
+      <div class="op-header-section">
+          <div class="op-header-left" style="width: 100%;">
+              <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 5px;">
+                  <h2 class="op-title" style="margin-bottom: 0;">My Orders</h2>
+                  <a href="{% url 'customer_orders' %}" class="btn-outline-purple" style="padding: 6px 12px; font-size: 0.8rem; height: fit-content; text-decoration: none;">
+                      View All &rarr;
+                  </a>
+              </div>
+              <p class="op-subtitle">Track, manage and review all your purchases.</p>
+          </div>
+      </div>
+
+      <div class="op-main-tabs">
+          <button class="op-tab active" data-filter-main="pending">
+              Pending <span class="op-badge">{{ ongoing_orders.count|default:0 }}</span>
+          </button>
+          <button class="op-tab" data-filter-main="all">
+              All <span class="op-badge">{{ total_orders|default:0 }}</span>
+          </button>
+          <button class="op-tab" data-filter-main="delivered">
+              Delivered <span class="op-badge">{{ completed_orders.count|default:0 }}</span>
+          </button>
+          <button class="op-tab" data-filter-main="cancelled">
+              Cancelled <span class="op-badge">{{ cancelled_orders.count|default:0 }}</span>
+          </button>
+      </div>
+
+      <div class="op-sub-tabs-wrapper" id="pending-sub-tabs">
+          <div class="op-sub-tabs">
+              <button class="op-sub-tab active" data-filter-sub="all">All Pending</button>
+              <button class="op-sub-tab" data-filter-sub="in_transit">In Transit</button>
+              <button class="op-sub-tab" data-filter-sub="processing">Processing</button>
+              <button class="op-sub-tab" data-filter-sub="pending">Awaiting Validation</button>
+          </div>
+      </div>
+
+      <div class="op-orders-list">
+          
+          {% for order in ongoing_orders %}
+            <div class="op-card" data-main="pending" data-sub="{% if order.status == 'shipped' or order.status == 'in_transit' %}in_transit{% else %}{{ order.status }}{% endif %}">
+                <div class="op-card-header">
+                    <div class="op-ch-left">
+                        <h4>Order #LX-{{ order.public_order_id }}</h4>
+                        <p>Placed {{ order.created_at|date:"j M Y" }} · {{ order.sub_orders.count }} item{% if order.sub_orders.count > 1 %}s{% endif %}</p>
+                    </div>
+                    <div class="op-ch-right">
+                        {% if order.status == 'shipped' or order.status == 'in_transit' %}
+                            <span class="status-badge status-transit">IN TRANSIT</span>
+                        {% elif order.status == 'processing' %}
+                            <span class="status-badge status-processing">PROCESSING</span>
+                        {% else %}
+                            <span class="status-badge status-pending">AWAITING VALIDATION</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="op-card-body">
+                    <div class="op-cb-images">
+                        {% with first_item=order.sub_orders.first.items.first %}
+                        <div class="op-img-box">
+                            {% if first_item.product.main_image %}
+                                <img src="{{ first_item.product.main_image.url }}" alt="Product">
+                            {% else %}
+                                <i class="fas fa-box" style="color: #cbd5e1;"></i>
+                            {% endif %}
+                        </div>
+                        {% endwith %}
+                        
+                        {% if order.sub_orders.count > 1 %}
+                        <div class="op-img-box"><img src="{% static '/images/icons/gift.png' %}" alt="+"></div>
+                        <div class="op-img-box"><img src="{% static '/images/icons/chocolate.png' %}" alt="+"></div>
+                        {% endif %}
+                    </div>
+                    <div class="op-cb-info">
+                        {% with first_item=order.sub_orders.first.items.first %}
+                        <h4>{{ first_item.product.name }}{% if order.sub_orders.count > 1 %} + {{ order.sub_orders.count|add:"-1" }} more{% endif %}</h4>
+                        <p>{% if order.sub_orders.count > 1 %}Multiple vendors{% else %}{{ first_item.product.category.name|default:"General" }} · {{ first_item.product.vendor.store_name|default:"Luxa Official" }}{% endif %} · Qty: {{ order.sub_orders.count }} total</p>
+                        {% endwith %}
+                    </div>
+                </div>
+
+                <div class="op-card-footer">
+                    <div class="op-cf-total">
+                        <span>Total</span>
+                        <strong>{{ currency_symbol }}{{ order.total_amount|floatformat:0|intcomma }}</strong>
+                    </div>
+                    <div class="op-cf-actions">
+                        {% if order.status == 'shipped' or order.status == 'in_transit' %}
+                            <button class="op-btn-outline"><i class="fas fa-truck" style="margin-right: 5px;"></i> Track</button>
+                        {% else %}
+                            <button class="op-btn-outline">Cancel Order</button>
+                        {% endif %}
+                        <a href="{% url 'customer_order_detail' order.public_order_id %}" class="op-btn-filled">View Details</a>
+                    </div>
+                </div>
+            </div>
+          {% endfor %}
+
+          {% for order in completed_orders %}
+            <div class="op-card" data-main="delivered" data-sub="delivered">
+                <div class="op-card-header">
+                    <div class="op-ch-left">
+                        <h4>Order #LX-{{ order.public_order_id }}</h4>
+                        <p>Placed {{ order.created_at|date:"j M Y" }} · {{ order.sub_orders.count }} item{% if order.sub_orders.count > 1 %}s{% endif %}</p>
+                    </div>
+                    <div class="op-ch-right">
+                        <span class="status-badge status-delivered">DELIVERED</span>
+                    </div>
+                </div>
+                <div class="op-card-body">
+                    <div class="op-cb-images">
+                        {% with first_item=order.sub_orders.first.items.first %}
+                        <div class="op-img-box">
+                            {% if first_item.product.main_image %}<img src="{{ first_item.product.main_image.url }}">{% else %}<i class="fas fa-box" style="color: #cbd5e1;"></i>{% endif %}
+                        </div>
+                        {% endwith %}
+                    </div>
+                    <div class="op-cb-info">
+                        {% with first_item=order.sub_orders.first.items.first %}
+                        <h4>{{ first_item.product.name }}</h4>
+                        <p>{{ first_item.product.category.name|default:"General" }} · {{ first_item.product.vendor.store_name|default:"Luxa Official" }}</p>
+                        {% endwith %}
+                    </div>
+                </div>
+                <div class="op-card-footer">
+                    <div class="op-cf-total">
+                        <span>Total</span><strong>{{ currency_symbol }}{{ order.total_amount|floatformat:0|intcomma }}</strong>
+                    </div>
+                    <div class="op-cf-actions">
+                        <button class="op-btn-outline">Write Review</button>
+                        <a href="{% url 'customer_order_detail' order.public_order_id %}" class="op-btn-filled" style="background: #6a5299;">Buy Again</a>
+                    </div>
+                </div>
+            </div>
+          {% endfor %}
+
+          {% for order in cancelled_orders %}
+            <div class="op-card" data-main="cancelled" data-sub="cancelled">
+                 <div class="op-card-header">
+                    <div class="op-ch-left">
+                        <h4>Order #LX-{{ order.public_order_id }}</h4>
+                        <p>Placed {{ order.created_at|date:"j M Y" }} · {{ order.sub_orders.count }} item{% if order.sub_orders.count > 1 %}s{% endif %}</p>
+                    </div>
+                    <div class="op-ch-right">
+                        <span class="status-badge status-processing" style="background:#fee2e2; color:#991b1b;">CANCELLED</span>
+                    </div>
+                </div>
+                <div class="op-card-body">
+                    <div class="op-cb-images">
+                        {% with first_item=order.sub_orders.first.items.first %}
+                        <div class="op-img-box">
+                            {% if first_item.product.main_image %}<img src="{{ first_item.product.main_image.url }}">{% else %}<i class="fas fa-box"></i>{% endif %}
+                        </div>
+                        {% endwith %}
+                    </div>
+                    <div class="op-cb-info">
+                        {% with first_item=order.sub_orders.first.items.first %}
+                        <h4>{{ first_item.product.name }}</h4>
+                        <p>{{ first_item.product.category.name|default:"General" }} · {{ first_item.product.vendor.store_name|default:"Luxa Official" }}</p>
+                        {% endwith %}
+                    </div>
+                </div>
+                <div class="op-card-footer">
+                    <div class="op-cf-total">
+                        <span>Total</span><strong>{{ currency_symbol }}{{ order.total_amount|floatformat:0|intcomma }}</strong>
+                    </div>
+                    <div class="op-cf-actions">
+                        <a href="{% url 'customer_order_detail' order.public_order_id %}" class="op-btn-filled">View Details</a>
+                    </div>
+                </div>
+            </div>
+          {% endfor %}
+          
+          <div id="op-empty-state" style="display: none; text-align: center; padding: 40px; color: #94a3b8;">
+              <i class="fas fa-search" style="font-size: 2rem; margin-bottom: 15px; opacity: 0.5;"></i>
+              <p>No orders found in this category.</p>
+          </div>
+
+      </div>
+    </section>
+
+    <section class="detpanel" id="wishlistpanel">
+      <div class="wl-header-section">
+          <div class="wl-header-left">
+              <h2 class="wl-title desktop-only">My Wishlist</h2>
+              <h2 class="wl-title mobile-only" style="align-items: center; gap: 8px;">
+                  Wishlist <span class="wl-count">({{ wishlist_count|default:0 }})</span>
+              </h2>
+              <p class="wl-subtitle desktop-only">{{ wishlist_count|default:0 }} items saved — hover a card to remove.</p>
+          </div>
+          <div class="wl-header-right">
+              <button id="add-all-to-cart-btn" class="btn-outline-purple desktop-only">
+                  <i class="fas fa-shopping-cart"></i> Add All to Cart
+              </button>
+              <button id="clear-wishlist-btn" class="wl-clear-all-btn mobile-only">
+                  Clear all
+              </button>
+          </div>
+      </div>
+
+      <div class="wl-grid">
+        {% if wishlist_items %}
+          {% for item in wishlist_items %}
+          <div class="wl-card">
+              <button class="wl-remove-btn remove-wishlist-btn desktop-only" data-product-id="{{ item.product.id }}" title="Remove from Wishlist">
+                  <i class="fas fa-times"></i>
+              </button>
+
+              <div class="wl-img-container">
+                  {% if item.product.model_3d_file %}
+                      <span class="badge-3d desktop-only">3D</span>
+                  {% endif %}
+                  
+                  <a href="{% url 'product_detail' item.product.slug %}">
+                      {% if item.product.main_image %}
+                          <img src="{{ item.product.main_image.url }}" alt="{{ item.product.name }}">
+                      {% else %}
+                          <div class="placeholder-img"><i class="fas fa-image" style="color:#ccc;"></i></div>
+                      {% endif %}
+                  </a>
+              </div>
+              
+              <div class="wl-details">
+                  <div class="wl-info">
+                      <h4 class="wl-item-title" title="{{ item.product.name }}">{{ item.product.name|truncatechars:35 }}</h4>
+                      
+                      <span class="wl-category-tag desktop-only">{{ item.product.category.name|default:"General" }}</span>
+                      <p class="wl-category-mobile mobile-only">
+                          {{ item.product.category.name|default:"General" }}{% if item.product.model_3d_file %} · 3D Preview{% endif %}
+                      </p>
+                      
+                      <span class="wl-price">{{ wishlist_currency_symbol }}{{ item.product.price|floatformat:0|intcomma }}</span>
+                  </div>
+                  
+                  <div class="wl-bottom-row desktop-only">
+                      <button class="wl-add-cart-btn add-to-cart-btn" data-product-id="{{ item.product.id }}">
+                          <i class="fas fa-shopping-cart"></i> Add
+                      </button>
+                  </div>
+              </div>
+
+              <div class="m-wl-actions mobile-only">
+                  <button class="m-wl-btn m-add-cart add-to-cart-btn" data-product-id="{{ item.product.id }}">
+                      <i class="fas fa-shopping-cart"></i>
+                  </button>
+                  <button class="m-wl-btn m-remove remove-wishlist-btn" data-product-id="{{ item.product.id }}">
+                      <i class="far fa-trash-alt"></i>
+                  </button>
+              </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px;">
+              <img src="{% static '/images/icons/heartoutline.png' %}" style="width: 50px; opacity: 0.3; margin-bottom: 15px;">
+              <p style="color: #64748b;">Your wishlist is currently empty.</p>
+              <a href="{% url 'index' %}" style="color: #6a3aff; font-weight: 600; text-decoration: none; margin-top: 10px; display: inline-block;">Start shopping</a>
+          </div>
+        {% endif %}
+      </div>
+    </section>  
+
+    <section class="detpanel" id="addresspanel">
+      <div class="addr-header-section">
+          <div class="addr-header-left">
+              <h2 class="addr-title">My Addresses</h2>
+              <p class="addr-subtitle desktop-only">Manage your saved delivery addresses.</p>
+          </div>
+          <button id="btn-show-add-form" class="btn-primary-purple">
+              <i class="fas fa-plus"></i> 
+              <span class="desktop-only" style="margin-left: 5px;">Add New Address</span>
+              <span class="mobile-only" style="margin-left: 5px;">Add</span>
+          </button>
+      </div>
+
+      <div class="addr-grid" id="addr-cards-container">
+          {% for addr in all_addresses %}
+          <div class="addr-card {% if addr.is_primary %}is-default{% endif %}">
+              <div class="addr-card-header">
+                  <div class="addr-label-wrap">
+                      <i class="{% if 'Office' in addr.label %}fas fa-cube{% else %}far fa-heart{% endif %}" style="color: #6a3aff;"></i>
+                      <strong>{{ addr.label|default:"Address" }}</strong>
+                  </div>
+                  {% if addr.is_primary %}
+                      <span class="badge-default">DEFAULT</span>
+                  {% endif %}
+              </div>
+              
+              <div class="addr-card-body">
+                  <h4 class="addr-name">{{ customer.full_name }}</h4>
+                  <p class="addr-text">
+                      {{ addr.address_line1 }}<br>
+                      {% if addr.address_line2 %}{{ addr.address_line2 }}<br>{% endif %}
+                      {{ addr.city }}, {{ addr.state }}<br>
+                      {{ addr.country }}
+                  </p>
+                  <p class="addr-phone">
+                      <i class="fas fa-phone-alt" style="color: #94a3b8; font-size: 0.8rem; margin-right: 5px;"></i> 
+                      {{ customer.phone_number|default:"+234 xxx xxx xxxx" }}
+                  </p>
+              </div>
+
+              <div class="addr-card-footer">
+                    <button class="btn-addr-action edit-addr-btn" 
+                            data-id="{{ addr.id }}"
+                            data-fullname="{{ addr.full_name|default:customer.full_name }}"
+                            data-phone="{{ addr.phone|default:customer.phone_number }}"
+                            data-line1="{{ addr.address_line1 }}"
+                            data-line2="{{ addr.address_line2|default:'' }}"
+                            data-city="{{ addr.city }}"
+                            data-state="{{ addr.state }}"
+                            data-label="{{ addr.label|default:'' }}">
+                        <i class="fas fa-pen" style="font-size: 0.75rem;"></i> Edit
+                    </button>                  
+                    <button class="btn-addr-action del-addr-btn" data-id="{{ addr.id }}"><i class="far fa-trash-alt" style="font-size: 0.75rem;"></i> Delete</button>
+                    {% if not addr.is_primary %}
+                      <button class="btn-addr-set-default" data-id="{{ addr.id }}">Set Default</button>
+                    {% endif %}
+              </div>
+          </div>
+          {% endfor %}
+
+          <div class="addr-card addr-card-add" id="card-show-add-form">
+              <div class="add-circle"><i class="fas fa-plus"></i></div>
+              <h4 style="color: #1e1b4b; margin-bottom: 5px;">Add New Address</h4>
+              <p style="color: #94a3b8; font-size: 0.85rem;">Save a home, office or<br>other delivery address</p>
+          </div>
+      </div>
+
+      <div class="addr-form-wrapper" id="add-address-form-wrapper" style="display: none;">
+          <h3 class="addr-form-title">Add New Address</h3>
+          
+          <form id="new-address-form" method="POST" action="/api/add-address/">
+              {% csrf_token %}
+              <input type="hidden" name="address_id" id="form-address-id" value="">
+              <div class="form-grid">
+                  <div class="form-group full-width">
+                      <label>Address Line</label>
+                      <input type="text" name="address_line1" placeholder="House number, street name / Room number, Hostel [For School]" class="addr-input" required>
+                  </div>
+                  <div class="form-group">
+                      <label>City / Town</label>
+                      <input type="text" name="city" placeholder="e.g. Omu-Aran" class="addr-input" required>
+                  </div>
+                  <div class="form-group">
+                      <label>State</label>
+                      <input type="text" name="state" placeholder="Kwara State" class="addr-input" required>
+                  </div>
+                  <div class="form-group">
+                      <label>Address Label</label>
+                      <input type="text" name="label" placeholder="Home, Office, etc." class="addr-input">
+                  </div>
+                  <div class="form-group checkbox-group">
+                      <input type="checkbox" id="set-default-check" name="is_default">
+                      <label for="set-default-check">Set as default delivery address</label>
+                  </div>
+              </div>
+              
+              <div class="form-actions">
+                  <button type="submit" class="btn-primary-purple">Save Address</button>
+                  <button type="button" class="btn-outline-cancel" id="btn-cancel-add-form">Cancel</button>
+              </div>
+          </form>
+      </div>
+
+    </section>
+
+  {% block vendpanels %}
+  {% endblock %}
+  </div>
+  
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // 1. Switches the main panel (e.g., from Dashboard to Wishlist)
+    window.navigateToPanel = function(panelId) {
+        // Find the sidebar list item linked to this panel
+        const sidebarItem = document.querySelector(`.menu li[data-target="${panelId}"]`);
+        if (sidebarItem) {
+            sidebarItem.click(); // Trigger the sidebar click logic
+            window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll back up to the top
+        }
+    };
+
+    // 2. Switches to Order Panel AND selects the correct Tab (All vs Pending)
+    window.navigateToOrderTab = function(mainTabFilter) {
+        // First, switch to the order panel
+        window.navigateToPanel('orderpanel');
+        
+        // Next, wait just a tiny fraction of a second for the panel to become active, 
+        // then click the specific tab (Pending or All Orders)
+        setTimeout(() => {
+            const tabToClick = document.querySelector(`.op-tab[data-filter-main="${mainTabFilter}"]`);
+            if (tabToClick) {
+                tabToClick.click();
+            }
+        }, 50);
+    };
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Remove from wishlist handlers
+        document.querySelectorAll('.remove-wishlist-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const productId = this.getAttribute('data-product-id');
+                if (confirm('Remove this item from wishlist?')) {
+                    removeFromWishlist(productId);
+                }
+            });
+        });
+
+        // KYC Modal pop up if customer unverfied
+        const vendorLink = document.getElementById('become-vendor-link');
+        const modal = document.getElementById('kyc-vendor-modal');
+
+        if (vendorLink) {
+            vendorLink.addEventListener('click', function(e) {
+                const isVerified = this.getAttribute('data-verified') === 'true';
+                if (!isVerified) {
+                    e.preventDefault(); 
+                    modal.classList.add('active');
+                }
+            });
+        }
+
+        window.closeKycModal = function() {
+            if (modal) modal.classList.remove('active');
+        }
+        
+        if (modal) {
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) closeKycModal();
+            });
+        }
+
+        function removeFromWishlist(productId) {
+            fetch(`/wishlist/remove/${productId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                }
+            })
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    alert(data.message || 'Item removed from wishlist');
+                    location.reload();
+                } else {
+                    alert(data.error || 'Failed to remove item');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred');
+            });
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // --- Address Panel Logic (Add & Edit) ---
+        // MOVED INSIDE THE DOMContentLoaded LISTENER!
+        const btnShowAddForm = document.getElementById('btn-show-add-form');
+        const cardShowAddForm = document.getElementById('card-show-add-form');
+        const btnCancelAddForm = document.getElementById('btn-cancel-add-form');
+        const addrFormWrapper = document.getElementById('add-address-form-wrapper');
+        const addressForm = document.getElementById('new-address-form');
+        const formTitle = document.querySelector('.addr-form-title');
+
+        function showAddressFormForAdd() {
+            addressForm.reset();
+            document.getElementById('form-address-id').value = ''; 
+            formTitle.textContent = 'Add New Address';
+            addrFormWrapper.style.display = 'block';
+            addrFormWrapper.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function hideAddressForm() {
+            addrFormWrapper.style.display = 'none';
+            addressForm.reset();
+        }
+
+        if (btnShowAddForm) btnShowAddForm.addEventListener('click', showAddressFormForAdd);
+        if (cardShowAddForm) cardShowAddForm.addEventListener('click', showAddressFormForAdd);
+        if (btnCancelAddForm) btnCancelAddForm.addEventListener('click', hideAddressForm);
+
+        document.querySelectorAll('.edit-addr-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                // Populate only the existing form fields
+                addressForm.elements['address_line1'].value = this.dataset.line1 || '';
+                
+                // Use a safe check for address_line2 in case you didn't add it to the HTML
+                if (addressForm.elements['address_line2']) {
+                    addressForm.elements['address_line2'].value = this.dataset.line2 || '';
+                }
+                
+                addressForm.elements['city'].value = this.dataset.city || '';
+                addressForm.elements['state'].value = this.dataset.state || '';
+                addressForm.elements['label'].value = this.dataset.label || '';
+                
+                // Set the hidden ID so the backend knows which address to update
+                document.getElementById('form-address-id').value = this.dataset.id;
+                
+                formTitle.textContent = 'Edit Address';
+                addrFormWrapper.style.display = 'block';
+                addrFormWrapper.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            });
+        });
+
+        if (addressForm) {
+            addressForm.addEventListener('submit', function(e) {
+                e.preventDefault(); 
+                
+                const submitBtn = this.querySelector('button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+                submitBtn.disabled = true;
+
+                const formData = new FormData(this);
+                const dataObj = Object.fromEntries(formData.entries());
+
+                fetch('/api/address/manage/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(dataObj)
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload(); 
+                    } else {
+                        alert('Error: ' + data.error);
+                        submitBtn.innerHTML = originalText;
+                        submitBtn.disabled = false;
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert('A network error occurred while saving the address.');
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                });
+            });
+        }
+
+        // Delete Address Listener
+        document.querySelectorAll('.del-addr-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                if(confirm('Are you sure you want to delete this address?')) {
+                    const addrId = this.getAttribute('data-id');
+                    const originalHTML = this.innerHTML;
+                    
+                    // UI Loading state
+                    this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                    this.disabled = true;
+
+                    fetch('/api/address/delete/', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': getCookie('csrftoken'),
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ address_id: addrId })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            location.reload(); // Refresh to remove the card from the UI
+                        } else {
+                            alert('Error: ' + data.error);
+                            this.innerHTML = originalHTML;
+                            this.disabled = false;
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        alert('A network error occurred.');
+                        this.innerHTML = originalHTML;
+                        this.disabled = false;
+                    });
+                }
+            });
+        });
+
+        // Set Default Listener
+        document.querySelectorAll('.btn-addr-set-default').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const addrId = this.getAttribute('data-id');
+                const originalText = this.innerHTML;
+                
+                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Setting...';
+                this.disabled = true;
+
+                fetch('/api/address/set-default/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ address_id: addrId })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload(); // Reload to show the new default badge!
+                    } else {
+                        alert('Error: ' + data.error);
+                        this.innerHTML = originalText;
+                        this.disabled = false;
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert('A network error occurred.');
+                    this.innerHTML = originalText;
+                    this.disabled = false;
+                });
+            });
+        });
+
+        // 3. Clear All Wishlist Logic (Mobile)
+        const clearWishlistBtn = document.getElementById('clear-wishlist-btn');
+        if (clearWishlistBtn) {
+            clearWishlistBtn.addEventListener('click', async function() {
+                if (!confirm('Are you sure you want to clear your entire wishlist?')) return;
+                
+                const buttons = document.querySelectorAll('.m-remove'); 
+                if (buttons.length === 0) return;
+
+                this.innerHTML = 'Clearing...';
+                this.style.opacity = '0.5';
+                this.style.pointerEvents = 'none';
+
+                // Process removals sequentially
+                for (let btn of buttons) {
+                    const productId = btn.getAttribute('data-product-id');
+                    try {
+                        await fetch(`/wishlist/remove/${productId}/`, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': getCookie('csrftoken'),
+                                'Content-Type': 'application/json'
+                            }
+                        });
+                    } catch (error) {
+                        console.error('Failed to remove product:', productId, error);
+                    }
+                }
+                
+                // Reload page to show empty state
+                location.reload();
+            });
+        }
+    }); 
+</script>
+<script src="{% static '/js/customerpage.js' %}"></script>
+{% endblock %}

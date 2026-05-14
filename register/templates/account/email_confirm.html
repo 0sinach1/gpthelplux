@@ -1,0 +1,24 @@
+{% extends "MAIN/base.html" %}
+{% load account %}
+
+{% block content %}
+<div class="container text-center" style="padding: 80px 20px;">
+    {% if confirmation %}
+        {# This part runs if they click the link but 'ON_GET' is False (rare for you) #}
+        <h2 class="purple">Confirm E-mail Address</h2>
+        <p>Please confirm that <a href="mailto:{{ confirmation.email_address.email }}">{{ confirmation.email_address.email }}</a> is an e-mail address for user {{ confirmation.email_address.user }}.</p>
+        
+        <form method="post" action="{% url 'account_confirm_email' confirmation.key %}">
+        {% csrf_token %}
+            <button class="btn btn-primary" type="submit">Confirm</button>
+        </form>
+
+    {% else %}
+        {# This runs if the link is invalid or expired #}
+        <h2 class="text-danger">Invalid Link</h2>
+        <p>This verification link has expired or is invalid.</p>
+        <p>Please log in and request a new one.</p>
+        <a href="{% url 'account_login' %}"><button class="btn btn-primary">Go to Login</button></a>
+    {% endif %}
+</div>
+{% endblock %}

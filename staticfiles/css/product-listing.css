@@ -1,0 +1,106 @@
+#main {
+    display: flex;
+    color: #333;
+    padding: 30px;
+    width: 90%;
+    justify-self: center;
+    flex-direction: column;
+}
+
+h2 {
+    margin-bottom: 20px;
+    color: black;
+}
+
+/* === Header === */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #eaeaea;
+}
+
+#heading {
+    font-weight: 700;
+    color: #960ffa;
+}
+
+.language-select {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.language-select select {
+    padding: 8px 15px;
+    border-radius: 7px;
+    font-size: 16px;
+    border: 0.8px solid #ccc;
+    cursor: pointer;
+}
+
+.theme {
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 7px;
+    padding: 8px 10px;
+    transition: background 0.2s;
+}
+
+.theme:hover {
+    background: #ccc;
+}
+
+.moon {
+    height: fit-content;
+}
+
+.webicon {
+    width: 20px;
+} 
+
+
+/* === Input Fields === */
+
+.formcont {
+    margin: 15px 0px;
+}
+
+.formcont h3 {
+    font-size: 28px;
+    color: #960ffa;
+    font-weight: 600;
+    margin-top: 20px;
+}
+
+input[type="text"],
+input[type="password"],
+input[type="email"] {
+    width: 100%;
+    font-size: 1em;
+    border-radius: 20px;
+    padding: 10px 15px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.01);
+}
+
+.formcont label {
+  font-weight: 550;
+  color: #333; /* optional */
+}
+
+.btn-primary {
+    background-color: #960ffa;
+    border-color: #960ffa;
+    padding: 10px;
+    font-size: 18px;
+}
+
+.notes {
+    background-color: white;
+    padding: 30px;
+    box-shadow: rgba(0, 0, 0, 0.01);
+    width: fit-content;
+    border-radius: 15px;
+    align-self: center;
+}

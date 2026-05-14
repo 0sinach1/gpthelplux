@@ -1,0 +1,64 @@
+#main {
+    display: flex;
+    color: #333;
+    padding: 30px;
+    width: 90%;
+    justify-self: center;
+    flex-direction: column;
+}
+
+header {
+    padding: 10px 10px 20px 10px;
+    border-bottom: 1px solid #eaeaea;
+}
+
+.manage {
+    margin-top: 20px;
+    padding: 20px;
+    background-color: white;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+    border-radius: 15px;
+    display: flex;
+    flex-direction: column;
+}
+
+.col1 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr 0.5fr 0.5fr 0.5fr;
+    gap: 15px;
+    padding: 20px 10px;
+    border-bottom: 1px solid #a3a3a3;
+}
+
+#mancol {
+    grid-column: 5/span 3;
+    justify-self: center;
+}
+
+.procol {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr 0.5fr 0.5fr 0.5fr;
+    gap: 15px;
+    padding: 15px 10px;
+    border-bottom: 1px solid #eaeaea;
+}
+
+.procol p {
+    justify-items: center;
+    margin: auto 0;
+}
+
+.procol:last-child {
+    border-bottom: none;
+}
+
+.btn-primary {
+    width: fit-content;
+    margin: auto;
+    background-color: #960ffa;
+    border-color: #960ffa;
+}
+
+#vendashbtn {
+    margin-top: 20px;
+}

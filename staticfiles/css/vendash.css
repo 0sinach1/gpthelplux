@@ -1,0 +1,51 @@
+#vendnavitems {
+    border: 2px solid #FFB900;
+    border-radius: 15px;
+}
+
+#vendnavitems h5 {
+    padding: 5px 15px;
+    color: #FFB900;
+}
+
+#proorderspanel {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)) !important;
+}
+
+#listpropanel {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: repeat(auto-fill, minmax(500px, 1fr)) !important;
+    align-items: left;
+    justify-items: left;
+}
+
+#protab {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    width: 100%;
+}
+
+ul {
+    list-style-type: none!important;
+}
+
+ul h3 {
+    border-bottom: 1px solid #cacaca;
+    padding-bottom: 20px;
+}
+
+.btn-primary {
+    background-color: #6a3aff;
+    border-color: #6a3aff;
+    width: 100%;
+    margin: 10px;
+}
+
+.prode {
+    display: flex;
+    flex-direction: column;
+}
+
+a {
+    text-decoration: none !important;
+}

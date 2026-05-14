@@ -1,0 +1,134 @@
+{% extends'base.html' %}
+{% load static %} 
+{% block title %}My Orders{% endblock %} 
+{%block extra_css %}
+<link rel="stylesheet" href="{% static 'MAIN/css/orders.css' %}" />
+{% endblock %} {% block category_bar %}{% endblock %} {% block content %}
+<div class="container page-wrapper">
+  {# Header #}
+  <div class="orders-header">
+    <h1>My Orders</h1>
+    <p>Track all your purchases in one place.</p>
+  </div>
+
+  {# Main tabs: Pending / Delivered / Cancelled #}
+  <div class="orders-filter-bar">
+    <div class="tabs">
+      <a
+        href="?tab=pending"
+        class="tab-btn {% if active_tab == 'pending' or not active_tab %}active{% endif %}"
+      >
+        Pending {% if pending_count %}<span class="tab-count"
+          >{{ pending_count }}</span
+        >{% endif %}
+      </a>
+      <a
+        href="?tab=delivered"
+        class="tab-btn {% if active_tab == 'delivered' %}active{% endif %}"
+      >
+        Delivered {% if delivered_count %}<span class="tab-count"
+          >{{ delivered_count }}</span
+        >{% endif %}
+      </a>
+      <a
+        href="?tab=cancelled"
+        class="tab-btn {% if active_tab == 'cancelled' %}active{% endif %}"
+      >
+        Cancelled {% if cancelled_count %}<span class="tab-count"
+          >{{ cancelled_count }}</span
+        >{% endif %}
+      </a>
+    </div>
+  </div>
+
+  {# Sub-filters (shown only on Pending tab) #} {% if active_tab == 'pending' or
+  not active_tab %}
+  <div class="orders-sub-filters">
+    <button
+      class="order-sub-chip {% if active_sub_filter == 'intransit' or not active_sub_filter %}active{% endif %}"
+      onclick="filterOrders('intransit')"
+    >
+      In-transit
+    </button>
+    <button
+      class="order-sub-chip {% if active_sub_filter == 'processing' %}active{% endif %}"
+      onclick="filterOrders('processing')"
+    >
+      Processing
+    </button>
+    <button
+      class="order-sub-chip {% if active_sub_filter == 'awaiting' %}active{% endif %}"
+      onclick="filterOrders('awaiting')"
+    >
+      Awaiting Validation
+    </button>
+  </div>
+  {% endif %} {# ── Order groups ── #} {% with
+  active=active_tab|default:"pending" %} {# Pending / In-transit group #} {% if
+  active == 'pending' %} {% if orders_intransit %}
+  <p class="orders-section-label">
+    In-Transit · {{ orders_intransit|length }} Order{{
+    orders_intransit|length|pluralize }}
+  </p>
+  {% for order in orders_intransit %} {% include 'partials/order_card.html' with
+  order=order icon_type='intransit' %} {% endfor %} {% endif %} {% if
+  orders_processing %}
+  <p class="orders-section-label">
+    Processing · {{ orders_processing|length }} Order{{
+    orders_processing|length|pluralize }}
+  </p>
+  {% for order in orders_processing %} {% include 'partials/order_card.html'
+  with order=order icon_type='intransit' %} {% endfor %} {% endif %} {% if
+  orders_awaiting %}
+  <p class="orders-section-label">
+    Awaiting Validation · {{ orders_awaiting|length }} Order{{
+    orders_awaiting|length|pluralize }}
+  </p>
+  {% for order in orders_awaiting %} {% include 'partials/order_card.html' with
+  order=order icon_type='intransit' %} {% endfor %} {% endif %} {% if not
+  orders_intransit and not orders_processing and not orders_awaiting %}
+  <div
+    class="card"
+    style="text-align: center; padding: 48px; color: var(--clr-text-3)"
+  >
+    No pending orders.
+  </div>
+  {% endif %} {% endif %} {# Delivered group #} {% if active == 'delivered' %}
+  {% if orders_delivered %}
+  <p class="orders-section-label">
+    Delivered · {{ orders_delivered|length }} Order{{
+    orders_delivered|length|pluralize }}
+  </p>
+  {% for order in orders_delivered %} {% include 'partials/order_card.html' with
+  order=order icon_type='delivered' %} {% endfor %} {% else %}
+  <div
+    class="card"
+    style="text-align: center; padding: 48px; color: var(--clr-text-3)"
+  >
+    No delivered orders yet.
+  </div>
+  {% endif %} {% endif %} {# Cancelled group #} {% if active == 'cancelled' %}
+  {% if orders_cancelled %}
+  <p class="orders-section-label">
+    Cancelled · {{ orders_cancelled|length }} Order{{
+    orders_cancelled|length|pluralize }}
+  </p>
+  {% for order in orders_cancelled %} {% include 'partials/order_card.html' with
+  order=order icon_type='cancelled' %} {% endfor %} {% else %}
+  <div
+    class="card"
+    style="text-align: center; padding: 48px; color: var(--clr-text-3)"
+  >
+    No cancelled orders.
+  </div>
+  {% endif %} {% endif %} {% endwith %}
+</div>
+{% endblock %} {% block extra_js %}
+<script>
+  function filterOrders(type) {
+    const url = new URL(window.location);
+    url.searchParams.set("sub", type);
+    window.location = url.toString();
+  }
+</script>
+{% endblock %}

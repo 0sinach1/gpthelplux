@@ -1,0 +1,242 @@
+{% extends "MAIN/base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Review Order{% endblock %}
+
+{% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static '/css/order_draft/order_edit.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="edit-page-wrapper">
+    
+    <div class="order-card">
+        <div class="card-header">
+            <div>
+                <h2 style="margin: 0; font-size: 1.5rem; color: #111;">Review Order</h2>
+                <div class="item-meta">Draft #{{ existing_draft.id|stringformat:".8s" }}</div>
+            </div>
+            <a href="{% url 'order_dispatch_prompt' existing_draft.id %}" style="color: #64748b; text-decoration: none; font-weight: 600; font-size: 0.9rem;">
+                Back
+            </a>
+        </div>
+
+        <div class="card-body">
+            <form method="POST" id="order-form">
+                {% csrf_token %}
+
+                <div class="delivery-select-container">
+                    <label style="display:block; margin-bottom:8px; font-weight:700; color:#475569; font-size:0.8rem; text-transform:uppercase;">Delivery Preference</label>
+                    <div style="position:relative;">
+                        <select name="delivery_type" class="delivery-select">
+                            <option value="standard_delivery" {% if existing_draft.delivery_type == 'standard_delivery' %}selected{% endif %}>Standard Delivery (Within 48 hours)</option>
+                            <!-- Disable sameday delivery for now -->
+                            <option value="same_day_delivery" {% if existing_draft.delivery_type == 'same_day_delivery' %}selected{% endif %} disabled>🚀 Same-Day Delivery (Express)</option>
+                        </select>
+                        <i class="fas fa-chevron-down" style="position:absolute; right:15px; top:50%; transform:translateY(-50%); pointer-events:none; color:#64748b;"></i>
+                    </div>
+                </div>
+
+                <div id="item-list-container">
+                    </div>
+
+                <button type="button" class="add-product-btn" onclick="openProductModal()">
+                    <i class="fas fa-plus-circle" style="font-size: 1.2rem;"></i>
+                    Add Another Product
+                </button>
+
+                <button type="submit" class="save-btn">
+                    <i class="fas fa-check"></i> CONFIRM CHANGES
+                </button>
+            </form>
+        </div>
+    </div>
+
+</div>
+
+<div id="productModal" class="modal-overlay" onclick="closeProductModal(event)">
+    <div class="modal-card">
+        <div class="modal-header">
+            <div class="search-box">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="productSearch" class="search-input" placeholder="Search products..." onkeyup="filterProducts()">
+            </div>
+            <select id="categoryFilter" style="padding: 12px; border-radius: 8px; border: 1px solid #e5e7eb; background: #f9fafb;" onchange="filterProducts()">
+                <option value="all">All Categories</option>
+                </select>
+            <button onclick="document.getElementById('productModal').style.display='none'" style="background:none; border:none; font-size:1.5rem; cursor:pointer; padding:0 10px;">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div id="modalProductGrid" class="product-grid">
+                </div>
+        </div>
+    </div>
+</div>
+
+<script id="product-json" type="application/json">{{ product_json|safe }}</script>
+<script id="draft-items-json" type="application/json">{{ draft_items_json|safe }}</script>
+
+<script>
+    const allProducts = JSON.parse(document.getElementById('product-json').textContent);
+    const existingItems = JSON.parse(document.getElementById('draft-items-json').textContent);
+
+    /* --- INITIALIZATION --- */
+    document.addEventListener('DOMContentLoaded', () => {
+        // Hydrate existing items
+        if (existingItems && existingItems.length > 0) {
+            existingItems.forEach(item => {
+                const product = allProducts.find(p => String(p.id) === String(item.product_id));
+                if (product) {
+                    renderItemRow(product, item.quantity, item.variations);
+                }
+            });
+        }
+        
+        // Setup Modal Categories
+        populateCategoryFilter();
+        renderModalProducts(allProducts);
+    });
+
+    /* --- ITEM ROW RENDERING --- */
+    function renderItemRow(product, qty = 1, selectedVariations = {}) {
+        const list = document.getElementById('item-list-container');
+        const rowId = document.querySelectorAll('.item-row').length + 1;
+        
+        const div = document.createElement('div');
+        div.className = 'item-row';
+        div.id = `row-${rowId}`;
+
+        // Prepare Attribute Selectors
+        let attrsHtml = '';
+        if (product.attributes && product.attributes.length > 0) {
+            product.attributes.forEach(attr => {
+                const preSelected = selectedVariations[attr.name] || '';
+                
+                let options = attr.values.map(val => 
+                    `<option value="${val}" ${val === preSelected ? 'selected' : ''}>${val}</option>`
+                ).join('');
+
+                // Name format: attr_{rowIdx}_{prodId}_{attrName}
+                const fieldName = `attr_${rowId}_${product.id}_${attr.name}`;
+                
+                attrsHtml += `
+                    <div class="spec-group">
+                        <label>${attr.name}</label>
+                        <select name="${fieldName}">${options}</select>
+                    </div>
+                `;
+            });
+        } else {
+            attrsHtml = `<div class="spec-group" style="grid-column: 1/-1;"><p style="font-size:0.8rem; color:#94a3b8;">No options available</p></div>`;
+        }
+
+        // Hidden input for Product ID
+        // Note: We use product_ids[] so request.POST.getlist works
+        var total_price = product.price * qty;
+        div.innerHTML = `
+            <img src="${product.image}" class="item-image" alt="${product.name}">
+            
+            <div class="item-details">
+                <input type="hidden" name="product_ids" value="${product.id}">
+                <h4>${product.name}</h4>
+                <div class="item-meta">${product.category} • ₦${product.price.toLocaleString()} each -> Total: ₦${total_price.toLocaleString()}</div>
+                
+                <div class="specs-container">
+                    <div class="spec-group">
+                        <label>Quantity</label>
+                        <input type="number" name="quantities" value="${qty}" min="1">
+                    </div>
+                    ${attrsHtml}
+                </div>
+            </div>
+
+            <button type="button" class="action-btn remove-btn" onclick="this.parentElement.remove()">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+        `;
+
+        list.appendChild(div);
+        
+        // Re-index logic is handled by backend harvesting list order, 
+        // but unique names need to ensure no conflict. 
+        // Since we append, ID collision is rare unless deleted/re-added. 
+        // For robustness, simply keep incrementing rowId logic or re-index on submit.
+        // Current logic works because backend harvester iterates by index.
+    }
+
+    /* --- MODAL LOGIC --- */
+    function openProductModal() {
+        document.getElementById('productModal').style.display = 'flex';
+        document.getElementById('productSearch').focus();
+    }
+
+    function closeProductModal(e) {
+        if (e.target.id === 'productModal') {
+            document.getElementById('productModal').style.display = 'none';
+        }
+    }
+
+    function populateCategoryFilter() {
+        const categories = [...new Set(allProducts.map(p => p.category))].sort();
+        const select = document.getElementById('categoryFilter');
+        categories.forEach(cat => {
+            const opt = document.createElement('option');
+            opt.value = cat;
+            opt.textContent = cat;
+            select.appendChild(opt);
+        });
+    }
+
+    function renderModalProducts(products) {
+        const grid = document.getElementById('modalProductGrid');
+        grid.innerHTML = '';
+        
+        if (products.length === 0) {
+            grid.innerHTML = '<p style="grid-column:1/-1; text-align:center; color:#64748b; padding:20px;">No products found.</p>';
+            return;
+        }
+
+        products.forEach(p => {
+            const card = document.createElement('div');
+            card.className = 'product-card-select';
+            card.onclick = () => selectProduct(p.id);
+            
+            card.innerHTML = `
+                <img src="${p.image}" class="pc-image" loading="lazy">
+                <div class="pc-info">
+                    <div class="pc-cat">${p.category}</div>
+                    <div class="pc-name">${p.name}</div>
+                    <div class="pc-price">₦${p.price.toLocaleString()}</div>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+    }
+
+    function filterProducts() {
+        const search = document.getElementById('productSearch').value.toLowerCase();
+        const cat = document.getElementById('categoryFilter').value;
+
+        const filtered = allProducts.filter(p => {
+            const matchesSearch = p.name.toLowerCase().includes(search);
+            const matchesCat = cat === 'all' || p.category === cat;
+            return matchesSearch && matchesCat;
+        });
+
+        renderModalProducts(filtered);
+    }
+
+    function selectProduct(id) {
+        const product = allProducts.find(p => String(p.id) === String(id));
+        if (product) {
+            renderItemRow(product); // Add with default qty 1
+            document.getElementById('productModal').style.display = 'none';
+            // Scroll to bottom
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }
+    }
+
+</script>
+{% endblock %}

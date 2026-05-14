@@ -1,0 +1,131 @@
+{% for item in assignments.transit %}
+<div class="batch-wrapper" id="transit-item-{{ forloop.counter }}" style="margin-bottom: 20px; border-radius: 15px; background: #fdfdfd; border: 1px solid #eee;">
+
+    {% if item.status == 'in_transit' and item.matrix_manifest %}
+        {% include 'couriers/partials/dynamic_routing_map.html' with active_batch=item %}
+    {% endif %}
+
+
+   {% if item.campus_orders.exists and item.status == 'in_transit' %}
+        
+        <div style="padding: 0 15px; margin-bottom: 15px;">
+            <button onclick="openModal('voluntaryTollboothModal-{{ item.batch_id }}')" 
+                    style="width: 100%; background: #1e293b; color: white; border: 1px solid #334155; padding: 14px; border-radius: 12px; font-size: 1rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.05);"
+                    onmouseover="this.style.background='#334155'" onmouseout="this.style.background='#1e293b'">
+                <i class="bi bi-shield-lock-fill" style="color: #10b981;"></i> Access Security Tollbooth
+            </button>
+        </div>
+
+        <div id="voluntaryTollboothModal-{{ item.batch_id }}" class="modal-overlay" style="z-index: 2000;">
+            <div class="modal-content" style="max-width: 500px; padding: 0; background: #f8fafc; border-radius: 16px; overflow: hidden;">
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: white; border-bottom: 1px solid #e2e8f0;">
+                    <h3 style="margin: 0; font-size: 1.1rem; color: #1e293b; display: flex; align-items: center; gap: 8px;">
+                        <i class="bi bi-upc-scan" style="color: #8b5cf6;"></i> Tollbooth Checkpoint
+                    </h3>
+                    <button class="close-modal" onclick="closeModal('voluntaryTollboothModal-{{ item.batch_id }}')" style="background: none; border: none; font-size: 1.8rem; cursor: pointer; color: #94a3b8; line-height: 1;">&times;</button>
+                </div>
+                
+                <div style="padding: 10px; max-height: 75vh; overflow-y: auto;">
+                    {% include 'couriers/partials/tollbooth_panel.html' with item=item %}
+                </div>
+                
+            </div>
+
+            {% if request.session.force_tollbooth == item.batch_id %}
+                <script>
+                    document.addEventListener("DOMContentLoaded", function() {
+                        setTimeout(() => {
+                            const modalId = 'voluntaryTollboothModal-{{ item.batch_id }}';
+                            openModal(modalId);
+                            
+                            const modal = document.getElementById(modalId);
+                            if (modal) {
+                                // 1. Hide the close button (Inescapable across reloads)
+                                const closeBtn = modal.querySelector('.close-modal');
+                                if (closeBtn) closeBtn.style.display = 'none';
+                                
+                                // 2. Change the header to show it's a mandatory lock
+                                const header = modal.querySelector('h3');
+                                if (header) {
+                                    header.innerHTML = '<i class="bi bi-shield-lock-fill" style="color: #ef4444;"></i> Mandatory Checkpoint';
+                                    header.style.color = '#ef4444';
+                                }
+                            }
+                        }, 300); // Slight delay for smooth animation
+                    });
+                </script>
+                {% endif %}
+        </div>
+    {% endif %}
+
+
+    {% if item.campus_orders.exists %}
+        <div style="padding: 15px;">
+            
+            <h6 class="manifest-section-title">Campus: Pending Deliveries</h6>
+            
+            {% for campus_order in item.campus_orders.all %}
+                {% if campus_order.status != 'delivered' %}
+                    {% with engine=campus_order.engine_view %}
+                        {% with data=engine.display_data %} 
+                            {% include "couriers/snippets/modular_order_card.html" with data=data is_campus="true" hide_actions=False %}
+                        {% endwith %}
+                    {% endwith %}
+                {% endif %}
+            {% endfor %}
+
+            <div class="manifest-segment-completed">
+                <h6 class="manifest-section-title" style="color: #22c55e;">✓ Finished in this Batch</h6>
+                
+                {% for campus_order in item.campus_orders.all %}
+                    {% if campus_order.status == 'delivered' %}
+                        <div style="opacity: 0.7; transform: scale(0.98); transform-origin: top;">
+                            {% with engine=campus_order.engine_view %}
+                                {% with data=engine.display_data %} 
+                                    {% include "couriers/snippets/modular_order_card.html" with data=data is_campus="true" hide_actions=True order_obj=campus_order %}
+                                {% endwith %}
+                            {% endwith %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+
+    {% if item.orders.exists %}
+        <div style="padding: 15px; border-top: 1px solid #eee;">
+            
+            <h6 class="manifest-section-title std">Standard: Pending Deliveries</h6>
+            
+            {% for order in item.orders.all %}
+                {% if order.status != 'completed' %}
+                    {% with data=order.display_data %}
+                        {% include "couriers/snippets/modular_order_card.html" with data=data is_campus="false" hide_actions=False %}
+                    {% endwith %}
+                {% endif %}
+            {% endfor %}
+
+            <div class="manifest-segment-completed">
+                <h6 class="manifest-section-title" style="color: #22c55e;">✓ Finished in this Batch</h6>
+                
+                {% for order in item.orders.all %}
+                    {% if order.status == 'completed' %}
+                        <div style="opacity: 0.7; transform: scale(0.98); transform-origin: top;">
+                            {% with data=order.display_data %}
+                                {% include "couriers/snippets/modular_order_card.html" with data=data is_campus="false" hide_actions=True order_obj=order %}
+                            {% endwith %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+</div>
+{% empty %}
+    <div style="text-align: center; padding: 40px; color: #94a3b8;">
+        <p>No active transit batches found.</p>
+    </div>
+{% endfor %}

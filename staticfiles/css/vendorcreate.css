@@ -1,0 +1,17 @@
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+.maincont {
+    max-width: 900px;
+    margin: 20px auto;
+}
+
+.formcont {
+    padding: 50px 50px;
+    border-radius: 20px;
+    background-color: white;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+}

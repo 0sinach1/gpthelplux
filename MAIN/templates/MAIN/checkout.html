@@ -1,0 +1,539 @@
+{% extends "MAIN/base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Secure Checkout{% endblock %}
+
+{% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static '/css/checkout.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="checkout-wrapper">
+    
+    <div class="checkout-header">
+        <h1>Secure Checkout</h1>
+        <p>Review your details and complete your order.</p>
+    </div>
+
+    <div id="checkout-alerts"></div>
+
+    <form id="checkout-form" method="post" action="{% url 'create_order' %}">
+        {% csrf_token %}
+        
+        <div class="checkout-grid">
+            
+            <div class="checkout-card">
+                <div class="form-section-title" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <i class="fas fa-map-marker-alt"></i> Shipping Information •
+                        <span style="font-size: small;color: #64748b; align-self: center;">Please ensure the data inputed is Accurate</span>
+                    </div>
+                    {% if all_addresses|length > 1 %}
+                    <button type="button" class="btn-select-addr" onclick="openAddressModal()">
+                        <i class="far fa-address-book"></i> Saved Addresses
+                    </button>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Delivery Address</label>
+                    <textarea name="shipping_address" id="checkout_address" class="form-input" placeholder="e.g. Hall 3, Room 204 (Landmark University)" required>{{ shipping_data.shipping_address }}</textarea>
+                    <small style="color: #64748b; font-size: 0.8rem; margin-top: 5px; display: block;">
+                        <strong>Format:</strong> Room number, Hall <em>(For School)</em> ; House number, Street name, Neighborhood name <em>(For Home)</em>
+                    </small>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="form-group">
+                        <label class="form-label">City</label>
+                        <input type="text" name="shipping_city" id="checkout_city" class="form-input" value="{{ shipping_data.shipping_city }}" placeholder="Omu-Aran">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">State</label>
+                        <input type="text" name="shipping_state" id="checkout_state" class="form-input" value="{{ shipping_data.shipping_state }}" placeholder="Kwara">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="form-group">
+                        <label class="form-label">Postal Code</label>
+                        <input type="text" name="shipping_postal_code" class="form-input" value="{{ shipping_data.shipping_postal_code }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Country</label>
+                        <input type="text" name="shipping_country" class="form-input" value="{{ shipping_data.shipping_country }}" readonly style="background: #f1f5f9;">
+                    </div>
+                </div>
+            </div>
+
+            <div class="summary-column">
+                <div class="summary-card">
+                    <div class="summary-header">
+                        <h3>Order Summary</h3>
+                    </div>
+
+                    <div class="summary-items">
+                        {% for item in cart_items %}
+                        <div class="summary-row">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                {% if item.product.main_image %}
+                                    <img src="{{ item.product.main_image.url }}" alt="{{ item.product.name }}" 
+                                        style="width: 50px; height: 50px; border-radius: 6px; object-fit: cover; border: 1px solid #f1f5f9;">
+                                {% else %}
+                                    <div style="width: 50px; height: 50px; border-radius: 6px; background: #f1f5f9; display: flex; align-items: center; justify-content: center; color: #cbd5e1;">
+                                        <i class="fas fa-box"></i>
+                                    </div>
+                                {% endif %}
+
+                                <div>
+                                    <div class="item-name" style="font-size: 0.95rem; line-height: 1.2;">{{ item.product.name|truncatechars:20 }}</div>
+                                    <div class="item-meta">
+                                        Qty: {{ item.quantity }}
+                                        {% if item.variants.exists %}
+                                            <span style="opacity: 0.7;">| {% for v in item.variants.all %}{{ v.variant_value }} {% endfor %}</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="item-price">{{ currency_symbol }}{{ item.subtotal|floatformat:2|intcomma }}</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="cost-breakdown">
+                        <div class="cost-row">
+                            <span>Subtotal</span>
+                            <span>{{ currency_symbol }}{{ subtotal|floatformat:2|intcomma }}</span>
+                        </div>
+                        <div class="cost-row">
+                            <span>VAT and Charges</span>
+                            <span>{{ currency_symbol }}{{ total_delivery_fee|floatformat:2|intcomma }}</span>
+                        </div>
+                        
+                        <div class="total-row">
+                            <span>Total</span>
+                            <span style="color: var(--luxa-purple);">{{ currency_symbol }}{{ total|floatformat:2|intcomma }}</span>
+                        </div>
+
+                        <div style="margin-top: 20px; padding: 15px; background: #e0e7ff; border-radius: 8px; color: #3730a3; font-size: 0.9rem; display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-lock"></i>
+                            <div>
+                                <strong>Secure Payment</strong><br>
+                                Wallet / Escrow System
+                            </div>
+                        </div>
+
+                        <button type="submit" class="checkout-btn" id="place-order-btn">
+                            Complete Order <i class="fas fa-arrow-right" style="margin-left: 8px;"></i>
+                        </button>
+                        
+                        {% if checkout_draft_id %}
+                            <a href="{% url 'order_dispatch_prompt' checkout_draft_id %}" class="back-link">
+                                <i class="fas fa-arrow-left"></i> Return to Order Dispatch
+                            </a>
+                        {% else %}
+                            <a href="{% url 'cart' %}" class="back-link">Return to Cart</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </form>
+</div>
+
+<!-- KYC MODALS -->
+
+<div id="modal-kyc-warning" class="kyc-modal-overlay">
+    <div class="kyc-modal">
+        <div class="kyc-icon-circle">
+            <i class="fas fa-shield-alt"></i>
+        </div>
+        <h3 class="kyc-title">Identity Verification</h3>
+        <p class="kyc-text">
+            Your Identity is not yet verified. A verified identity ensure safer delivery.
+        </p>
+        <div class="kyc-actions">
+            <a href="{% url 'submit_kyc' %}" class="btn-kyc-primary">
+                Verify Identity with KYC Now
+            </a>
+            <button class="btn-kyc-secondary" onclick="openProfileEdit()">
+                Continue Unverified
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="modal-profile-edit" class="kyc-modal-overlay">
+    <div class="kyc-modal" style="text-align: left;">
+        <div class="kyc-header" style="text-align: center; margin-bottom: 20px;">
+            <h3 class="kyc-title" style="margin-bottom: 5px;">Confirm Details</h3>
+            <p class="kyc-text" style="margin-bottom: 0;">Ensure these details match your ID.</p>
+        </div>
+
+        <div class="profile-edit-form">
+            <div style="display: flex; justify-content: center; margin-bottom: 20px;">
+                <label for="modal_profile_pic" style="cursor: pointer; position: relative;">
+                    {% if customer.profile_picture %}
+                        <img src="{{ customer.profile_picture.url }}" id="preview_img" 
+                             style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #e2e8f0;">
+                    {% else %}
+                        <div id="preview_placeholder" 
+                             style="width: 80px; height: 80px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; border: 2px solid #e2e8f0;">
+                            <i class="fas fa-camera" style="color: #94a3b8; font-size: 1.5rem;"></i>
+                        </div>
+                        <img id="preview_img" src="" style="display: none; width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #e2e8f0;">
+                    {% endif %}
+                    <div style="position: absolute; bottom: 0; right: 0; background: #960ffa; width: 25px; height: 25px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid white;">
+                        <i class="fas fa-pencil-alt" style="color: white; font-size: 0.7rem;"></i>
+                    </div>
+                </label>
+                <input type="file" id="modal_profile_pic" accept="image/*" style="display: none;" onchange="previewProfileImage(this)">
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                <div>
+                    <label class="form-label" style="font-size: 0.75rem;">First Name</label>
+                    <input type="text" id="modal_fname" class="form-input" value="{{ customer.first_name }}">
+                </div>
+                <div>
+                    <label class="form-label" style="font-size: 0.75rem;">Last Name</label>
+                    <input type="text" id="modal_lname" class="form-input" value="{{ customer.last_name }}">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px;">
+                <div>
+                    <label class="form-label" style="font-size: 0.75rem;">Phone Number</label>
+                    <input type="text" id="modal_phone" class="form-input" value="{{ customer.phone_number }}">
+                </div>
+                <div>
+                    <label class="form-label" style="font-size: 0.75rem;">Gender</label>
+                    <select id="modal_gender" class="form-input" style="background: #fdfbf7;" required>
+                        <option value="" disabled {% if not customer.gender %}selected{% endif %}>Select...</option>
+                        <option value="Male" {% if customer.gender == 'Male' or customer.gender == 'male' %}selected{% endif %}>Male</option>
+                        <option value="Female" {% if customer.gender == 'Female' or customer.gender == 'female' %}selected{% endif %}>Female</option>
+                    </select>
+                </div>
+            </div>
+
+            <p class="kyc-text" style="margin-bottom: 10px;text-align: center;">We will not be liable for any delivery issues that may arise due to incorrect information.</p>
+            <div class="kyc-actions">
+                <button class="btn-kyc-primary" onclick="triggerProfileUpdateWarning()">
+                    Save & Continue
+                </button>
+                <button class="btn-kyc-secondary" onclick="closeModals()">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="modal-update-warning" class="kyc-modal-overlay">
+    <div class="kyc-modal">
+        <div class="kyc-icon-circle" style="background: #fff7ed;">
+            <i class="fas fa-exclamation-triangle" style="color: #c2410c;"></i>
+        </div>
+        <h3 class="kyc-title">Update Profile?</h3>
+        <p class="kyc-text">
+            This will <strong>permanently update</strong> your main profile details (Name, Picture, Phone) on Luxa.
+        </p>
+        
+        <div class="kyc-actions">
+            <button class="btn-kyc-primary" onclick="submitFinalOrder()">
+                Yes, Update & Pay
+            </button>
+            <button class="btn-kyc-secondary" onclick="openProfileEdit()">
+                Back to Edit
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- CREATE ORDER VERIFICAITON PIN MODAL -->
+ <div id="modal-pin-verify" class="kyc-modal-overlay">
+    <div class="kyc-modal" style="text-align: center;">
+        <div class="kyc-icon-circle" style="background: #f3e8ff; color: #960ffa;">
+            <i class="fas fa-lock"></i>
+        </div>
+        <h3 class="kyc-title">Enter Delivery PIN</h3>
+        <p class="kyc-text">
+            Please enter your 4-digit PIN to authorize this transaction. You will provide this same PIN to the courier upon delivery.
+        </p>
+        
+        <div style="margin: 20px 0;">
+            <input type="password" id="checkout_pin_input" maxlength="4" pattern="\d{4}" 
+                   style="font-size: 2rem; letter-spacing: 15px; text-align: center; width: 150px; padding: 10px; border: 2px solid #e2e8f0; border-radius: 8px;" 
+                   placeholder="••••" autocomplete="off">
+        </div>
+
+        <div class="kyc-actions">
+            <button class="btn-kyc-primary" onclick="submitOrderWithPin()">
+                Confirm & Pay
+            </button>
+            <button class="btn-kyc-secondary" onclick="closeModals()">
+                Cancel
+            </button>
+        </div>
+        <div style="margin-top: 15px; font-size: 0.85rem;">
+            <a href="{% url 'setup_delivery_pin' %}" target="_blank" style="color: #960ffa; font-weight: 600; text-decoration: none;">
+                No PIN yet? Create one here
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Address selection modal -->
+<div id="modal-address-select" class="kyc-modal-overlay">
+    <div class="kyc-modal" style="max-width: 600px; text-align: left;">
+        <div class="kyc-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 class="kyc-title" style="margin: 0;">Select Delivery Address</h3>
+            <button type="button" onclick="closeModals()" style="background:none; border:none; font-size: 1.2rem; cursor:pointer; color: #64748b;"><i class="fas fa-times"></i></button>
+        </div>
+
+        <div class="address-select-grid" style="max-height: 60vh; overflow-y: auto; padding-right: 5px;">
+            {% for addr in all_addresses %}
+            <div class="addr-select-card" 
+                 onclick="fillCheckoutAddress(`{{ addr.address_line1|escapejs }}`, `{{ addr.address_line2|escapejs }}`, `{{ addr.city|escapejs }}`, `{{ addr.state|escapejs }}`)">
+                <div class="addr-sc-header">
+                    <strong><i class="{% if 'Office' in addr.label %}fas fa-cube{% else %}far fa-heart{% endif %}" style="color: #960ffa; margin-right: 5px;"></i> {{ addr.label|default:"Saved Address" }}</strong>
+                    {% if addr.is_primary %}<span class="badge-default">DEFAULT</span>{% endif %}
+                </div>
+                <div class="addr-sc-body">
+                    {{ addr.address_line1 }} {% if addr.address_line2 %}, {{ addr.address_line2 }}{% endif %}<br>
+                    {{ addr.city }}, {{ addr.state }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div style="margin-top: 20px; text-align: center;">
+            <a href="{% url 'customerpage' %}#addresspanel" target="_blank" style="color: #960ffa; font-size: 0.9rem; font-weight: 600; text-decoration: none;">Manage Addresses in Account Settings</a>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block luxaslide %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('checkout-form');
+    const placeOrderBtn = document.getElementById('place-order-btn');
+    const alertContainer = document.getElementById('checkout-alerts');
+    
+    const kycStatus = "{{ kyc_verified }}"; 
+    
+    // NEW: We use this variable to remember if the user needs a profile update 
+    // after going through the unverified KYC flow.
+    let pendingProfileUpdate = false; 
+
+    // --- MODAL NAVIGATION ---
+    window.openProfileEdit = function() {
+        closeModals();
+        document.getElementById('modal-profile-edit').classList.add('active');
+    }
+
+    window.triggerProfileUpdateWarning = function() {
+        const fname = document.getElementById('modal_fname').value;
+        const lname = document.getElementById('modal_lname').value;
+        const gender = document.getElementById('modal_gender').value; 
+
+        if(!fname || !lname || !phone || !gender) {
+            alert("Please fill in all fields, including your gender.");
+            return;
+        }
+
+        closeModals();
+        document.getElementById('modal-update-warning').classList.add('active');
+    }
+
+    window.closeModals = function() {
+        document.querySelectorAll('.kyc-modal-overlay').forEach(el => el.classList.remove('active'));
+    }
+
+    // --- IMAGE PREVIEW LOGIC ---
+    window.previewProfileImage = function(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.getElementById('preview_img');
+                const placeholder = document.getElementById('preview_placeholder');
+                
+                img.src = e.target.result;
+                img.style.display = 'block';
+                if(placeholder) placeholder.style.display = 'none';
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    // --- HELPER TO OPEN PIN MODAL ---
+    function openPinModal() {
+        document.getElementById('checkout_pin_input').value = ''; // Clear previous input
+        document.getElementById('modal-pin-verify').classList.add('active');
+        setTimeout(() => document.getElementById('checkout_pin_input').focus(), 100);
+    }
+
+    // --- MAIN FORM LISTENER ---
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        pendingProfileUpdate = false; // Reset state
+        
+        if (kycStatus) {
+            // Verified users go straight to the PIN modal
+            openPinModal();
+        } else {
+            // Unverified users start the KYC warning flow
+            document.getElementById('modal-kyc-warning').classList.add('active');
+        }
+    });
+
+    // --- ADDRESS SELECTION LOGIC ---
+    window.openAddressModal = function() {
+        closeModals(); // Close any other open modals
+        document.getElementById('modal-address-select').classList.add('active');
+    };
+
+    window.fillCheckoutAddress = function(line1, line2, city, state) {
+        // Combine Line 1 and Line 2 for the textarea
+        let fullAddress = line1;
+        if (line2 && line2 !== 'None' && line2.trim() !== '') {
+            fullAddress += '\n' + line2;
+        }
+        
+        // Populate the editable checkout fields
+        document.getElementById('checkout_address').value = fullAddress;
+        document.getElementById('checkout_city').value = city;
+        document.getElementById('checkout_state').value = state;
+        
+        // Close modal
+        closeModals();
+        
+        // Optional: briefly flash the textarea to show it updated
+        const textArea = document.getElementById('checkout_address');
+        textArea.style.backgroundColor = '#f3e8ff';
+        setTimeout(() => textArea.style.backgroundColor = '', 500);
+    };
+
+    // --- FINAL UNVERIFIED SUBMISSION PATH ---
+    window.submitFinalOrder = function() {
+        closeModals();
+        pendingProfileUpdate = true; // Flag that we need to send profile data
+        openPinModal(); // STILL ASK FOR PIN!
+    }
+
+    // --- PIN MODAL SUBMISSION (THE FINAL TRIGGER) ---
+    window.submitOrderWithPin = function() {
+        const pinValue = document.getElementById('checkout_pin_input').value;
+        if(pinValue.length !== 4) {
+            alert("Please enter a valid 4-digit PIN.");
+            return;
+        }
+        
+        closeModals();
+        processOrderSubmission(pendingProfileUpdate, pinValue); 
+    }
+
+    function processOrderSubmission(includeProfileUpdate, pinValue) {
+        alertContainer.style.display = 'none';
+        placeOrderBtn.disabled = true;
+        placeOrderBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+        
+        const formData = new FormData(form);
+
+        // Append the PIN for the backend check
+        formData.append('delivery_pin', pinValue);
+
+        if (includeProfileUpdate) {
+            formData.append('update_profile', 'true');
+            formData.append('kyc_first_name', document.getElementById('modal_fname').value);
+            formData.append('kyc_last_name', document.getElementById('modal_lname').value);
+            formData.append('kyc_phone', document.getElementById('modal_phone').value);
+            formData.append('kyc_gender', document.getElementById('modal_gender').value);
+            
+            const fileInput = document.getElementById('modal_profile_pic');
+            if (fileInput.files[0]) {
+                formData.append('kyc_profile_picture', fileInput.files[0]);
+            }
+        }
+        
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-CSRFToken': getCookie('csrftoken') }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = data.redirect_url || '/orders/';
+            } else {
+                handleErrors(data);
+                resetButton();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showError('Network error. Please check your connection.');
+            resetButton();
+        });
+    }
+
+    function handleErrors(data) {
+        if (data.error_code === 'insufficient_funds') {
+            const requiredAmount = parseFloat(data.required_amount).toLocaleString();
+            const walletUrl = `${data.wallet_url}?deposit_amount=${data.required_amount}&from=checkout`;
+            
+            showError(
+                `Insufficient Wallet Balance. Needed: ₦${requiredAmount}`,
+                `<a href="${walletUrl}" target="_blank" class="fund-wallet-btn">Fund Wallet <i class="fas fa-external-link-alt"></i></a>`
+            );
+        } else {
+            // THIS IS WHERE YOUR PIN ERROR DISPLAYS
+            showError(data.error || 'Failed to place order.');
+        }
+    }
+    
+    function resetButton() {
+        placeOrderBtn.disabled = false;
+        placeOrderBtn.innerHTML = 'Complete Order <i class="fas fa-arrow-right" style="margin-left: 8px;"></i>';
+    }
+
+    function showError(message, actionHtml = '') {
+        alertContainer.innerHTML = `
+            <div class="alert-box alert-error">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <i class="fas fa-exclamation-circle" style="font-size: 1.2rem;"></i>
+                    <span>${message}</span>
+                </div>
+                ${actionHtml}
+            </div>
+        `;
+        alertContainer.style.display = 'block';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+});
+</script>
+{% endblock %}

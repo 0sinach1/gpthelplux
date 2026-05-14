@@ -1,0 +1,2290 @@
+{% extends 'couriers/courierbase.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Courier Dashboard | LUXA{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/couriers/courier_dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+
+{% if courier.courier_category == "CAMPUS_INTERCEPTOR" %}
+<style>
+    body { background: #f1f5f9; }
+    
+    /* Responsive Grid */
+    .interceptor-grid { 
+        display: grid; 
+        grid-template-columns: 350px 1fr; 
+        gap: 25px; 
+        min-height: 85vh; 
+        padding-top: 20px; 
+    }
+    
+    .interceptor-queue-panel {
+        background: white; border-radius: 16px; padding: 20px; 
+        box-shadow: 0 4px 20px rgba(0,0,0,0.03); overflow-y: auto;
+    }
+
+    .queue-card { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; cursor: pointer; transition: 0.2s; border-left: 4px solid #94a3b8; margin-bottom: 12px; }
+    .queue-card:hover { border-color: #cbd5e1; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    .queue-card.active { border-left-color: #8b5cf6; background: #faf5ff; border-color: #ddd6fe; }
+    
+    .verify-item { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 10px; }
+    .verify-info { display: flex; align-items: center; gap: 15px; }
+    .verify-info img { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; }
+    
+    /* --- NEW: SLEEK iOS-STYLE SMART TOGGLES --- */
+    .smart-toggle {
+        width: 52px; height: 28px; border-radius: 30px; background: #16a34a; /* Green */
+        position: relative; cursor: pointer; transition: background 0.3s; flex-shrink: 0;
+        border: 2px solid transparent; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .smart-toggle.sold-out { background: #dc2626; /* Red */ }
+    
+    .smart-slider {
+        position: absolute; top: 1px; left: 1px; width: 22px; height: 22px;
+        background: white; border-radius: 50%; transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    .smart-toggle.sold-out .smart-slider { transform: translateX(24px); }
+
+    .alts-container {
+        margin: 0 20px 20px 20px; padding: 15px 20px; background: #faf5ff;
+        border-left: 4px solid #d946ef; border-radius: 0 12px 12px 12px;
+        display: none; animation: slideDown 0.3s ease;
+    }
+    @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    
+    .alt-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px dashed #f0abfc; padding-bottom: 12px; }
+    .alt-item:last-child { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }
+    .alt-info { display: flex; align-items: center; gap: 12px; }
+    .alt-info img { width: 35px; height: 35px; border-radius: 6px; object-fit: cover; }
+
+    /* --- TRUE MOBILE RESPONSIVENESS --- */
+    @media (max-width: 900px) {
+        .interceptor-grid { 
+            grid-template-columns: 1fr; 
+            display: flex; 
+            flex-direction: column; 
+        }
+        /* Limit the height of the queue on mobile so it doesn't push the workspace offscreen */
+        .interceptor-queue-panel { 
+            max-height: 220px; 
+            padding: 15px; 
+        }
+        .verify-item { padding: 12px; }
+        .verify-info { gap: 10px; }
+        .verify-info img { width: 40px; height: 40px; }
+        .mobile-text-shrink { font-size: 0.95rem !important; }
+        .alts-container { margin: 0 10px 15px 10px; padding: 12px; }
+    }
+    @media (max-width: 450px) {
+        /* Hide the "IN STOCK" text on super small phones to save space, keeping just the sleek toggle */
+        .mobile-status-text { display: none !important; } 
+    }
+</style>
+
+<div class="container" style="max-width: 1200px;">
+    <div class="interceptor-grid">
+        
+        <aside class="interceptor-queue-panel">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px;">
+                <h3 style="margin: 0; font-size: 1.1rem; color: #1e293b; font-weight: 800;">Active Pings</h3>
+                <span id="queue-counter" style="background: #ef4444; color: white; padding: 2px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 800;">0</span>
+            </div>
+            
+            <div id="ping-queue-list">
+                <div style="text-align: center; color: #94a3b8; padding: 30px 10px; font-size: 0.9rem;">
+                    <i class="bi bi-check-circle" style="font-size: 2rem; display: block; margin-bottom: 10px; color: #cbd5e1;"></i>
+                    All caught up. Waiting for requests...
+                </div>
+            </div>
+        </aside>
+
+        <section style="background: white; border-radius: 16px; padding: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); display: flex; flex-direction: column; flex: 1;">
+            
+            <div id="workspace-empty" style="text-align: center; color: #94a3b8; margin: auto; padding: 40px 0;">
+                <i class="bi bi-radar" style="font-size: 4rem; color: #e2e8f0; margin-bottom: 15px; display: block;"></i>
+                <h2 style="color: #475569; font-size: 1.3rem; margin-bottom: 5px;">Interceptor Standby</h2>
+                <p style="font-size: 0.9rem;">Select a ping from the queue to verify stock.</p>
+            </div>
+
+            <div id="workspace-active" style="display: none; flex-direction: column; height: 100%;">
+                <div style="border-bottom: 1px solid #f1f5f9; padding-bottom: 15px; margin-bottom: 20px;">
+                    <span style="font-size: 0.7rem; font-weight: 800; color: #8b5cf6; text-transform: uppercase; letter-spacing: 1px;">Target Outlet</span>
+                    <h2 id="ws-outlet-name" style="margin: 2px 0 0 0; color: #1e293b; font-size: 1.3rem;">Outlet Name</h2>
+                </div>
+
+                <div style="flex: 1; overflow-y: auto; padding-right: 5px;">
+                    <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 15px;">Toggle the exact physical availability below.</p>
+                    <div id="ws-items-container"></div>
+                </div>
+
+                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #f1f5f9;">
+                    <button id="btn-submit-verification" onclick="submitVerification()" style="width: 100%; background: #1e293b; color: white; border: none; padding: 14px; border-radius: 12px; font-size: 1rem; font-weight: 800; cursor: pointer; transition: 0.2s;">
+                        Confirm Stock & Resolve
+                    </button>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+
+<div id="toast-anchor" class="ping-toast-container"></div>
+
+<script>
+    let activePings = [];
+    let currentActivePingId = null;
+    let currentItemStatuses = {}; 
+    let knownPingIds = new Set(); // NEW: The engine's memory
+    let isInitialLoad = true;
+
+    // 1. UPGRADED POLLING ENGINE
+    function fetchQueue() {
+        fetch("{% url 'api_get_interceptor_pings' %}")
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    checkForNewPings(data.pings);
+                    activePings = data.pings;
+                    renderQueue();
+                }
+            }).catch(err => console.error("Polling Error:", err));
+    }
+    
+    // Check for new pings and trigger alerts
+    function checkForNewPings(incomingPings) {
+        const currentIds = new Set(incomingPings.map(p => p.ping_id));
+        let hasNewPing = false;
+
+        incomingPings.forEach(ping => {
+            if (!knownPingIds.has(ping.ping_id)) {
+                hasNewPing = true;
+                // THE FIX: Use the flag instead of checking if the previous queue was empty
+                if (!isInitialLoad) {
+                    showPingToast(ping.outlet_name, ping.items.length);
+                }
+            }
+        });
+
+        // Trigger audio if there's a new ping (and it's not the page load)
+        if (hasNewPing && !isInitialLoad) {
+            playAlertSound();
+        }
+
+        // Update memory
+        knownPingIds = currentIds;
+
+        // The first load is officially over. All future additions are guaranteed "New"!
+        isInitialLoad = false;
+    }
+
+    // THE AUDIO SYNTHESIZER (No external audio files needed!)
+    function playAlertSound() {
+        try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            const ctx = new AudioContext();
+            const osc = ctx.createOscillator();
+            const gainNode = ctx.createGain();
+
+            // Create a pleasant, high-pitched "ding"
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(880, ctx.currentTime); // A5 note
+            osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.1);
+
+            gainNode.gain.setValueAtTime(0.2, ctx.currentTime); // Volume
+            gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+
+            osc.connect(gainNode);
+            gainNode.connect(ctx.destination);
+
+            osc.start();
+            osc.stop(ctx.currentTime + 0.2);
+        } catch (e) {
+            console.log("Audio alert blocked by browser auto-play policy until user interacts with the page.");
+        }
+    }
+
+    // THE TOAST GENERATOR
+    function showPingToast(outletName, itemCount) {
+        const anchor = document.getElementById('toast-anchor');
+        const toast = document.createElement('div');
+        toast.className = 'ping-toast';
+        
+        toast.innerHTML = `
+            <div class="ping-toast-icon">
+                <i class="bi bi-bell-fill"></i>
+            </div>
+            <div>
+                <div style="font-weight: 800; font-size: 0.95rem;">New Verification Request!</div>
+                <div style="font-size: 0.8rem; color: #cbd5e1;">${outletName} • ${itemCount} items</div>
+            </div>
+        `;
+        
+        anchor.appendChild(toast);
+
+        // Remove the toast after 5 seconds
+        setTimeout(() => {
+            toast.style.animation = 'fadeOutRight 0.4s forwards';
+            setTimeout(() => toast.remove(), 400); // Wait for animation to finish
+        }, 5000);
+    }
+
+    setInterval(fetchQueue, 3000);
+    fetchQueue(); 
+
+    // 2. RENDER THE LEFT PANEL
+    function renderQueue() {
+        const list = document.getElementById('ping-queue-list');
+        document.getElementById('queue-counter').innerText = activePings.length;
+
+        if (activePings.length === 0) {
+            list.innerHTML = `
+                <div style="text-align: center; color: #94a3b8; padding: 30px 10px; font-size: 0.9rem;">
+                    <i class="bi bi-check-circle" style="font-size: 2rem; display: block; margin-bottom: 10px; color: #cbd5e1;"></i>
+                    All caught up. Waiting for requests...
+                </div>`;
+            
+            if(currentActivePingId) clearWorkspace();
+            return;
+        }
+
+        let html = '';
+        let stillExists = false;
+
+        activePings.forEach(ping => {
+            const isActive = ping.ping_id === currentActivePingId;
+            if (isActive) stillExists = true;
+
+            const itemNames = ping.items.map(i => i.name).join(', ');
+            const previewText = itemNames.length > 25 ? itemNames.substring(0, 25) + '...' : itemNames;
+
+            html += `
+                <div class="queue-card ${isActive ? 'active' : ''}" onclick="openWorkspace(${ping.ping_id})">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span style="font-weight: 800; font-size: 0.85rem; color: #1e293b;">${ping.outlet_name}</span>
+                        <span style="font-size: 0.7rem; color: #94a3b8; font-weight: 600;">${ping.time_ago}</span>
+                    </div>
+                    <div style="font-size: 0.75rem; color: #64748b;">
+                        <i class="bi bi-box-seam" style="margin-right: 5px;"></i> ${ping.items.length} Items: ${previewText}
+                    </div>
+                </div>`;
+        });
+
+        list.innerHTML = html;
+        if (currentActivePingId && !stillExists) clearWorkspace();
+    }
+
+    // 3. RENDER THE RIGHT PANEL WORKSPACE
+    function openWorkspace(pingId) {
+        currentActivePingId = pingId;
+        const ping = activePings.find(p => p.ping_id === pingId);
+        if (!ping) return;
+
+        renderQueue(); 
+        document.getElementById('workspace-empty').style.display = 'none';
+        document.getElementById('workspace-active').style.display = 'flex';
+        document.getElementById('ws-outlet-name').innerText = ping.outlet_name;
+
+        currentItemStatuses = {};
+        let itemsHtml = '';
+
+        ping.items.forEach(item => {
+            currentItemStatuses[item.id] = true; // Default primary items to available initially
+            
+            itemsHtml += `
+                <div class="verify-item">
+                    <div class="verify-info">
+                        <img src="${item.image}" alt="item">
+                        <div>
+                            <span class="mobile-text-shrink" style="font-weight: 700; font-size: 1.05rem; color: #1e293b; display: block;">${item.name}</span>
+                            <span style="font-size: 0.7rem; color: #94a3b8; font-weight: 600; text-transform: uppercase;">${item.section_name}</span>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span class="sync-text-${item.id} mobile-status-text" style="font-size: 0.75rem; font-weight: 800; color: #16a34a;">IN STOCK</span>
+                        <div class="smart-toggle sync-toggle-${item.id}" onclick="toggleStatusGlobally(${item.id})">
+                            <div class="smart-slider"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="alts-container-${item.id}" class="alts-container">
+                    <h5 style="margin: 0 0 12px 0; color: #a21caf; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                        <i class="bi bi-arrow-return-right"></i> Alternatives in ${item.section_name}
+                    </h5>
+                    <div id="alts-list-${item.id}"></div>
+                </div>
+            `;
+            
+            setTimeout(() => { renderAlternatives(item.id, item.alternatives); }, 0);
+        });
+
+        document.getElementById('ws-items-container').innerHTML = itemsHtml;
+    }
+
+    // 4. RENDER ALTERNATIVES
+    function renderAlternatives(primaryItemId, alternatives) {
+        const listDiv = document.getElementById(`alts-list-${primaryItemId}`);
+        let altsHtml = '';
+        
+        if (alternatives.length === 0) {
+            listDiv.innerHTML = `<span style="font-size: 0.75rem; color: #c084fc; font-style: italic;">No other items available in this section.</span>`;
+            return;
+        }
+
+        alternatives.forEach(alt => {
+            currentItemStatuses[alt.id] = alt.is_available; 
+            const isSoldOutClass = alt.is_available ? '' : 'sold-out';
+            const textStatus = alt.is_available ? 'IN STOCK' : 'SOLD OUT';
+            const textColor = alt.is_available ? '#16a34a' : '#dc2626';
+
+            altsHtml += `
+                <div class="alt-item">
+                    <div class="alt-info">
+                        <img src="${alt.image}" alt="alt">
+                        <span class="mobile-text-shrink" style="font-weight: 700; font-size: 0.95rem; color: #4a044e;">${alt.name}</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span class="sync-text-${alt.id} mobile-status-text" style="font-size: 0.7rem; font-weight: 800; color: ${textColor};">${textStatus}</span>
+                        <div class="smart-toggle sync-toggle-${alt.id} ${isSoldOutClass}" onclick="toggleStatusGlobally(${alt.id})">
+                            <div class="smart-slider"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        listDiv.innerHTML = altsHtml;
+    }
+
+    // 5. THE FIX: UNIVERSAL TOGGLE SYNC LOGIC
+    window.toggleStatusGlobally = function(itemId) {
+        // 1. Flip the logical state
+        currentItemStatuses[itemId] = !currentItemStatuses[itemId];
+        const isAvail = currentItemStatuses[itemId];
+        
+        // 2. Visually update EVERY toggle button that shares this item ID
+        document.querySelectorAll(`.sync-toggle-${itemId}`).forEach(el => {
+            if (isAvail) el.classList.remove('sold-out');
+            else el.classList.add('sold-out');
+        });
+        
+        // 3. Visually update EVERY text label that shares this item ID
+        document.querySelectorAll(`.sync-text-${itemId}`).forEach(el => {
+            if (isAvail) {
+                el.innerText = 'IN STOCK';
+                el.style.color = '#16a34a';
+            } else {
+                el.innerText = 'SOLD OUT';
+                el.style.color = '#dc2626';
+            }
+        });
+        
+        // 4. If this item was a Primary item, show/hide its alternatives container
+        const altsContainer = document.getElementById(`alts-container-${itemId}`);
+        if (altsContainer) {
+            altsContainer.style.display = isAvail ? 'none' : 'block';
+        }
+    }
+
+    function clearWorkspace() {
+        currentActivePingId = null;
+        document.getElementById('workspace-empty').style.display = 'block';
+        document.getElementById('workspace-active').style.display = 'none';
+    }
+
+    // 6. SUBMIT TO BACKEND (Upgraded Smart Payload)
+    function submitVerification() {
+        if (!currentActivePingId) return;
+
+        const btn = document.getElementById('btn-submit-verification');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating Database...';
+        btn.disabled = true;
+
+        // --- THE FIX: SMART PAYLOAD CONSTRUCTION ---
+        let verifiedProductsOnly = {};
+        const activePing = activePings.find(p => p.ping_id === currentActivePingId);
+        
+        if (activePing) {
+            activePing.items.forEach(primaryItem => {
+                // 1. ALWAYS verify the primary item the Engine specifically asked for
+                verifiedProductsOnly[primaryItem.id] = currentItemStatuses[primaryItem.id];
+                
+                // 2. ONLY verify alternatives IF the primary item was marked SOLD OUT
+                // (This guarantees we only update the timestamps of items the courier actually looked at!)
+                if (currentItemStatuses[primaryItem.id] === false) {
+                    primaryItem.alternatives.forEach(alt => {
+                        verifiedProductsOnly[alt.id] = currentItemStatuses[alt.id];
+                    });
+                }
+            });
+        }
+
+        fetch("{% url 'api_resolve_ping' %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": "{{ csrf_token }}"
+            },
+            body: JSON.stringify({
+                ping_id: currentActivePingId,
+                products: verifiedProductsOnly // Sends ONLY the visually verified items!
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                clearWorkspace();
+                fetchQueue(); 
+            } else {
+                alert("Error: " + data.error);
+            }
+        })
+        .catch(err => {
+            console.error("Network Error:", err);
+            alert("Connection error while updating database.");
+        })
+        .finally(() => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        });
+    }
+</script>
+
+{% else %}
+<div hx-get="{% url 'check_courier_state' %}" 
+     hx-trigger="every 10s, force-pulse" 
+     hx-swap="none">
+</div>
+
+<div class="container">
+    <div class="dashboard-grid">
+        <aside class="panel-left">
+
+        {% if courier.courier_category == "CAMPUS" %}
+        <div class="r-score-card" onclick="openRScoreModal()" style="background: white; border-radius: 14px; padding: 15px; margin-bottom: 20px; cursor: pointer; transition: all 0.2s ease; position: relative; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.02);">
+            
+            <div style="display: flex; align-items: center; gap: 15px;">
+               <div style="position: relative; width: 60px; height: 60px; flex-shrink: 0;">
+                    <svg width="60" height="60" viewBox="0 0 60 60" style="transform: rotate(-90deg);">
+                        <circle cx="30" cy="30" r="26" fill="none" stroke="#f1f5f9" stroke-width="6" stroke-linecap="round"></circle>
+                        <circle id="r-score-circle" cx="30" cy="30" r="26" fill="none" stroke="#10b981" stroke-width="6" stroke-linecap="round" 
+                                stroke-dasharray="163.36" stroke-dashoffset="163.36" style="transition: stroke-dashoffset 1s cubic-bezier(0.175, 0.885, 0.32, 1.275), stroke 0.5s ease;"></circle>
+                    </svg>
+                    
+                    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1rem; color: #1e293b;">
+                        {{ courier.reliability_score|floatformat:0 }}
+                        
+                        <span style="font-size: 0.6rem; margin-left: 3px;">  
+                            {% if courier.is_immune %}
+                                <i class="bi bi-shield-fill-check" style="color: #3b82f6; font-size: 0.75rem; text-shadow: 0 0 5px rgba(59, 130, 246, 0.5);" title="Teflon Shield Active (Immune to Penalties)"></i>
+                            {% else %}
+                                R  
+                            {% endif %}
+                        </span>
+                    </div>
+                    </div>
+
+                <div style="flex: 1;">
+                    <h5 style="margin: 0 0 2px 0; font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 800;">Reliability</h5>
+                    <div id="r-score-health" style="font-weight: 800; font-size: 1.05rem; color: #10b981; line-height: 1.2;">
+                        Evaluating...
+                    </div>
+                </div>
+            </div>
+
+            {% with t_batch=assignments.transit|first n_batch=assignments.new|first f_batch=assignments.forming|first %}
+            {% with active_batch=t_batch|default:n_batch|default:f_batch %}
+                {% if active_batch and active_batch.genesis_anchor %}
+                <div style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed #e2e8f0; display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 24px; height: 24px; background: #f0fdf4; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; color: #16a34a;">
+                        <i class="bi bi-geo-alt-fill"></i>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.65rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Active Anchor</div>
+                        <div style="font-size: 0.85rem; font-weight: 700; color: #334155; text-transform: uppercase;">
+                            {{ active_batch.genesis_anchor|cut:"male_"|cut:"fem_"|cut:"acad_"|cut:"senate_"|cut:"hub_"|cut:"_" }}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            {% endwith %}
+            {% endwith %}
+
+            <div class="r-score-hover-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(248, 250, 252, 0.7); backdrop-filter: blur(1px); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; font-weight: 800; color: #475569; font-size: 0.85rem;">
+                <i class="bi bi-bar-chart-steps" style="margin-right: 5px;"></i> View Metrics
+            </div>
+        </div>
+
+        <style>
+            .r-score-card:hover {
+                border-color: #cbd5e1 !important;
+                box-shadow: 0 6px 15px rgba(0,0,0,0.05) !important;
+                transform: translateY(-2px);
+            }
+            .r-score-card:hover .r-score-hover-overlay {
+                opacity: 1;
+            }
+        </style>
+
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+            const circle = document.getElementById('r-score-circle');
+            if (!circle) return; 
+
+            const score = parseFloat("{{ courier.reliability_score|default:100 }}");
+            const healthText = document.getElementById('r-score-health');
+            
+            const circumference = 163.36;
+            const offset = circumference - (score / 100) * circumference;
+            setTimeout(() => { circle.style.strokeDashoffset = offset; }, 100);
+
+            let color = "#10b981"; 
+            let status = "Hot Drops Enabled";
+
+            if (score >= 70) {
+                // ALPHA ZONE (70 to 100)
+                color = "#10b981"; // Emerald Green
+                status = "Entitled to HOT DROPS";
+                
+            } else if (score > 45) {
+                // FAIRNESS LANE ONLY (45.1 to 69.9)
+                // Math adjusted: scales the hue smoothly between 45 and 69
+                const hue = 35 + ((score - 45) / 24) * 20;
+                color = `hsl(${hue}, 90%, 50%)`; 
+                status = "Fairness Lane only";
+                
+            } else if (score > 40) {
+                // WARNING ZONE (40.1 to 45.0)
+                color = "#ef4444"; // Red
+                status = "Warning: Near Exile";
+                
+            } else {
+                // GUILLOTINE FLOOR (40.0 and below)
+                color = "#7f1d1d"; // Dark Red
+                status = "Exiled / Suspended";
+            }
+
+            circle.style.stroke = color;
+            healthText.style.color = color;
+            healthText.innerText = status;
+        });
+
+            function openRScoreModal() {
+                console.log("R-Score clicked. Metrics modal coming soon.");
+            }
+        </script>
+        {% endif %}
+
+
+
+
+            
+            <h5 style="margin-bottom:15px; color:#999; font-size:0.8rem; padding-left:10px;">WORKFLOW</h5>
+            
+          <button class="nav-btn active" onclick="switchTab('new', this)">
+                <span>📦 New Batches</span>
+                
+                {% if assignments.forming %}
+                    <span class="notification-star-pulse" style="margin-left: 8px; color: #f1c40f; font-size: 1.1rem;">⭐</span>
+                {% endif %}
+            
+                {% if badge_counts.new > 0 %}
+                    <span id="badge-new" class="badge-count">{{ badge_counts.new }}</span>
+                {% endif %}
+            </button>
+
+            <button class="nav-btn" onclick="switchTab('transit', this)">
+                <span>🚚 In Transit</span>
+                {% if badge_counts.transit > 0 %}
+                    <span id="badge-transit" class="badge-count" style="background:#9539cb">{{ badge_counts.transit }}</span>
+                {% endif %}
+            </button>
+
+            <button class="nav-btn" onclick="switchTab('history', this)">
+                <span>✅ Completed Batches</span>
+            </button>
+
+            <button class="nav-btn btn-cancel" onclick="switchTab('returns', this)">
+                <span>⚠️ Returns</span>
+                {% if cancellation_orders %}
+                <span id="badge-returns" class="badge-count" style="background:#c0392b">{{ cancellation_orders.count }}</span>
+                {% endif %}
+            </button>
+
+            {% if courier.courier_category == "CAMPUS" %}
+            <div style="margin-top:20px; padding-top:15px; border-top:1px solid #eee;">
+                <h5 style="color:#999; font-size:0.75rem; text-transform:uppercase; margin-bottom:10px; font-weight:800;">COMPLIANCE</h5>
+                
+                <button class="nav-btn" onclick="openShiftPicker()" style="border-left: 4px solid #3498db; background: #f0f8ff;">
+                    <span style="color: #2c3e50; font-weight: 700;">📅 Shift Scheduler</span>
+                    
+                    {% if needs_to_schedule %}
+                        <span class="notification-star-pulse" style="margin-left: 8px; color: #e74c3c; font-size: 1.1rem;" title="Action Required!">⚠️</span>
+                    {% endif %}
+                </button>
+            </div>
+            {% endif %}
+
+            <div style="margin-top:20px; padding:15px; border-top:1px solid #eee;">
+                <small style="color:#888;">Current Load</small>
+                <div style="font-size:1.2rem; font-weight:600;">
+                    {{ current_load }} <span style="font-size:0.9rem; font-weight:400; color:#666;">Stops</span>
+                </div>
+            </div>
+
+            <div style="margin-top:10px; padding:15px; border-top:1px dashed #e2e8f0;">
+                <h5 style="color:#9539cb; font-size:0.75rem; text-transform:uppercase; margin-bottom:12px; font-weight:800; letter-spacing:1px; display:flex; align-items:center; gap:6px;">
+                    <i class="bi bi-radar"></i> Open Market
+                </h5>
+                
+                {% if scavenger_orders %}
+                    <div class="scavenger-trigger active" onclick="openModal('scavengerModal')">
+                        <div class="sc-info">
+                            <span class="sc-count">{{ scavenger_orders|length }}</span>
+                            <span class="sc-text">Orders Available</span>
+                        </div>
+                        <button class="btn-sc-view">View & Claim</button>
+                    </div>
+                {% else %}
+                    <div class="scavenger-trigger empty">
+                        <i class="bi bi-inbox" style="font-size: 1.5rem; color:#cbd5e1; margin-bottom:5px;"></i>
+                        <span style="font-size:0.8rem; color:#94a3b8; font-weight:600;">No extra orders fit your bag right now.</span>
+                    </div>
+                {% endif %}
+            </div>
+            </aside>
+        </aside>
+
+        <section class="panel-middle">
+            
+            <div id="tab-new" class="tab-content active-tab" 
+                hx-get="{% url 'get_batch_details' %}" 
+                hx-trigger="refreshNew_User{{ request.user.id }} from:body" 
+                hx-swap="innerHTML">
+                <h3 style="margin-bottom:20px; padding-left:10px;">New Assignments</h3>
+
+                {% include 'couriers/partials/batch_list.html' %}
+            </div>
+
+            <div id="tab-transit" class="tab-content" 
+                hx-get="{% url 'get_active-batch' %}" 
+                hx-trigger="refreshTransit_User{{ request.user.id }} from:body" 
+                hx-swap="innerHTML">
+                <h3 style="margin-bottom:20px; padding-left:10px;">Active Route</h3>
+                
+                {% include 'couriers/partials/active-batch-list.html' %}
+            </div>
+
+            <div id="tab-returns" class="tab-content"
+                hx-get="{% url 'get_returns_fragment' %}" 
+                hx-trigger="refreshReturns_User{{ request.user.id }} from:body" 
+                hx-swap="innerHTML">
+                <h3 style="margin-bottom:20px; padding-left:10px; color:#c0392b;">Returns & Issues</h3>
+                
+                {% include 'couriers/partials/returns_list.html' %}
+            </div>
+
+            <div id="tab-history" class="tab-content">
+                <h3 style="margin-bottom:20px; padding-left:10px;">Completed Batches</h3>
+                
+                {% for item in assignments.history %}
+                    <div class="batch-wrapper">
+                        <div class="batch-card active-trigger" style="border-left: 4px solid #2ecc71" onclick="toggleBatch('{{ item.batch_id }}')">
+                            <div class="card-header" style="margin-bottom: 8px;">
+                                <span class="id-tag">Batch #{{ item.batch_id|truncatechars:12 }}</span>
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    
+                                    <div class="static-batch-time" 
+                                         data-start="{% if item.started_at %}{{ item.started_at|date:'c' }}{% elif item.assigned_at %}{{ item.assigned_at|date:'c' }}{% else %}{{ item.created_at|date:'c' }}{% endif %}" 
+                                         data-end="{{ item.completed_at|date:'c' }}" 
+                                         data-eta="{{ item.total_eta_minutes }}"
+                                         style="font-size: 0.75rem; font-weight: 800; padding: 4px 8px; border-radius: 6px;">
+                                         Evaluating...
+                                    </div>
+
+                                    <span class="status-pill status-done">Completed</span>
+                                    <span class="toggle-icon" style="display: inline-block; font-size: 0.8rem; color: #64748b;">▼</span>
+                                </div>
+                            </div>
+                            <div style="font-size: 0.8rem; color: #94a3b8; font-weight: 600;">
+                                {{ item.completed_at|date:"M d, Y • H:i" }}
+                            </div>
+                        </div>
+
+                        <div id="details-{{ item.batch_id }}" class="batch-details-panel" style="display: none;">
+                            
+                            {# --- CAMPUS ORDERS --- #}
+                            {% if item.campus_orders.exists %}
+                                <h6 style="color: #9539cb; font-weight: 800; margin-bottom: 15px; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px;">
+                                    Campus Deliveries
+                                </h6>
+                               {% for campus_order in item.campus_orders.all %}
+                                    <div style="opacity: 0.8; border: 1px solid #dcfce7; border-radius: 18px; margin-bottom: 10px; background: #f0fff4;">
+                                        {% with engine=campus_order.engine_view %}
+                                            {% with data=engine.display_data %} 
+                                                {% include "couriers/snippets/modular_order_card.html" with data=data is_campus="true" hide_actions=True order_obj=campus_order %}
+                                            {% endwith %}
+                                        {% endwith %}
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+
+                            {# --- STANDARD ORDERS --- #}
+                            {% if item.orders.exists %}
+                                <h6 style="color: #3498db; font-weight: 800; margin-bottom: 15px; {% if item.campus_orders.exists %}margin-top: 25px; border-top: 1px dashed #e2e8f0; padding-top: 15px;{% endif %} font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px;">
+                                    Standard Deliveries
+                                </h6>
+                                {% for order in item.orders.all %}
+                                    <div style="opacity: 0.8; border: 1px solid #dcfce7; border-radius: 18px; margin-bottom: 10px; background: #f0fff4;">
+                                        {% with data=order.display_data %}
+                                            {% include "couriers/snippets/modular_order_card.html" with data=data is_campus="false" hide_actions=True %}
+                                        {% endwith %}
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                            
+                        </div>
+                    </div>
+                {% empty %}
+                    <div style="text-align:center; padding:40px; color:#999;"><p>No history yet.</p></div>
+                {% endfor %}
+            </div>
+
+        </section>
+
+        <aside class="panel-right">
+            <h4 style="color:#888; font-size:0.8rem; text-transform:uppercase; border-bottom:1px solid #eee; padding-bottom:10px;">Earnings</h4>
+            
+            <div class="balance-box">
+                <span style="font-size:1.2rem; color:#888;">₦</span>
+                <span class="amount">{{ wallet.available_balance|intcomma }}</span>
+                <div style="color:#2ecc71; font-size:0.85rem;">Earnings Available</div>
+            </div>
+
+            <button onclick="toggleTransactionModal()" class="btn btn-outline" style="width:100%; margin-top:10px; font-size:0.8rem;">
+                📜 View Transaction History
+            </button>
+
+            <a href="{% url 'wallet_dashboard' %}?view=COURIER" class="btn btn-dark" style="width:100%; margin-top:20px; display:flex; justify-content:center; align-items:center; text-decoration:none;">
+                Go to Wallet
+            </a>
+
+            {% if courier.courier_category == "CAMPUS" %}
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+                <h4 style="color:#888; font-size:0.8rem; text-transform:uppercase; margin-bottom:15px; display:flex; justify-content:space-between; align-items:center;">
+                    Advance Payout Account
+                    <i class="bi bi-bank" style="color:#bdc3c7;"></i>
+                </h4>
+
+                {% with banks=wallet.bank_accounts.all %}
+                    {% if banks %}
+                        {% for bank in banks %}
+                            <div style="background: #f8f9fa; border: 1px solid {% if bank.is_default %}#2ecc71{% else %}#ddd{% endif %}; border-radius: 8px; padding: 15px; position: relative;">
+                                <div style="font-weight: 700; font-size: 0.95rem; color: #333;">{{ bank.bank_name }}</div>
+                                <div style="font-size: 0.85rem; color: #666; font-family: monospace; margin: 4px 0;">{{ bank.account_number }}</div>
+                                <div style="font-size: 0.75rem; color: #888; font-weight: 600;" title="{{bank.account_name}}">{{ bank.account_name|truncatechars:22 }}</div>
+                                
+                                <div style="margin-top: 12px; display: flex; justify-content: space-between; align-items: center;">
+                                    {% if bank.is_default %}
+                                        <span style="color: #2ecc71; font-size: 0.75rem; font-weight: 800;"><i class="fas fa-check-circle"></i> Active</span>
+                                    {% else %}
+                                        <button onclick="setActiveBank({{ bank.id }}, 'COURIER')" style="background: none; color: #3498db; border: none; font-size: 0.75rem; font-weight: 700; cursor: pointer; padding: 0;">Set Active</button>
+                                    {% endif %}
+                                    
+                                    <button onclick="deleteBank({{ bank.id }})" style="background: #fff5f5; color: #e74c3c; border: 1px solid #fecaca; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fff5f5'">
+                                        <i class="far fa-trash-alt"></i> Remove
+                                    </button>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div style="text-align: center; padding: 20px; background: #fafafa; border-radius: 8px; border: 1px dashed #ccc;">
+                            <i class="fas fa-university" style="font-size: 1.8rem; color: #ccc; margin-bottom: 10px; display: block;"></i>
+                            <p style="font-size: 0.8rem; color: #777; margin: 0 0 15px 0;">Link an account to receive payouts and advance funds.</p>
+                            <button onclick="openLinkBankModal()" class="btn" style="background: #000; color: white; width: 100%; font-size: 0.85rem; font-weight: 600; border-radius: 8px;">
+                                <i class="fas fa-plus"></i> Link Bank Account
+                            </button>
+                        </div>
+                    {% endif %}
+                {% endwith %}
+            </div>
+            <div style="margin-top: 35px; padding-top: 25px; border-top: 2px dashed #eee;">
+                <h4 style="color:#888; font-size:0.8rem; text-transform:uppercase; padding-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+                    Purchasing Advance
+                    <i class="bi bi-info-circle" title="Advance funds provided to purchase items for delivery" style="cursor:help; font-size:0.9rem;"></i>
+                </h4>
+                
+                <div id="advance-balance-container"
+                    hx-get="{% url 'get_advance_courier_wallet_balance' %}" 
+                    hx-trigger="refreshWallet_User{{ request.user.id }} from:body" 
+                    hx-swap="innerHTML">
+                    
+                    {% include 'couriers/partials/advance_wallet_balance.html' %}
+                    
+                </div>
+
+                <button onclick="openModal('withdrawAdvanceModal')" class="btn" style="width:100%; background:#d68910; color:white; font-weight:700; border:none; padding:12px; border-radius:8px; display:flex; justify-content:center; align-items:center; gap:8px; transition:0.2s;" onmouseover="this.style.backgroundColor='#b9770e'" onmouseout="this.style.backgroundColor='#d68910'">
+                    <i class="bi bi-box-arrow-up"></i> Withdraw Customer Order Charge
+                </button>
+            </div>
+            
+            {% endif %}
+        </aside>
+
+    </div>
+</div>
+
+<!-- COURIER WALLET TRANSACTIONS MODAL -->
+<div id="courierTxnModal" class="modal-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1500; align-items:center; justify-content:center;">
+    <div style="background:white; width:90%; max-width:400px; border-radius:12px; padding:20px; max-height:80vh; overflow-y:auto;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h3>Earnings History</h3>
+            <button onclick="closeModal('courierTxnModal')" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+        </div>
+
+        {% for txn in recent_transactions %}
+        <div style="display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid #eee;">
+            <div>
+                <div style="font-weight:600; font-size:0.9rem;">{{ txn.description }}</div>
+                <small style="color:#999;">{{ txn.timestamp|date:"M d, H:i" }}</small>
+            </div>
+            <div style="font-weight:700; color:#27ae60;">+₦{{ txn.amount|intcomma }}</div>
+        </div>
+        {% empty %}
+        <p style="text-align:center; color:#999;">No earnings yet.</p>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- ORDER DETAILS MODAL -->
+<div id="orderDetailModal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-header">
+            <h3>Order Details</h3>
+            <button class="close-modal" onclick="closeModal('orderDetailModal')">&times;</button>
+        </div>
+        <div id="orderModalBody">
+        </div>
+        <button class="action-btn btn-withdraw" onclick="closeModal('orderDetailModal')">Close</button>
+    </div>
+</div>
+
+<!-- CUSTOMER DETAILS MODAL -->
+<div id="customerDetailModal" class="modal-overlay side-drawer">
+    <div class="modal-content side-content">
+        <button class="close-modal" onclick="closeModal('customerDetailModal')" style="position:absolute; top:15px; right:15px; color:white; background:rgba(0,0,0,0.2); z-index:2;">&times;</button>
+        <div id="customerModalBody" style="height:100%; display:flex; flex-direction:column;">
+        </div>
+    </div>
+</div>
+
+<!-- WITHDRAWAL MODAL FOR ADVANCE PAYOUT -->
+<div id="withdrawAdvanceModal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 400px; text-align: center; padding: 30px 20px;">
+        <button class="close-modal" onclick="closeModal('withdrawAdvanceModal')" style="position: absolute; top: 15px; right: 15px;">&times;</button>
+        
+        <div style="width: 60px; height: 60px; background: #fdfaf2; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; color: #d68910; margin: 0 auto 15px;">
+            <i class="bi bi-cash-stack"></i>
+        </div>
+        
+        <h3 style="margin: 0 0 10px 0; font-size: 1.25rem; color: #333;">Withdraw Advance</h3>
+        <p style="font-size: 0.85rem; color: #666; margin-bottom: 25px;">
+            Withdraw these funds directly to your linked bank account to purchase the requested food.
+        </p>
+        
+        <form id="advance-withdraw-form" onsubmit="submitAdvanceWithdraw(event)" style="text-align: left;">
+            {% csrf_token %}
+            
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #555; margin-bottom: 8px;">Amount (₦)</label>
+                <input type="number" name="amount" min="100" max="{{ advance_wallet.available_balance }}" step="0.01" required 
+                       style="width: 100%; padding: 14px; border: 2px solid #eee; border-radius: 8px; font-size: 1.2rem; font-weight: 700; color: #333; outline: none; background: #f9f9f9;" 
+                       placeholder="0.00" id="advance-withdraw-amount">
+                
+                <div style="display: flex; justify-content: space-between; margin-top: 6px;">
+                    <small style="color: #888; font-size: 0.75rem;">Max available: ₦{{ advance_wallet.available_balance|intcomma }}</small>
+                    <small style="color: #d68910; font-size: 0.75rem; font-weight: 700; cursor: pointer;" 
+                           onclick="document.getElementById('advance-withdraw-amount').value = '{{ advance_wallet.available_balance|stringformat:'.2f' }}'">
+                           Withdraw All
+                    </small>
+                </div>
+            </div>
+            
+            <button type="submit" id="btn-submit-withdraw" class="btn" style="width: 100%; background: #d68910; color: white; font-weight: 700; padding: 14px; border-radius: 8px; border: none; font-size: 1rem; cursor: pointer; transition: 0.2s;" onmouseover="this.style.backgroundColor='#b9770e'" onmouseout="this.style.backgroundColor='#d68910'">
+                Confirm Withdrawal
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- LINK BANK MODAL FOR LINKING WITHDRAWAL BANK ACCOUNT -->
+<div id="linkBankModal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 400px; padding: 30px 25px;">
+        <button class="close-modal" onclick="closeModal('linkBankModal')" style="position: absolute; top: 15px; right: 15px;">&times;</button>
+        
+        <h3 style="margin: 0 0 10px 0; font-size: 1.25rem; color: #333;">Link Bank Account</h3>
+        <p style="font-size: 0.85rem; color: #666; margin-bottom: 25px;">Search for your bank and enter your account number.</p>
+        
+        <form id="link-bank-form" onsubmit="submitLinkBank(event)">
+            
+            <div style="margin-bottom: 15px; position: relative;">
+                <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #555; margin-bottom: 6px;">Search Bank Name</label>
+                
+                <input type="text" id="bankSearchInput" required autocomplete="off"
+                       placeholder="Type to search bank..." 
+                       onkeyup="filterBanks()" 
+                       onfocus="openBankList()"
+                       style="width: 100%; padding: 14px; border: 2px solid #eee; border-radius: 8px; font-size: 0.95rem; outline: none; background: #f9f9f9;">
+                
+                <div id="bankListContainer" style="display: none; position: absolute; width: 100%; max-height: 200px; overflow-y: auto; background: white; border: 1px solid #ddd; border-radius: 8px; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 4px;">
+                    <div style="padding:10px; color:#999; text-align:center;">Loading banks...</div>
+                </div>
+
+                <input type="hidden" id="selectedBankCode" required>
+                <input type="hidden" id="selectedBankName" required>
+            </div>
+            
+            <div style="margin-bottom: 25px;">
+                <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #555; margin-bottom: 6px;">Account Number</label>
+                <input type="text" id="account_number" required maxlength="11" pattern="\d+" title="Only numbers allowed" 
+                       style="width: 100%; padding: 14px; border: 2px solid #eee; border-radius: 8px; font-size: 1.1rem; letter-spacing: 1px; outline: none; background: #f9f9f9;" 
+                       placeholder="e.g. 0123456789">
+            </div>
+            
+            <button type="submit" id="btn-submit-bank" class="btn" style="width: 100%; background: #000; color: white; font-weight: 700; padding: 14px; border-radius: 8px; border: none; font-size: 1rem; cursor: pointer; transition: 0.2s;">
+                Verify & Link Account
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Slider for customer details -->
+<div id="sliderOverlay" class="slider-overlay" onclick="closeCustomerSlider()"></div>
+
+<div id="customerSlider" class="customer-slider">
+    <button class="close-slider" onclick="closeCustomerSlider()">✕</button>
+    <div id="sliderContent">
+        </div>
+</div>
+
+<!-- Image Zoom Overlay -->
+<div id="imageZoomOverlay" class="zoom-overlay" onclick="this.classList.remove('active')">
+    <img id="zoomedImage" src="" alt="Zoomed view">
+</div>
+
+<!-- CANCELLATION CONFIRMATION MODAL -->
+<div id="cancelConfirmModal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 400px; text-align: center; padding: 30px 20px;">
+        <div style="width: 60px; height: 60px; background: #fff5f5; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; color: #e74c3c; margin: 0 auto 15px;">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+        </div>
+        
+        <h3 style="margin: 0 0 10px 0; font-size: 1.25rem; color: #333;">Are you 100% sure?</h3>
+        <p style="font-size: 0.85rem; color: #666; margin-bottom: 25px;">
+            Moving this order to cancellations will permanently remove it from your active batch and notify customer support. This action cannot be undone.
+        </p>
+        
+        <div style="display: flex; gap: 10px; flex-direction: column;">
+            <button id="btn-confirm-cancel" onclick="executeCancellation()" class="btn" style="width: 100%; background: #e74c3c; color: white; font-weight: 700; padding: 12px; border-radius: 8px; border: none; font-size: 1rem; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#c0392b'" onmouseout="this.style.background='#e74c3c'">
+                Yes, Cancel Order
+            </button>
+            <button onclick="closeModal('cancelConfirmModal')" class="btn" style="width: 100%; background: #f8f9fa; color: #333; font-weight: 700; padding: 12px; border-radius: 8px; border: 1px solid #ddd; font-size: 1rem; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#e9ecef'" onmouseout="this.style.background='#f8f9fa'">
+                No, Go Back
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- SCAVENGER FEATURE MODAL -->
+<div id="scavengerModal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 550px; background: #f8fafc; padding: 25px;">
+        <div class="modal-header" style="margin-bottom: 20px;">
+            <div>
+                <h3 style="color: #1e293b; font-size: 1.3rem; display:flex; align-items:center; gap:8px; margin:0;">
+                    <i class="bi bi-shop" style="color: #9539cb;"></i> Dumped Container
+                </h3>
+                <p style="font-size:0.85rem; color:#64748b; margin: 5px 0 0 0;">
+                    Available Space left in your bag: <strong style="color:#1e293b;">{{ available_scavenger_space }} Courions</strong>
+                </p>
+            </div>
+            <button class="close-modal" onclick="closeModal('scavengerModal')">&times;</button>
+        </div>
+        
+        <div class="scavenger-list">
+            {% for s_order in scavenger_orders %}
+                <div class="scavenger-card">
+                    <div class="sc-card-main">
+                        <div class="sc-dest">
+                            <span class="sc-building">
+                                {{ s_order.raw_order.location_category.name }} 
+                                {% if s_order.raw_order.building %}
+                                    • {{ s_order.raw_order.building.value }}
+                                {% endif %}
+                            </span>
+                            
+                            <span class="sc-room">
+                                Room {{ s_order.raw_order.room_number|default:"-" }}
+                            </span>
+                        </div>
+                        <div class="sc-meta">
+                            <span class="sc-vol">
+                                <i class="bi bi-box-seam"></i> {{ s_order.raw_order.total_physical_packs_db }} Courions
+                            </span>
+                            <span class="sc-earn">
+                                <i class="bi bi-cash-stack"></i> +₦{{ s_order.raw_order.delivery_fee|default:"0.00" }}
+                            </span>
+                        </div>
+                    </div>
+                    <button class="btn-claim-order" onclick="claimScavengerOrder('{{ s_order.id }}', this)">
+                        Claim
+                    </button>
+                </div>
+            {% empty %}
+                <div style="text-align:center; padding:40px; color:#94a3b8;">
+                    <i class="bi bi-wind" style="font-size:2.5rem; margin-bottom:10px; display:block; opacity:0.5;"></i>
+                    No eligible orders available right now.
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+{% include 'couriers/partials/shift_picker_modal.html' %}
+{% endif %}
+
+{% if courier.courier_category == "CAMPUS" %}
+
+<div id="anchorSelectModal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 400px; text-align: center; padding: 30px 20px;">
+        <button class="close-modal" onclick="closeModal('anchorSelectModal')" style="position: absolute; top: 15px; right: 15px;">&times;</button>
+        
+        <div style="width: 60px; height: 60px; background: #f0fdf4; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; color: #16a34a; margin: 0 auto 15px;">
+            <i class="bi bi-geo-alt-fill"></i>
+        </div>
+        
+        <h3 style="margin: 0 0 10px 0; font-size: 1.25rem; color: #1e293b;">Set Starting Location</h3>
+        <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 25px;">
+            To optimize your route, please declare your current physical location on campus.
+        </p>
+        
+        <div style="text-align: left; margin-bottom: 15px;">
+            <label style="display: block; font-size: 0.8rem; font-weight: 800; color: #475569; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Current Anchor</label>
+            
+            <select id="genesis-anchor-select" style="width: 100%; padding: 14px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1rem; font-weight: 600; color: #1e293b; outline: none; background: #f8fafc; cursor: pointer;">
+                <option value="" disabled selected>-- Select your physical location --</option>
+                <optgroup label="Male Hostels">
+                    <option value="male_daniel">Daniel Hall</option>
+                    <option value="male_jacob">Jacob Hall</option>
+                    <option value="male_isaac">Isaac Hall</option>
+                    <option value="male_abraham">Abraham Hall</option>
+                    <option value="male_joseph">Joseph Hall</option>
+                </optgroup>
+                <optgroup label="Female Hostels">
+                    <option value="fem_abigail">Abigail Hall</option>
+                    <option value="fem_sarah">Sarah Hall</option>
+                    <option value="fem_deborah">Deborah Hall</option>
+                </optgroup>
+                <optgroup label="Academic & Admin">
+                    <option value="acad_coll1">College 1</option>
+                    <option value="acad_coll2">College 2</option>
+                    <option value="acad_eng">Engineering</option>
+                    <option value="acad_lib">Library</option>
+                    <option value="senate_main">Senate Building</option>
+                </optgroup>
+                <optgroup label="Campus Hubs & Outlets">
+                    <option value="caf">Main Cafeteria</option>
+                    <option value="boc">Back of Caf</option>
+                    <option value="ak">Alumni Kitchen (AK)</option>
+                    <option value="bakery">Bakery</option>
+                    <option value="hub_chapel">University Chapel</option>
+                    <option value="medical_center">Medical Center</option>
+                </optgroup>
+            </select>
+        </div>
+
+        <button id="btn-confirm-anchor" onclick="confirmStartBatch()" class="btn" style="width: 100%; background: #16a34a; color: white; font-weight: 800; padding: 14px; border-radius: 10px; border: none; font-size: 1rem; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.2);" onmouseover="this.style.backgroundColor='#15803d'" onmouseout="this.style.backgroundColor='#16a34a'">
+            Lock Anchor & Start Route
+        </button>
+        
+        <div id="anchor-loading-indicator" style="display: none; color: #16a34a; font-size: 1rem; font-weight: 800; margin-top: 15px; animation: pulseGlow 1.5s infinite;">
+            <i class="fas fa-spinner fa-spin"></i> Initializing Matrix...
+        </div>
+    </div>
+</div>
+
+<div id="manager-ping-overlay" style="display: none; position: fixed; top: -100px; left: 50%; transform: translateX(-50%); z-index: 9999; width: 90%; max-width: 380px; background: #1e293b; border-radius: 16px; box-shadow: 0 10px 30px rgba(139, 92, 246, 0.3); overflow: hidden; border: 2px solid #8b5cf6; transition: top 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+    <div style="padding: 18px; color: white;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <span style="background: #8b5cf6; color: white; padding: 4px 10px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; letter-spacing: 1px; animation: pulseGlow 1.5s infinite;">
+                <i class="bi bi-lightning-fill"></i> MANAGER REQUEST
+            </span>
+            <span id="ping-timer-text" style="font-weight: 800; font-size: 1.2rem; color: #f87171;">--s</span>
+        </div>
+        
+        <h3 id="ping-outlet-name" style="margin: 0 0 4px 0; font-size: 1.3rem; color: #f8fafc;">Outlet</h3>
+        <p id="ping-delivery-dest" style="margin: 0 0 15px 0; font-size: 0.85rem; color: #94a3b8;">
+            <i class="bi bi-geo-alt-fill" style="color: #cbd5e1;"></i> Drop-off: <span style="color: white; font-weight: 600;" id="ping-dest-name">Destination</span>
+        </p>
+        
+        <div style="display: flex; gap: 10px;">
+            <button onclick="acceptManagerPing()" style="flex: 1; background: #10b981; color: white; border: none; padding: 14px; border-radius: 10px; font-weight: 800; font-size: 0.95rem; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#059669'" onmouseout="this.style.background='#10b981'">
+                ACCEPT
+            </button>
+            <button onclick="rejectManagerPing()" style="flex: 1; background: #334155; color: white; border: none; padding: 14px; border-radius: 10px; font-weight: 800; font-size: 0.95rem; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#475569'" onmouseout="this.style.background='#334155'">
+                DECLINE
+            </button>
+        </div>
+    </div>
+    <div style="height: 5px; background: #334155; width: 100%;">
+        <div id="ping-progress-bar" style="height: 100%; background: #10b981; width: 100%; transition: width 1s linear, background 0.3s;"></div>
+    </div>
+</div>
+
+<style>
+    @keyframes pulseGlow {
+        0% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.7); }
+        70% { box-shadow: 0 0 0 6px rgba(139, 92, 246, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0); }
+    }
+</style>
+
+<script>
+    let activePingId = null;
+    let pingCountdown = null;
+    let pingTimerInterval = null;
+
+    function checkForManagerPings() {
+        if (activePingId) return;
+
+        fetch("/couriers/api/check-pending-ping/")
+            .then(res => res.json())
+            .then(data => {
+                if (data.has_ping) {
+                    triggerPingUI(data.ping_data);
+                }
+            })
+            .catch(err => console.error("Ping check failed:", err));
+    }
+
+    function triggerPingUI(pingData) {
+        activePingId = pingData.ping_id;
+        pingCountdown = pingData.seconds_remaining;
+
+        document.getElementById('ping-outlet-name').innerText = pingData.outlet_name;
+        document.getElementById('ping-dest-name').innerText = pingData.destination_name;
+        
+        const overlay = document.getElementById('manager-ping-overlay');
+        const progressBar = document.getElementById('ping-progress-bar');
+        const timerText = document.getElementById('ping-timer-text');
+        
+        overlay.style.display = 'block';
+        setTimeout(() => { overlay.style.top = '20px'; }, 10); 
+        
+        if (typeof playAlertSound === "function") {
+            playAlertSound(); 
+        }
+
+        const totalTime = pingCountdown;
+        pingTimerInterval = setInterval(() => {
+            pingCountdown--;
+            timerText.innerText = pingCountdown + "s";
+            
+            const percentage = (pingCountdown / totalTime) * 100;
+            progressBar.style.width = percentage + "%";
+
+            if (pingCountdown <= 4) {
+                progressBar.style.background = "#ef4444"; 
+                timerText.style.color = "#ef4444";
+            } else {
+                progressBar.style.background = "#10b981";
+                timerText.style.color = "#f87171";
+            }
+
+            if (pingCountdown <= 0) {
+                clearInterval(pingTimerInterval);
+                hidePingUI(); 
+            }
+        }, 1000);
+    }
+
+    function hidePingUI() {
+        const overlay = document.getElementById('manager-ping-overlay');
+        overlay.style.top = '-200px'; 
+        setTimeout(() => { overlay.style.display = 'none'; }, 400);
+        clearInterval(pingTimerInterval);
+        activePingId = null;
+    }
+
+    let newlySecuredOrders = []; // Memory array for the items they check off
+
+    function acceptManagerPing() {
+        if (!activePingId) return;
+        clearInterval(pingTimerInterval); 
+        
+        const btn = event.target;
+        btn.innerHTML = "ACCEPTING...";
+        btn.disabled = true;
+
+        fetch("/couriers/api/respond-ping/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-CSRFToken": "{{ csrf_token }}" },
+            body: JSON.stringify({ ping_id: activePingId, response: "accepted" })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                hidePingUI();
+                // 🌍 THE FIX: The backend now handles the lock. Just reload!
+                window.location.hash = 'transit';
+                window.location.reload();
+            } else {
+                alert("Failed: " + data.error);
+                hidePingUI();
+                btn.innerHTML = "ACCEPT";
+                btn.disabled = false;
+            }
+        })
+        .catch(err => {
+            console.error("Ping error:", err);
+            alert("Network connection lost.");
+        });
+    }
+
+    function markHotDropExistingPurchased(orderId) {
+        // 1. Save it to memory so we send it to the backend
+        if (!newlySecuredOrders.includes(orderId)) {
+            newlySecuredOrders.push(orderId);
+        }
+
+        // 2. Change the specific item's button to green
+        const btn = document.getElementById(`hd-btn-purch-${orderId}`);
+        btn.style.cssText = 'background: #10b981; border: 2px solid #10b981; color: white; padding: 6px 12px; border-radius: 8px; font-weight: 800; font-size: 0.75rem; cursor: not-allowed; transition: 0.2s;';
+        btn.innerText = '✅ SECURED';
+        btn.disabled = true;
+        
+        // 3. Transform the main bottom button!
+        const transitBtn = document.getElementById('hd-btn-transit');
+        transitBtn.style.background = '#8b5cf6'; // Turn Purple
+        transitBtn.style.boxShadow = '0 10px 20px rgba(139, 92, 246, 0.3)';
+        transitBtn.innerText = 'Save updates and recalculate matrix';
+    }
+
+    function submitHotDropTollbooth() {
+        const transitBtn = document.getElementById('hd-btn-transit');
+        transitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> RECALCULATING MATRIX...';
+        transitBtn.disabled = true;
+
+        const batchId = document.getElementById('hd-batch-id').value;
+
+        fetch("/couriers/api/tollbooth-transit/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-CSRFToken": "{{ csrf_token }}" },
+            body: JSON.stringify({ batch_id: batchId, secured_orders: newlySecuredOrders })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('hotDropTollboothModal').style.display = 'none';
+                window.location.hash = 'transit';
+                window.location.reload();
+            } else {
+                alert("Matrix Sync Error: " + data.error);
+                transitBtn.innerHTML = newlySecuredOrders.length > 0 ? "Save updates and recalculate matrix" : "Nothing to update, proceed";
+                transitBtn.disabled = false;
+            }
+        })
+        .catch(err => console.error("Tollbooth Error:", err));
+    }
+
+    function rejectManagerPing() {
+        if (!activePingId) return;
+        clearInterval(pingTimerInterval);
+        
+        const btn = event.target;
+        btn.innerHTML = "DECLINING...";
+        btn.disabled = true;
+
+        fetch("/couriers/api/respond-ping/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-CSRFToken": "{{ csrf_token }}" },
+            body: JSON.stringify({ ping_id: activePingId, response: "rejected" })
+        })
+        .then(res => res.json())
+        .then(data => {
+            hidePingUI(); 
+            btn.innerHTML = "DECLINE";
+            btn.disabled = false;
+        });
+    }
+
+    // Polling triggers every 3 seconds for Campus couriers only
+    setInterval(checkForManagerPings, 3000);
+</script>
+{% endif %}
+
+<script>
+    // Helper to trigger HTMX refreshes from JavaScript
+    function triggerCourierRefresh(type) {
+        const userId = "{{ request.user.id }}";
+        let eventName;
+        if (type === 'new') eventName = `refreshNew_User${userId}`;
+        else if (type === 'transit') eventName = `refreshTransit_User${userId}`;
+        else if (type === 'returns') eventName = `refreshReturns_User${userId}`; // Added this!
+        
+        if (eventName) document.body.dispatchEvent(new Event(eventName));
+
+        // THE FIX: Automatically trigger a wallet refresh alongside any order action
+        if (['new', 'transit', 'returns'].includes(type)) {
+            document.body.dispatchEvent(new Event(`refreshWallet_User${userId}`));
+        }
+    }
+
+    // Image Zoom Function
+    function zoomImage(src) {
+        const overlay = document.getElementById('imageZoomOverlay');
+        const zoomedImg = document.getElementById('zoomedImage');
+        
+        if (src && overlay && zoomedImg) {
+            zoomedImg.src = src;
+            overlay.classList.add('active');
+        }
+    }
+
+
+    // --- 1. TAB SWITCHING LOGIC ---
+    function switchTab(tabName, btnElement) {
+        // Force save the tab name to memory immediately
+        localStorage.setItem('courier_last_tab', tabName);
+
+        // Hide all tab contents
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active-tab'));
+        // Remove active state from all buttons
+        document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+        
+        // Show the targeted tab
+        const targetTab = document.getElementById('tab-' + tabName);
+        if (targetTab) {
+            targetTab.classList.add('active-tab');
+        }
+        
+        // Highlight the active button
+        if (btnElement) {
+            btnElement.classList.add('active');
+        } else {
+            // Fallback: If triggered by page reload, find the button automatically
+            const fallbackBtn = document.querySelector(`.nav-btn[onclick*="'${tabName}'"]`) || 
+                                document.querySelector(`.nav-btn[onclick*="${tabName}"]`);
+            if (fallbackBtn) {
+                fallbackBtn.classList.add('active');
+            }
+        }
+    }
+
+    function toggleTransactionModal() {
+        const modal = document.getElementById('courierTxnModal');
+        modal.style.display = (modal.style.display === "none") ? "flex" : "none";
+        openModal('courierTxnModal');
+    }
+
+    // --- 2. MODAL HELPERS (The Missing Piece!) ---
+    function openModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.style.display = 'flex';
+            // Slight delay to allow display:flex to apply before transition
+            setTimeout(() => { 
+                modal.classList.add('show'); // <--- Triggers the slide-up
+                modal.style.opacity = '1'; 
+            }, 10);
+        }
+    }
+
+    function closeModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.style.opacity = '0';
+            setTimeout(() => { modal.style.display = 'none'; }, 30);
+        }
+    }
+
+    // --- 3. ORDER DETAILS LOGIC ---
+    function openOrderModal(orderId) {
+        const modalBody = document.getElementById('orderModalBody');
+        
+        // 1. Show Loading State
+        modalBody.innerHTML = '<div style="padding:40px; text-align:center; color:#999;">Loading details...</div>';
+        openModal('orderDetailModal');
+
+        // 2. Fetch Content via AJAX
+        fetch(`/couriers/modal/order/${orderId}/`)
+            .then(response => {
+                if (!response.ok) throw new Error("Network response was not ok");
+                return response.text();
+            })
+            .then(html => {
+                modalBody.innerHTML = html;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                modalBody.innerHTML = '<div style="padding:20px; text-align:center; color:red;">Failed to load order details.</div>';
+            });
+    }
+
+    // --- 4. OPEN CUSTOMER MODAL ---
+    function openCustomerModal() {
+        // Since we loaded the customer data inside the Order Modal snippet (inside <template>),
+        // we can grab it from there without another server call!
+        const template = document.getElementById('loaded-customer-data');
+        const targetDiv = document.getElementById('customerModalBody');
+        
+        if (template && targetDiv) {
+            targetDiv.innerHTML = template.innerHTML;
+            openModal('customerDetailModal');
+        } else {
+            console.error("Customer data template not found");
+        }
+    }
+
+    // 5. Start Batch Function
+
+    const COURIER_CATEGORY = "{{ courier.courier_category|default:'' }}";
+    let pendingStartBatchId = null;
+    function startBatch(batchId) {
+    // Django will automatically turn this into '/api/batch-action/'
+    // 2. Use standard JS logic to fork the behavior
+        if (COURIER_CATEGORY === "CAMPUS") {
+            // --- CAMPUS MODE: Open the Genesis Anchor Modal ---
+            pendingStartBatchId = batchId;
+            document.getElementById('genesis-anchor-select').value = "";
+            openModal('anchorSelectModal');
+            
+        } else {
+
+
+        const actionUrl = "{% url 'courier_batch_action' %}"; 
+
+        if (event && event.target) {
+                event.target.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                event.target.disabled = true;
+            }
+        
+        fetch(actionUrl, { 
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}', // Direct injection for reliability
+                'HX-Request': 'true'
+            },
+            body: JSON.stringify({
+                'batch_id': batchId,
+                'action': 'start_batch'
+            })
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Server responded with an error');
+            return response.json();
+        })
+
+        .then(data => {
+            if (data.success) {
+                // Add the hash so the page knows to open the transit tab after reload
+                window.location.hash = 'transit';
+                window.location.reload(); 
+            } else {
+                alert("Error: " + (data.error || "Could not start batch"));
+            }
+        })
+
+        .catch(err => {
+            console.error('Network Error:', err);
+            alert("Check your internet connection or URL path.");
+        });
+      }
+    }
+
+
+    // 3. We leave this function exposed for everyone, but only Campus couriers can trigger it
+    function confirmStartBatch() {
+        if (!pendingStartBatchId) return;
+
+        const anchorSelect = document.getElementById('genesis-anchor-select');
+        const selectedLocation = anchorSelect.value;
+
+        // Force them to pick a location before the button does anything
+        if (!selectedLocation) {
+            alert("Please select your current physical location first!");
+            return;
+        }
+
+        // Lock UI: Disable dropdown, hide button, show spinner
+        anchorSelect.disabled = true;
+        const btn = document.getElementById('btn-confirm-anchor');
+        btn.style.display = 'none'; 
+        document.getElementById('anchor-loading-indicator').style.display = 'block';
+
+        const actionUrl = "{% url 'courier_batch_action' %}"; 
+
+        fetch(actionUrl, { 
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}',
+                'HX-Request': 'true'
+            },
+            body: JSON.stringify({
+                'batch_id': pendingStartBatchId,
+                'action': 'start_batch',
+                'start_location': selectedLocation 
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                closeModal('anchorSelectModal');
+                window.location.hash = 'transit';
+                window.location.reload(); 
+            } else {
+                alert("Error: " + (data.error || "Could not start batch"));
+                // Reset UI if the server rejects it
+                anchorSelect.disabled = false;
+                btn.style.display = 'block';
+                document.getElementById('anchor-loading-indicator').style.display = 'none';
+            }
+        })
+        .catch(err => {
+            console.error('Network Error:', err);
+            alert("Check your internet connection.");
+            anchorSelect.disabled = false;
+            btn.style.display = 'block';
+            document.getElementById('anchor-loading-indicator').style.display = 'none';
+        });
+    }
+        /**
+     * UNIFIED RETURN LOGIC
+     * @param {string} luxaId - Used for Standard Orders (The LUXAOrder primary key)
+     * @param {string} masterId - Used for Campus Orders (The University_Order UUID/ID)
+     */
+    /**
+ * UNIFIED RETURN LOGIC
+ * @param {string} masterOrderId - The ID for Standard (MasterOrder)
+ * @param {string} universityOrderId - The ID for Campus (University_Order)
+ */
+    function confirmReturn(masterOrderId, universityOrderId) {
+        // Select the ID based on which one is provided
+        // If universityOrderId exists, it's a Campus order. Otherwise, it's Standard.
+        const targetId = universityOrderId || masterOrderId;
+
+        if (!targetId) {
+            console.error("Critical Error: No ID provided to confirmReturn");
+            return;
+        }
+
+        if (!confirm("Confirm you have returned this item to the Hub? It will be removed from your active bag.")) return;
+
+        fetch(`/couriers/api/order-action/${targetId}/`, {
+            method: "POST",
+            headers: { 
+                "Content-Type": "application/json", 
+                "X-CSRFToken": "{{ csrf_token }}" 
+            },
+            body: JSON.stringify({ action: "confirm_return" })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === "success") {
+                // SUCCESS: The Batch Burn has run in the background.
+                // We reload to show the empty bag and updated stats.
+                window.location.reload(); 
+            } else {
+                alert("Error: " + data.error);
+            }
+        })
+        .catch(err => {
+            console.error("Network Error:", err);
+        });
+    }
+        // 7. Toggle Batch Details (Slide Out)
+        function toggleBatch(batchId) {
+            const panel = document.getElementById('details-' + batchId);
+            const card = panel.previousElementSibling; // The trigger card
+            const icon = card.querySelector('.toggle-icon');
+
+            if (panel.style.display === "none") {
+                panel.style.display = "block";
+                // Simple animation
+                panel.style.opacity = 0;
+                setTimeout(() => { panel.style.opacity = 1; }, 10);
+                icon.style.transform = "rotate(180deg)";
+            } else {
+                panel.style.display = "none";
+                icon.style.transform = "rotate(0deg)";
+            }
+        }
+
+        // 8. Mark Order Delivered
+        // This is the new modular handler that talks to your universal view
+    function performOrderAction(orderId, actionType) {
+        const url = `/couriers/api/order-action/${orderId}/`; 
+
+        fetch(url, {
+            method: "POST",
+            headers: { 
+                "Content-Type": "application/json", 
+                "X-CSRFToken": "{{ csrf_token }}" 
+            },
+            body: JSON.stringify({ action: actionType })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'requires_verification') {
+                // The backend dictates if we show the Seed Phrase option
+                const showSeed = data.ui_config.show_seed_phrase;
+                window.location.href = `${data.redirect_url}?show_seed=${showSeed}#transit`;
+            } 
+            else if (data.status === "success") {
+                // Refresh allows the 'Batch Burn' check results to show on the UI
+               if (data.batch_status === 'completed' || data.is_batch_done) {
+                    window.location.hash = 'history';
+                }
+                // 2. If we just authorized/delivered one order but more remain:
+                else {
+                    window.location.hash = 'transit';
+                }
+
+                window.location.reload();
+            } 
+            else {
+                alert("Error: " + (data.error || "Action failed"));
+            }
+        })
+        .catch(error => console.error('Fetch Error:', error));
+    }
+
+    // Updated Mark Delivered Wrapper
+    function markDelivered(orderId) {
+        performOrderAction(orderId, 'mark_delivered');
+    }
+
+    // --- 9. SEND TO POCKET (Cancel) ---
+    
+    // Global variables to hold the ID and the button clicked
+    let pendingCancelId = null; 
+    let pendingCancelBtn = null;    
+
+    function reportIssue(masterOrderId, universityOrderId, btnElement) {
+        // Dynamically select the ID based on the network type
+        const targetId = universityOrderId || masterOrderId;
+
+        if (!targetId) {
+            console.error("Critical Error: No ID provided to reportIssue");
+            return;
+        }
+
+        // Store the ID and the button that was clicked
+        pendingCancelId = targetId;
+        pendingCancelBtn = btnElement;
+
+        openModal('cancelConfirmModal');
+    }
+
+    function executeCancellation() {
+        if (!pendingCancelId) return;
+
+        const confirmBtn = document.getElementById('btn-confirm-cancel');
+        const originalText = confirmBtn.innerHTML;
+        
+        confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Canceling...';
+        confirmBtn.disabled = true;
+
+        fetch(`/couriers/api/order-action/${pendingCancelId}/`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-CSRFToken": "{{ csrf_token }}" },
+            body: JSON.stringify({ action: "request_cancellation" })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === "success") {
+                // 1. Close the modal instantly
+                closeModal('cancelConfirmModal');
+                
+                // 2. THE MAGIC: Find the physical order card on the screen and delete it instantly!
+                if (pendingCancelBtn) {
+                    const card = pendingCancelBtn.closest('.order-manifest-card');
+                    if (card) {
+                        card.style.transition = "all 0.3s ease";
+                        card.style.opacity = "0";
+                        card.style.transform = "scale(0.95)";
+                        setTimeout(() => card.remove(), 300);
+                    }
+                }
+                
+                // 3. Quietly refresh the Returns tab in the background so it shows up there
+                triggerCourierRefresh('returns');
+
+            } else {
+                alert("Error: " + data.error);
+            }
+        })
+        .finally(() => {
+            // Reset the modal button for next time
+            confirmBtn.innerHTML = originalText;
+            confirmBtn.disabled = false;
+        });
+    }
+
+    // --- 10. RESTORE FROM POCKET ---
+    function restoreOrder(masterOrderId, universityOrderId) {
+        // Dynamically select the ID based on the network type
+        const targetId = universityOrderId || masterOrderId;
+
+        if (!targetId) {
+            console.error("Critical Error: No ID provided to restoreOrder");
+            return;
+        }
+
+        if(!confirm("Restore this order to your active batch?")) return;
+
+        fetch(`/couriers/api/order-action/${targetId}/`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-CSRFToken": "{{ csrf_token }}" },
+            body: JSON.stringify({ action: "restore_order" })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === "success") {
+                alert(data.message); // Will show the specific restore message
+                location.reload();
+            } else {
+                alert("Error: " + data.error);
+            }
+        });
+    }
+
+    function openCustomerSlider(orderId) {
+        // Find the template for this specific order
+        const template = document.getElementById(`cust-template-${orderId}`);
+        const content = document.getElementById('sliderContent');
+        const slider = document.getElementById('customerSlider');
+        const overlay = document.getElementById('sliderOverlay');
+
+        if (template) {
+            content.innerHTML = template.innerHTML;
+            slider.classList.add('active');
+            overlay.classList.add('active');
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
+        }
+    }
+
+    function closeCustomerSlider() {
+        document.getElementById('customerSlider').classList.remove('active');
+        document.getElementById('sliderOverlay').classList.remove('active');
+        document.body.style.overflow = 'auto';
+    }
+
+    // --- 12. DYNAMIC BANK ACCOUNT MANAGEMENT ---
+    let allBanks = [];
+
+    function openLinkBankModal() {
+        openModal('linkBankModal');
+        
+        // Reset all inputs
+        document.getElementById('bankSearchInput').value = '';
+        document.getElementById('selectedBankCode').value = '';
+        document.getElementById('selectedBankName').value = '';
+        document.getElementById('account_number').value = '';
+        
+        const listContainer = document.getElementById('bankListContainer');
+        listContainer.style.display = 'none';
+
+        // Fetch from Paystack
+        if (allBanks.length === 0) {
+            listContainer.style.display = 'block';
+            listContainer.innerHTML = '<div style="padding:10px; color:#999; text-align:center;">Loading...</div>';
+            
+            fetch('https://api.paystack.co/bank?currency=NGN')
+            .then(res => res.json())
+            .then(data => {
+                if(data.status) {
+                    allBanks = data.data.sort((a, b) => a.name.localeCompare(b.name));
+                    
+                    // Add Test Bank for development bypass
+                    allBanks = [{name: "TEST BANK (Bypass API)", code: "999"}, ...allBanks];
+
+                    renderBankList(allBanks);
+                    listContainer.style.display = 'none'; 
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                listContainer.innerHTML = '<div style="padding:10px; color:red;">Failed to load banks. Check connection.</div>';
+            });
+        }
+    }
+
+    function renderBankList(banks) {
+        const container = document.getElementById('bankListContainer');
+        container.innerHTML = '';
+        
+        if(banks.length === 0) {
+            container.innerHTML = '<div style="padding:10px; color:#999; text-align:center;">No banks found</div>';
+            return;
+        }
+        
+        banks.forEach(bank => {
+            const div = document.createElement('div');
+            div.style.cssText = 'padding: 12px 15px; cursor: pointer; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; color: #333; transition: background 0.2s;';
+            div.innerText = bank.name;
+            div.onmouseover = () => div.style.background = '#f8fafc';
+            div.onmouseout = () => div.style.background = 'transparent';
+            
+            div.onclick = () => selectBank(bank.code, bank.name);
+            container.appendChild(div);
+        });
+    }
+
+    function openBankList() {
+        document.getElementById('bankListContainer').style.display = 'block';
+        if (document.getElementById('bankSearchInput').value === '') {
+            renderBankList(allBanks); 
+        }
+    }
+
+    function filterBanks() {
+        const query = document.getElementById('bankSearchInput').value.toLowerCase();
+        
+        document.getElementById('selectedBankCode').value = '';
+        document.getElementById('selectedBankName').value = '';
+        
+        const filtered = allBanks.filter(b => b.name.toLowerCase().includes(query));
+        renderBankList(filtered);
+        document.getElementById('bankListContainer').style.display = 'block';
+    }
+
+    function selectBank(code, name) {
+        document.getElementById('selectedBankCode').value = code;
+        document.getElementById('selectedBankName').value = name;
+        document.getElementById('bankSearchInput').value = name;
+        document.getElementById('bankListContainer').style.display = 'none';
+    }
+
+    // Hide dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        const container = document.getElementById('bankListContainer');
+        const input = document.getElementById('bankSearchInput');
+        if (container && e.target !== container && e.target !== input && !container.contains(e.target)) {
+            container.style.display = 'none';
+        }
+    });
+
+    function submitLinkBank(event) {
+        event.preventDefault();
+        
+        const bankCode = document.getElementById('selectedBankCode').value;
+        const bankName = document.getElementById('selectedBankName').value;
+        const accNumber = document.getElementById('account_number').value;
+        const btn = document.getElementById('btn-submit-bank');
+
+        if(!bankCode || !bankName) {
+            return alert("Please select a bank from the dropdown list.");
+        }
+
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
+        btn.disabled = true;
+
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]') ? document.querySelector('[name=csrfmiddlewaretoken]').value : '{{ csrf_token }}';
+
+        fetch("{% url 'link_bank_account' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({
+                wallet_type: 'COURIER', 
+                bank_code: bankCode,
+                bank_name: bankName,
+                account_number: accNumber
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.success) {
+                location.reload();
+            } else {
+                alert("Error: " + data.error);
+                btn.innerHTML = 'Verify & Link Account';
+                btn.disabled = false;
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Network error occurred while linking bank.");
+            btn.innerHTML = 'Verify & Link Account';
+            btn.disabled = false;
+        });
+    }
+
+    function deleteBank(bankId) {
+        if(!confirm("Are you sure you want to completely remove this payout account?")) return;
+        
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]') ? document.querySelector('[name=csrfmiddlewaretoken]').value : '{{ csrf_token }}';
+
+        fetch("{% url 'delete_bank_account' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({ bank_id: bankId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.success) {
+                location.reload();
+            } else {
+                alert("Error: " + data.error);
+            }
+        })
+        .catch(err => console.error('Network Error:', err));
+    }
+
+    function setActiveBank(bankId, walletType) {
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]') ? document.querySelector('[name=csrfmiddlewaretoken]').value : '{{ csrf_token }}';
+
+        fetch("{% url 'set_active_bank' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({ bank_id: bankId, wallet_type: walletType })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.success) location.reload();
+            else alert("Error: " + data.error);
+        });
+    }
+
+    // --- 13. ADVANCE WITHDRAWAL LOGIC ---
+    function submitAdvanceWithdraw(event) {
+        event.preventDefault();
+        
+        const amount = document.getElementById('advance-withdraw-amount').value;
+        const btn = document.getElementById('btn-submit-withdraw');
+
+        if (!amount || amount < 100) {
+            return alert("Minimum withdrawal amount is ₦100.");
+        }
+
+        // UX: Show loading state
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+        btn.disabled = true;
+
+        // Generate unique idempotency key to prevent double charges
+        const idempotencyKey = crypto.randomUUID();
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]') ? document.querySelector('[name=csrfmiddlewaretoken]').value : '{{ csrf_token }}';
+
+        fetch("{% url 'withdraw_funds' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({
+                amount: parseFloat(amount),
+                wallet_type: 'COURIER_ADVANCE', // Tells backend which bucket to hit
+                idempotency_key: idempotencyKey
+            })
+        })
+        .then(async response => {
+            const data = await response.json().catch(() => ({ error: "Server Error: Could not parse response" }));
+            
+            if (!response.ok || data.error) {
+                alert("❌ " + (data.error || "Transaction Failed"));
+                btn.innerHTML = 'Confirm Withdrawal';
+                btn.disabled = false;
+            } else {
+                alert(`✅ Success! ₦${amount} has been withdrawn to ${data.destination}.`);
+                location.reload();
+            }
+        })
+        .catch(err => {
+            console.error('Fetch Error:', err);
+            alert("Network error occurred while processing withdrawal.");
+            btn.innerHTML = 'Confirm Withdrawal';
+            btn.disabled = false;
+        });
+    }
+
+    // Scavenger function
+    // --- NEW: CLAIM SCAVENGER ORDER ---
+    function claimScavengerOrder(engineOrderId, btnElement) {
+        const originalText = btnElement.innerHTML;
+        btnElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        btnElement.disabled = true;
+
+        // Assuming you mapped the view to this URL path in urls.py
+        fetch("/couriers/api/claim-scavenger/", { 
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": "{{ csrf_token }}"
+            },
+            body: JSON.stringify({ engine_order_id: engineOrderId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                closeModal('scavengerModal');
+                // Auto-switch to Transit tab and reload to show the newly injected order
+                window.location.hash = 'transit';
+                window.location.reload();
+            } else {
+                alert("Action Failed: " + data.error);
+                btnElement.innerHTML = originalText;
+                btnElement.disabled = false;
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Network Error. Check your connection.");
+            btnElement.innerHTML = originalText;
+            btnElement.disabled = false;
+        });
+    }
+
+   // --- 2. AUTO-TAB ON RELOAD (THE FIX) ---
+    document.addEventListener("DOMContentLoaded", function() {
+        // Step 1: Check if JS forced a redirect (like 'Start Batch')
+        let targetTab = window.location.hash.replace('#', '');
+        
+        // Step 2: Check if Python forced a redirect (?tab=...)
+        if (!targetTab) {
+            const urlParams = new URLSearchParams(window.location.search);
+            targetTab = urlParams.get('tab');
+        }
+
+        // Step 3: MEMORY - If standard F5 reload, grab exactly where they were
+        if (!targetTab) {
+            targetTab = localStorage.getItem('courier_last_tab');
+        }
+
+        // Step 4: Default if it's their very first time logging in
+        if (!targetTab || targetTab === 'null') {
+            targetTab = 'new';
+        }
+
+        // Step 5: Execute the switch
+        switchTab(targetTab, null);
+
+        // Step 6: THE MAGIC WIPE
+        // This silently removes the #hash from the browser URL without reloading the page.
+        // Now, if they hit F5, the URL is clean, and the script strictly uses Step 3 (Memory).
+        if (window.location.hash) {
+            history.replaceState(null, null, window.location.pathname + window.location.search);
+        }
+    });
+
+
+    // --- SHIFT SCHEDULER LOGIC ---
+    function openShiftPicker() {
+        openModal('shiftPickerModal');
+    }
+
+    function openExemptionModal() {
+        closeModal('shiftPickerModal');
+        setTimeout(() => { openModal('exemptionModal'); }, 200); // Wait for the first modal to slide down
+    }
+
+    function submitShifts(event) {
+        event.preventDefault();
+        const btn = document.getElementById('btn-submit-shifts');
+        
+        // Gather selected checkboxes
+        const checkboxes = document.querySelectorAll('input[name="selected_shifts"]:checked');
+        const selectedBlocks = Array.from(checkboxes).map(cb => cb.value);
+        
+        if (selectedBlocks.length === 0) {
+            alert("Please select at least one hour block, or request an exemption.");
+            return;
+        }
+
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        btn.disabled = true;
+
+        fetch("/couriers/api/schedule-shifts/", { 
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-CSRFToken": "{{ csrf_token }}" },
+            body: JSON.stringify({ shifts: selectedBlocks })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("Schedule confirmed for tomorrow!");
+                location.reload();
+            } else {
+                alert("Error: " + data.error);
+                btn.innerHTML = 'Confirm Schedule';
+                btn.disabled = false;
+            }
+        });
+    }
+
+    function submitExemption(event) {
+        event.preventDefault();
+        const btn = document.getElementById('btn-submit-exemption');
+        const reason = event.target.exemption_reason.value;
+
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+        btn.disabled = true;
+
+        fetch("/couriers/api/request-exemption/", { 
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-CSRFToken": "{{ csrf_token }}" },
+            body: JSON.stringify({ reason: reason })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("Exemption requested successfully. Admin will review it.");
+                location.reload();
+            } else {
+                alert("Error: " + data.error);
+                btn.innerHTML = 'Submit for Approval';
+                btn.disabled = false;
+            }
+        });
+    }
+
+    
+        
+        function tickTimers() {
+            const timers = document.querySelectorAll('.live-countdown-timer');
+            if (timers.length === 0) return;
+
+            const now = new Date().getTime();
+
+            timers.forEach(el => {
+                const startTimeStr = el.getAttribute('data-start');
+                const etaMins = parseFloat(el.getAttribute('data-eta'));
+                
+                if (!startTimeStr || isNaN(etaMins)) return;
+
+                const startTime = new Date(startTimeStr).getTime();
+                const targetTime = startTime + (etaMins * 60000); 
+                
+                const diff = targetTime - now;
+
+                if (diff <= 0) {
+                    // THE FIX: The timer hit zero! Convert to positive and count FORWARD in Red.
+                    const overTime = Math.abs(diff);
+                    const h = Math.floor(overTime / (1000 * 60 * 60));
+                    const m = Math.floor((overTime % (1000 * 60 * 60)) / (1000 * 60));
+                    const s = Math.floor((overTime % (1000 * 60)) / 1000);
+                    const formattedSecs = s < 10 ? '0' + s : s;
+                    
+                    let timeStr = h > 0 ? `${h}h ${m}m ${formattedSecs}s` : `${m}m ${formattedSecs}s`;
+                    
+                    el.innerHTML = `+${timeStr} LATE`;
+                    el.style.color = "#ef4444"; // Red
+                } else {
+                    // Normal countdown in Green
+                    const h = Math.floor(diff / (1000 * 60 * 60));
+                    const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                    const s = Math.floor((diff % (1000 * 60)) / 1000);
+                    const formattedSecs = s < 10 ? '0' + s : s;
+                    
+                    let timeStr = h > 0 ? `${h}h ${m}m ${formattedSecs}s` : `${m}m ${formattedSecs}s`;
+                    
+                    el.innerHTML = timeStr;
+                    el.style.color = "#10b981"; // Green
+                }
+            });
+        } 
+        
+        tickTimers();
+        setInterval(tickTimers, 1000);
+
+
+    // ==========================================
+        // THE STATIC EVALUATOR (For Completed Orders & Batches)
+        // ==========================================
+        function evaluateCompletedMetrics() {
+            
+            // A. Evaluate Individual Orders
+            document.querySelectorAll('.static-order-time').forEach(el => {
+                const startStr = el.getAttribute('data-start');
+                const endStr = el.getAttribute('data-end');
+                const etaMins = parseFloat(el.getAttribute('data-eta')) || 0;
+
+                // Failsafe: If missing timestamps, default to a standard Delivered badge
+                if (!startStr || !endStr || endStr === '' || endStr === 'None') {
+                    el.innerHTML = `<i class="bi bi-check-circle-fill" style="color: #10b981;"></i> Delivered`;
+                    el.style.background = "#f1f5f9";
+                    el.style.color = "#64748b";
+                    return;
+                }
+
+                // THE MATH: Difference between Start and Drop-off
+                const startTime = new Date(startStr).getTime();
+                const endTime = new Date(endStr).getTime();
+                const actualMins = (endTime - startTime) / 60000; 
+
+                if (actualMins <= etaMins) {
+                    // Fast Delivery (Green)
+                    el.innerHTML = `<i class="bi bi-check-circle-fill"></i> ${Math.floor(actualMins)}m`;
+                    el.style.background = "#dcfce7";
+                    el.style.color = "#16a34a";
+                    el.style.border = "1px solid #bbf7d0";
+                } else {
+                    // Late Delivery (Red)
+                    const lateBy = Math.floor(actualMins - etaMins);
+                    el.innerHTML = `<i class="bi bi-exclamation-triangle-fill"></i> +${lateBy}m LATE`;
+                    el.style.background = "#fee2e2";
+                    el.style.color = "#dc2626";
+                    el.style.border = "1px solid #fecaca";
+                }
+            });
+
+            // B. Evaluate Entire Batches (History Tab)
+            document.querySelectorAll('.static-batch-time').forEach(el => {
+                const startStr = el.getAttribute('data-start');
+                const endStr = el.getAttribute('data-end');
+                const etaMins = parseFloat(el.getAttribute('data-eta')) || 0;
+
+                if (!startStr || !endStr || endStr === '' || endStr === 'None') {
+                    el.innerHTML = "<i class='fas fa-sync fa-spin'></i> Syncing...";
+                    return;
+                }
+
+                // THE MATH: Difference between Route Start and Final Burn
+                const startTime = new Date(startStr).getTime();
+                const endTime = new Date(endStr).getTime();
+                const actualMins = (endTime - startTime) / 60000; 
+
+                if (actualMins <= etaMins) {
+                    el.innerHTML = `<i class="bi bi-check-circle-fill"></i> ${Math.floor(actualMins)}m`;
+                    el.style.background = "#dcfce7";
+                    el.style.color = "#16a34a";
+                } else {
+                    const lateBy = Math.floor(actualMins - etaMins);
+                    el.innerHTML = `<i class="bi bi-exclamation-triangle-fill"></i> +${lateBy}m LATE`;
+                    el.style.background = "#fee2e2";
+                    el.style.color = "#dc2626";
+                }
+            });
+        }
+        
+        // Run the static evaluator once when the page loads, and whenever HTMX injects new content
+        document.addEventListener("DOMContentLoaded", evaluateCompletedMetrics);
+        document.body.addEventListener('htmx:afterSwap', evaluateCompletedMetrics);
+</script>
+
+{% endblock %}

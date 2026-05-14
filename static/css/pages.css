@@ -1,0 +1,16 @@
+.main {
+    background: #f0edff;
+    width: 90%;
+    padding: 50px 50px;
+    margin: 20px auto;
+    border-radius: 30px;
+}
+
+h1 {
+    color: #8b60ff;
+    margin-bottom: 20px;
+}
+
+h2 {
+    padding: 25px 0px;
+}

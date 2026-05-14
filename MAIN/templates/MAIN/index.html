@@ -1,0 +1,420 @@
+{% extends "MAIN/base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}LUXA landing Page{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static '/css/index.css' %}">
+{% endblock %}
+
+{% block content %}       
+    <section id="sub_nav">
+        <ul id="subnavli">
+            {% for cat in categories %}
+            <li class="subcat">
+                <a href="{% url 'category_detail' cat.slug %}#category-products">{{ cat.name }}</a>
+                <!-- <ul class="catdropdown">
+                    <li><a href="/categories/">Men's Clothing</a></li>
+                    <li><a href="/categories/">Women's Clothing</a></li>
+                    <li><a href="/categories/">Footwear</a></li>
+                    <li><a href="/categories/">Accessories</a></li>
+                    <li><a href="/categories/">Jewelleries and Watches</a></li>
+                </ul> -->
+            </li>
+            {% endfor %}
+        </ul>
+    </section>
+
+
+<section class="hero">
+
+    <div class="hero-container">
+
+        <div class="hero-left">
+
+            <h1>Everything You<br>Need, Delivered</h1>
+
+            <p>
+                Millions of products at your fingertips. Experience immersive
+                3D product previews before you buy.
+            </p>
+
+            <div class="hero-buttons">
+
+                <a href="/categories/" class="btn-primary">Start Shopping</a>
+                <a href="{% url 'explore_3d_products' %}" class="btn-outline">Explore 3D Products</a>
+
+            </div>
+
+        </div>
+
+        <!-- RIGHT PRODUCT GRID -->
+        <div class="hero-products">
+            <button class="slider-btn prev" id="heroPrevBtn">&#10094;</button>
+            <button class="slider-btn next" id="heroNextBtn">&#10095;</button>
+            <div class="hero-slider-tracker">
+
+            {% for product in hero_products %}
+
+            <a href="{% url 'product_detail' product.slug %}" class="hero-card">
+
+                <div class="hero-card-image">
+
+                    {% if product.main_image %}
+                        <img src="{{ product.main_image.url }}" alt="{{ product.name }}">
+                    {% else %}
+                        <img src="{% static 'images/products/placeholder.png' %}" alt="{{ product.name }}">
+                    {% endif %}
+
+                </div>
+
+                <div class="hero-card-info">
+
+                    <span class="hero-card-title">
+                        {{ product.name }}
+                    </span>
+
+                    <span class="hero-card-price">
+                        {{ currency_symbol }}{{ product.price|intcomma }}
+                    </span>
+
+                </div>
+
+            </a>
+
+            {% endfor %}
+
+            </div>
+        </div>
+    </div>
+
+
+    <!-- SLIDER DOTS -->
+    <div class="hero-dots" id="heroDots"></div>
+
+    </div>
+
+</section>
+   
+<section id="featured-products">
+
+    <div class="products-top">
+
+        <div>
+            <h2 class="section-title">
+                Featured Products
+            </h2>
+
+            <p class="section-subtitle">
+                Discover the top products across all categories.
+            </p>
+
+        </div>
+
+        <a href="/categories/" class="browse-btn">
+            Browse All →
+        </a>
+
+    </div>
+
+
+    <!-- CATEGORY NAV -->
+    <div class="product-filters">
+
+        <a href="?category=all#featured-products" class="filter active">All</a>
+
+        {% for category in categories %}
+        <a href="?category={{ category.slug }}#featured-products" class="filter">
+            {{ category.name }}
+        </a>
+        {% endfor %}
+    </div>
+
+
+    <!-- PRODUCTS GRID -->
+
+    <div class="products-grid">
+
+        {% for product in featured_products %}
+
+        <div class="product-card"
+             data-category="{{ product.category.slug }}">
+
+
+                <div class="product-image">
+                    {% if product.main_image %}
+                        <img src="{{ product.main_image.url }}">
+                    {% else %}
+                        <img src="{% static 'images/placeholder.png' %}">
+                    {% endif %}
+                
+                         <!-- HOVER ACTIONS -->
+                        <div class="product-overlay">
+
+                            <a href="{% url 'wishlist' %}" class="action-btn">
+                            <i class="fa-regular fa-heart"></i>
+                            </a>
+
+                            <a href="{% url 'cart' %}" class="action-btn">
+                                <i class="fa-solid fa-cart-shopping"></i>
+                            </a>
+
+                            <!-- <a class="action-btn">
+                                <i class="fa-regular fa-eye"></i>
+                            </a> -->
+
+                        </div>
+
+                    <!-- BADGES -->
+
+                    {% if product.is_new %}
+                    <span class="badge new">New</span>
+                    {% endif %}
+
+                    {% if product.is_hot %}
+                    <span class="badge hot">Hot</span>
+                    {% endif %}
+
+                    {% if product.has_3d %}
+                    <span class="badge three">3D</span>
+                    {% endif %}
+
+                </div>
+            <a href="{% url 'product_detail' product.slug %}">
+                <div class="product-info">
+
+                    <h4 class="product-title">
+                        {{ product.name|truncatewords:6|capfirst}}
+                    </h4>
+
+                    <span class="product-category">
+                        {{ product.category.name }}
+                    </span>
+
+                    <div class="product-bottom">
+
+                        <p class="product-price">
+                            {{ currency_symbol }}{{ product.price|intcomma }}
+                        </p>
+
+                        <div class="product-rating">
+
+                            <i class="bi bi-star"></i>
+                            <i class="bi bi-star"></i>
+                            <i class="bi bi-star"></i>
+                            <i class="bi bi-star"></i>
+                            <i class="bi bi-star"></i>
+
+                            <span>No reviews</span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </a>
+        </div>
+        {% empty %}
+
+            <div class="no-products">
+                <h3>No products found</h3>
+                <p>Try selecting another category.</p>
+            </div>
+
+
+        {% endfor %}
+           <!-- <a href="/categories/" class="browsemore">
+            Browse for more products...
+            </a> -->
+    </div>
+</section>
+
+<section id="featured-vendors">
+
+    <div class="vendors-header">
+
+        <div>
+            <h2 class="hea2">Featured Vendors</h2>
+            <p class="feat_p">Meet our most trusted sellers.</p>
+        </div>
+
+        <div class="vendor-nav">
+            <button class="nav-btn" id="prevBtn"><i class="bi bi-arrow-left"></i></button>
+            <button class="nav-btn"id="nextBtn"><i class="bi bi-arrow-right"></i></button>
+        </div>
+
+    </div>
+
+    <div class="vendors-wrapper"> 
+      <div class="vendors-container">
+         <div class="vendors-track" id="vendorsTrack">
+
+                {% for vendor in featured_vendors %}
+
+                <a href="{% url 'vendor_detail' vendor.id %}" class="vendor-card">
+
+                    <!-- LEFT IMAGE AREA -->
+
+                    <div class="vendor-image">
+
+                        {% if vendor.image %}
+                        <img src="{{ vendor.image.url }}" alt="{{ vendor.business_name }}">
+                        {% else %}
+                        <img src="{% static 'images/icons/vendor_icon.png' %}" alt="{{ vendor.business_name }}">
+                        {% endif %}
+
+                        <span class="vendor-badge">
+                            <i class="bi bi-check"></i>
+                        </span>
+
+                    </div>
+
+
+                    <!-- RIGHT INFO AREA -->
+
+                    <div class="vendor-info">
+
+                        <h4 class="vendor-name">
+                            {{ vendor.business_name }}
+                        </h4>
+
+                        <p class="vendor-location">
+                            <i class="bi bi-geo-alt"></i>
+                            {{ vendor.city }}, {{ vendor.state }}
+                        </p>
+
+                        <div class="vendor-stats">
+
+                            <div>
+                                <span class="stat-num">
+                                    {{ vendor.product_count|default:"0" }}
+                                </span>
+                                <span class="stat-label">PRODUCTS</span>
+                            </div>
+
+                            <div>
+                                <span class="stat-num">
+                                    {{ vendor.total_sales|default:"0" }}
+                                </span>
+                                <span class="stat-label">SALES</span>
+                            </div>
+
+                        </div>
+
+                        <div class="vendor-rating">
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star"></i>
+                        </div>
+
+                    </div>
+
+                </a>
+
+                {% endfor %}
+                </div>
+
+        </div>
+        </div>
+
+
+    <!-- TESTIMONIAL -->
+
+    <div class="vendor-testimonial">
+
+        <p class="testimonial-text">
+            “Ordered a Casio watch — arrived in 3 days, in perfect condition.
+            The 3D preview was spot-on!”
+        </p>
+
+        <p class="testimonial-author">
+            <strong>Adebayọ O.</strong> — Lagos
+        </p>
+
+    </div>
+
+</section>
+
+
+    <section class="trust">
+
+           <h2>Why Trust LUXA?</h2>
+
+            <p>
+                As a growing startup, we’re committed to earning your trust
+                through transparency, quality and exceptional service.
+            </p>
+
+        <div class="stats">
+
+            <div class="stat">
+                <h3>{{ product_count }}+</h3>
+                <p>Products Listed</p>
+            </div>
+
+            <div class="stat">
+                <h3>{{ vendor_count }}+</h3>
+                <p>Verified Vendors</p>
+            </div>
+
+            <div class="stat">
+                <h3>24/7</h3>
+                <p>Customer Support</p>
+            </div>
+
+        </div>
+
+        <div class="features">
+
+            <div class="feature">
+
+                <i class="fa fa-lock"></i>
+
+                <h4>Secure Payments</h4>
+
+                <p>
+                    Multiple payment methods with enterprise-grade
+                    security.
+                </p>
+                <div class="line"></div>
+            </div>
+
+            <div class="feature">
+
+                <i class="fa fa-truck"></i>
+
+                <h4>Fast Delivery</h4>
+
+                <p>
+                Quick and reliable nationwide shipping with real-time tracking updates.2–5 business days delivery.
+                </p>
+                <div class="line"></div>
+
+            </div>
+
+            <div class="feature">
+
+                <i class="fa fa-headset"></i>
+
+                <h4>24/7 Support</h4>
+
+                <p>
+                  Our dedicated team is here to help you every step of the way-chat,email or call anytime.
+                </p>
+                <div class="line"></div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+<script type="module" src="{% static 'js/hero-slider.js' %}"></script>
+
+<script type="module"src="{%static 'js/vendor-carousel-slider.js' %}" ></script>
+{% endblock %}

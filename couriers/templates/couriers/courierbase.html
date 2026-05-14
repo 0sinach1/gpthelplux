@@ -1,0 +1,321 @@
+{% load static %}
+{% load crispy_forms_tags %}
+{% load humanize %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{% endblock %}</title>
+    <link rel="icon" type="image/png" sizes="50x50" href="{% static '/images/titlelogo.png' %}" >
+    <link rel="stylesheet" href="{% static 'css/couriers/courierbase.css' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Arima:wght@100..700&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    
+    {% if request.user.is_authenticated %}
+    <header class="main-header" style="position: relative;">
+        <div class="container nav-container">
+            <div class="logo-area">
+                <a href="{% url 'courier_dashboard' %}">
+                    <img src="{% static '/images/LUXA_Logo2.png' %}" alt="LUXA" class="nav-logo-img">
+                </a>
+            </div>
+
+            <!-- Grouped Actions: Support, Greeting, Logout -->
+            <div class="nav-actions" style="display: flex; align-items: center; gap: 15px;">
+
+                <span class="user-greeting" style="font-weight: 600;">Hi, {{ request.user.username }}</span>
+                <a href="{% if request.user.courier_profile.is_on_active_batch %}javascript:void(0);{% else %}{% url 'courierlogout' %}{% endif %}" 
+                   class="btn btn-outline"
+                   {% if request.user.courier_profile.is_on_active_batch %}
+                   style="opacity: 0.5; cursor: not-allowed;" 
+                   title="You cannot logout while handling an active batch."
+                   onclick="return false;"
+                   {% endif %}>
+                   Logout
+                </a>
+                <!-- MOVED: Contact Support Button -->
+                <button onclick="openSupportModal()" class="btn-support-nav">
+                    <i class="bi bi-headset"></i>
+                </button>
+            </div>
+            {% if request.user.courier_profile.admin_profile %}
+            <div class="admin-link">
+                <a href="{% url 'admin_escrow_manager' %}" class="btn-admin-nav" target="_blank">
+                    <i class="bi bi-shield-lock-fill"></i> Admin Panel
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </header>
+    
+    <div class="dashboard-bar">
+        <div class="container">
+            <div class="status-flex">
+                
+                <div class="dashboard-titles">
+                    <h5 style="margin: 0; line-height: 1;">Courier Dashboard</h5>
+                    <div class="courier-badges" style="display: flex; align-items: center; gap: 10px;">
+                        <span class="courier-type-badge">
+                            {% if courier.courier_category == "SAME_DAY" %}
+                                Same Day Courier
+                            {% elif courier.courier_category == "STANDARD" %}
+                                Standard Courier
+                            {% elif courier.courier_category == "CAMPUS" or courier.courier_category == "CAMPUS_INTERCEPTOR" %}
+                                Student Courier
+                            {% else %}
+                                External Updater
+                            {% endif %}
+                        </span>
+                        
+                        {% if courier.courier_category == "CAMPUS" or courier.courier_category == "CAMPUS_INTERCEPTOR" %}
+                        <a href="{% url 'campus_availability_manager' %}" class="btn-manage-avail">
+                            <i class="bi bi-shop"></i> Manage Availability
+                        </a>
+                        {% endif %}
+
+                        {% if courier.courier_category == "CAMPUS_INTERCEPTOR" %}
+                        <div style="display: flex; align-items: center; gap: 5px; background: #f8fafc; padding: 4px 8px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                            <i class="bi bi-geo-alt-fill" style="color: #94a3b8; font-size: 0.8rem;"></i>
+                            <select id="interceptorOutletSelect" onchange="showOutletSaveBtn()" style="border: none; background: transparent; font-size: 0.8rem; font-weight: 600; color: #475569; outline: none; cursor: pointer;">
+                                <option value="">Select Interceptor Outlet...</option>
+                                
+                                {% for outlet in all_outlets %}
+                                    <option value="{{ outlet.id }}" {% if courier.interceptor_outlet_id == outlet.id %}selected{% endif %}>
+                                        {{ outlet.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            
+                            <button id="saveOutletBtn" onclick="saveInterceptorOutlet()" style="display: none; background: #22c55e; color: white; border: none; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: 0.2s;">
+                                Save
+                            </button>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if courier.is_scouting %}
+                <div class="scouting-badge" title="Scouting Shield Active">
+                    <span>Scouting Mode</span>
+                    <div class="sla-led-container">
+                        <div class="led-bulb active"></div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="status-toggle">
+                    <label for="statusSwitch" class="status-label">
+                        Status: 
+                        <span id="statusLabel" class="{% if request.user.courier_profile.is_online %}badge-active{% else %}badge-inactive{% endif %}">
+                            {% if request.user.courier_profile.is_online %}Online{% else %}Offline{% endif %}
+                        </span>
+                    </label>
+                    
+                    <label class="switch" {% if request.user.courier_profile.is_on_active_batch %}style="opacity: 0.5; cursor: not-allowed;" title="You cannot go offline while handling an active batch"{% endif %}>
+                        <input type="checkbox" id="statusSwitch" 
+                            {% if request.user.courier_profile.is_online %}checked{% endif %}
+                            {% if request.user.courier_profile.is_on_active_batch %}disabled{% endif %}>
+                        
+                        <span class="slider round" {% if request.user.courier_profile.is_on_active_batch %}style="cursor: not-allowed;"{% endif %}></span>
+                    </label>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- SUPPORT MODAL OVERLAY -->
+    <div id="supportModal" class="support-modal-overlay">
+        <div class="support-modal-content">
+            <div class="support-modal-header">
+                <h3 style="margin: 0; font-size: 1.2rem; color: #1e293b; display: flex; align-items: center; gap: 8px;">
+                    <i class="bi bi-headset" style="color: var(--luxapurple);"></i> Courier Support
+                </h3>
+                <button class="close-modal-btn" onclick="closeSupportModal()">&times;</button>
+            </div>
+            <div class="support-modal-body">
+                <p style="font-size: 0.9rem; color: #64748b; margin-bottom: 20px;">Need immediate assistance with an active order? Reach out to us via your preferred channel.</p>
+                
+                <div class="support-options">
+                    <!-- WhatsApp -->
+                    <a href="https://wa.me/+2348073704847" target="_blank" class="support-link btn-whatsapp">
+                        <i class="bi bi-whatsapp"></i> WhatsApp
+                    </a>
+                    
+                    <!-- Gmail -->
+                    <a href="mailto:thebrandluxa@gmail.com" target="_blank" class="support-link btn-gmail">
+                        <i class="bi bi-envelope-fill"></i> Email Us
+                    </a>
+
+                    <!-- Instagram -->
+                    <a href="https://instagram.com/thebrandluxa" target="_blank" class="support-link btn-instagram">
+                        <i class="bi bi-instagram"></i> Instagram
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <main class="content-wrapper container">
+        {% block content %}
+        {% endblock %}
+    </main>
+    {% endif %}
+
+    <footer id="bottomnav">
+        <div class="footer-grid">
+            
+            <div class="footer-col about">
+                <img src="{% static '/LUXA.png' %}" alt="LUXA" class="footer-logo">
+                <p>
+                    LUXA is your trusted marketplace for everything you need. Experience the future of logistics.
+                </p>
+                <div class="social-links">
+                    <a href="https://www.instagram.com/thebrandluxa/" target="_blank"><img src="{% static '/images/logos/instagram.svg' %}" alt="IG"></a>
+                    <a href="https://youtube.com/@thebrandluxa" target="_blank"><img src="{% static '/images/logos/youtube.svg' %}" alt="YT"></a>
+                    <a href="mailto:thebrandluxa@gmail.com" target="_blank"><img src="{% static '/images/icons/gmail.png' %}" alt="Email"></a>
+                </div>
+            </div>
+
+            <div class="footer-col links">
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><a href="https://www.luxa.ng/about" target="_blank">About Us</a></li>
+                    <li><a href="https://www.luxa.ng/contact" target="_blank">Contact</a></li>
+                    <li><a href="https://www.luxa.ng/privacy" target="_blank">Privacy Policy</a></li>
+                    <li><a href="https://www.luxa.ng/terms" target="_blank">Terms of Service</a></li>
+                    <li><a href="https://www.luxa.ng/help" target="_blank">Help Center</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col service">
+                <h3>Support</h3>
+                <ul>
+                    <li><a href="https://www.luxa.ng/returns" target="_blank">Returns</a></li>
+                    <li><a href="https://www.luxa.ng/size" target="_blank">Size Guide</a></li>
+                    <li><a href="https://www.luxa.ng/ship" target="_blank">Shipping Info</a></li>
+                    <li><a href="https://www.luxa.ng/faq" target="_blank">FAQ</a></li>
+                </ul>
+            </div>
+
+        </div>
+        <div class="footer-copyright">
+            <p>&copy; 2024 LUXA. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById('statusSwitch').addEventListener('change', function() {
+            const labelSpan = document.getElementById('statusLabel');
+            const originalState = !this.checked; // In case we need to revert
+
+            fetch("{% url 'toggle_courier_status' %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update Text
+                    labelSpan.textContent = data.is_online ? "Online" : "Offline";
+                    // Update Color Class
+                    if(data.is_online) {
+                        labelSpan.classList.remove('badge-inactive');
+                        labelSpan.classList.add('badge-active');
+                    } else {
+                        labelSpan.classList.remove('badge-active');
+                        labelSpan.classList.add('badge-inactive');
+                    }
+                } else {
+                    // Revert on error
+                    this.checked = originalState;
+                    alert("System Error: Could not update status.");
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                this.checked = originalState;
+            });
+
+        });
+
+        // Modal Control Functions
+        function openSupportModal() {
+            const modal = document.getElementById('supportModal');
+            modal.style.display = 'flex';
+            // Slight delay to allow display:flex to apply before adding opacity class
+            setTimeout(() => modal.classList.add('show'), 10);
+        }
+
+        function closeSupportModal() {
+            const modal = document.getElementById('supportModal');
+            modal.classList.remove('show');
+            setTimeout(() => modal.style.display = 'none', 300); // Matches CSS transition time
+        }
+
+        // --- NEW: INTERCEPTOR OUTLET DROPDOWN LOGIC ---
+        function showOutletSaveBtn() {
+            document.getElementById('saveOutletBtn').style.display = 'inline-block';
+        }
+
+        function saveInterceptorOutlet() {
+            const btn = document.getElementById('saveOutletBtn');
+            const select = document.getElementById('interceptorOutletSelect');
+            const outletId = select.value;
+
+            const originalText = btn.innerText;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            btn.disabled = true;
+
+            fetch("{% url 'update_interceptor_outlet' %}", { 
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ outlet_id: outletId })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    // Hide the save button again on success
+                    btn.style.display = 'none';
+                    btn.innerText = 'Save';
+                    btn.disabled = false;
+                    
+                    // If they are on the interceptor dashboard, force the poller to refresh immediately
+                    // so it instantly clears old items and loads the new outlet's items.
+                    if (typeof fetchQueue === 'function') {
+                        fetchQueue();
+                    }
+                } else {
+                    alert("Error: " + data.error);
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                }
+            })
+            .catch(err => {
+                console.error('Network Error:', err);
+                alert("Connection error while updating outlet.");
+                btn.innerText = originalText;
+                btn.disabled = false;
+            });
+        }
+    </script>
+    {% block extra_js %}{% endblock %}
+
+</body>
+</html>
+

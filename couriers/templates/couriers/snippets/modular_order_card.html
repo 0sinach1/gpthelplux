@@ -1,0 +1,98 @@
+<div class="order-manifest-card" style="display: flex; align-items: center; justify-content: space-between; background: white; padding: 15px; border-radius: 12px; margin-bottom: 12px; border: 1px solid #e2e8f0; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
+
+    <div class="manifest-main" style="display: flex; align-items: center; gap: 15px; flex: 1; min-width: 0;">
+        
+        {# --- AVATAR + KYC BADGE --- #}
+        <div class="manifest-avatar" onclick="event.stopPropagation(); openKYCModal('{{ data.customer_id }}')" style="position: relative; cursor: pointer; flex-shrink: 0;">
+            <div class="manifest-avatar-img" style="width: 50px; height: 50px; border-radius: 50%; overflow: hidden; background: #f1f5f9;">
+                <img src="{{ data.authorized_photo }}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='/static/images/user.png'">
+            </div>
+            {% if data.is_kyc_approved %}
+            <div class="manifest-kyc" style="position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%); background: #a855f7; color: white; font-size: 0.6rem; font-weight: 800; padding: 2px 6px; border-radius: 6px;">KYC</div>
+            {% endif %}
+        </div>
+
+        {# --- THE MISSING TEXT WRAPPER --- #}
+        <div style="display: flex; flex-direction: column; flex: 1; min-width: 0;">
+            
+            {# ID & LIVE ETA ROW #}
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 2px;">
+                <span style="font-size: 0.75rem; color: #64748b; font-weight: 700;">
+                    {% if is_campus == "true" %}
+                        #{{ data.internal_id|slice:":8" }}
+                        {% if data.Volume or data.volume %}
+                            &middot; {{ data.Volume }}{{ data.volume }} Courions
+                        {% endif %}
+                    {% else %}
+                        #{{ data.internal_id }}
+                    {% endif %}
+                </span>
+                {# THE LIVE MICRO-CLOCK #}
+                {% if is_campus == "true" and data.expected_eta_minutes > 0 %}
+                    
+                    {% if not hide_actions %}
+                        <span style="display: inline-flex; align-items: center; gap: 4px; background: #fffbeb; border: 1px solid #fde68a; padding: 2px 8px; border-radius: 12px; font-size: 0.65rem; font-weight: 800; color: #d97706; white-space: nowrap;">
+                            <i class="bi bi-stopwatch"></i>
+                            ETA: 
+                            <span class="live-countdown-timer" 
+                                  data-start="{{ item.started_at|date:'c' }}" 
+                                  data-eta="{{ data.expected_eta_minutes }}">
+                                {{ data.expected_eta_minutes }}m
+                            </span>
+                        </span>
+                    {% else %}
+                        <span class="static-order-time" 
+                              data-start="{% if order_obj.engine_view.in_transit_at %}{{ order_obj.engine_view.in_transit_at|date:'c' }}{% else %}{{ item.started_at|date:'c' }}{% endif %}" 
+                              data-end="{{ order_obj.engine_view.completed_at|date:'c' }}"
+                              data-eta="{{ data.expected_eta_minutes }}"
+                              style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 12px; font-size: 0.65rem; font-weight: 800; white-space: nowrap;">
+                            <i class="fas fa-sync fa-spin"></i> Eval...
+                        </span>
+                    {% endif %}
+                    
+                {% endif %}
+            </div>
+
+            {# Customer Name #}
+            <div class="manifest-name" style="font-size: 1.05rem; font-weight: 800; color: #1e293b; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                {{ data.customer_name }}
+            </div>
+
+            {# Location #}
+            <div class="manifest-location" style="margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                <span class="manifest-loc-badge" style="font-size: 0.75rem; color: #475569; background: #f8fafc; padding: 2px 6px; border-radius: 4px; border: 1px solid #e2e8f0;">🚩 {{ data.delivery_location }}</span>
+            </div>
+
+            {# View Items Button #}
+            {% if data.internal_id %}
+            <div>
+                <button class="btn-view-items"
+                    style="background: #f3e8ff; color: #a855f7; border: none; padding: 4px 10px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; cursor: pointer; transition: 0.2s;"
+                    hx-get="/couriers/modal/order/{{ data.internal_id }}/" 
+                    hx-target="#orderModalBody"
+                    onclick="openModal('orderDetailModal')">
+                    📝 VIEW ITEMS
+                </button>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+
+    {% if not hide_actions %}
+    <div class="manifest-actions" style="display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; margin-left: 15px;">
+        <button class="btn-manifest-action btn-delivered" onclick="markDelivered('{{ data.internal_id }}')" style="width: 36px; height: 36px; border-radius: 50%; background: #a855f7; color: white; border: none; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(168, 85, 247, 0.3);">✓</button>
+        
+        {% if is_campus == "true" %}
+            <button class="btn-manifest-action btn-issue" onclick="reportIssue('', '{{ data.internal_id }}', this)" style="width: 36px; height: 36px; border-radius: 50%; background: white; color: #ef4444; border: 1px solid #fecaca; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center;">✕</button>
+        {% else %}
+            <button class="btn-manifest-action btn-issue" onclick="reportIssue('{{ data.internal_id }}', '', this)" style="width: 36px; height: 36px; border-radius: 50%; background: white; color: #ef4444; border: 1px solid #fecaca; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center;">✕</button>
+        {% endif %}
+    </div>
+    {% else %}
+    <div class="manifest-completed" style="flex-shrink: 0; margin-left: 15px; font-size: 0.8rem; font-weight: 800; color: #22c55e; background: #f0fdf4; padding: 4px 10px; border-radius: 20px; border: 1px solid #bbf7d0;">
+        COMPLETED ✓
+    </div>
+    {% endif %}
+
+</div>

@@ -1,0 +1,519 @@
+{% extends "MAIN/base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Vendor Profile{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static '/css/vendorpub.css' %}">
+{% endblock %}
+
+{% block content %}
+<div id="all">
+    <div class="header-container">
+        <div class="left-section">
+            <div class="profile-pic">
+                {% if vendor.image %}
+                    <img src="{{ vendor.image.url }}" alt="{{ vendor.business_name }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                {% else %}
+                    <i class="bi bi-person"></i>
+                {% endif %}
+            </div>
+            
+            <div class="vendor-info">
+                <div class="vendor-name-row">
+                    <h1 class="vendor-name">{{ vendor.business_name }}</h1>
+                    {% if vendor.is_verified %}
+                    <span class="verified-badge">
+                        <img src="{% static '/images/icons/badge.png' %}" alt="badge">
+                        Verified
+                    </span>
+                    {% endif %}
+                </div>
+                
+                <div class="rating-location">
+                    <div class="rating">
+                        <i class="bi bi-star-fill star"></i>
+                        <span class="rating-text"> - - </span>
+                        <span class="review-count"></span>
+                    </div>
+                    <div class="location">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>{{ vendor.city }}, {{ vendor.state }}</span>
+                    </div>
+                </div>
+                
+                <div class="tags">
+                    {% if vendor.selling_category %}
+                    <span class="tag">{{ vendor.get_selling_category_display }}</span>
+                    {% endif %}
+                    {% if vendor.business_type %}
+                    <span class="tag">{{ vendor.get_business_type_display }}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="right-section">
+            <a href="{{ vendor.instagramlink }}" target="_blank">
+            <button class="contact-btn">
+                <i class="bi bi-chat"></i>
+                Contact Vendor
+            </button>
+            </a>
+            <button class="share-btn">
+                <i class="bi bi-share"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="left subcont">
+            <div class="vend-prof">
+                <div class="header">
+                    <h1>Vendor Profile Overview</h1>
+                    <p>Essential vendor information at a glance</p>
+                </div>
+
+                <div class="vendor-info-card">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">Vendor Name</div>
+                            <div class="info-value">{{ vendor.business_name }}</div>
+                        </div>
+                        {% if vendor.selling_category %}
+                        <div class="info-item">
+                            <div class="info-label">Major Category</div>
+                            <div class="info-value">{{ vendor.get_selling_category_display }}</div>
+                        </div>
+                        {% endif %}
+                        <div class="info-item">
+                            <div class="info-label">Rating</div>
+                            <div class="rating-value"> - - </div>
+                            </div>
+                        <div class="info-item">
+                            <div class="info-label">Successful Deliveries</div>
+                            <div class="info-value">{{ vendor.total_sales }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Business Address</div>
+                            <div class="info-value">{{ vendor.business_address }}{% if vendor.city %}, {{ vendor.city }}{% endif %}{% if vendor.state %}, {{ vendor.state }}{% endif %}{% if vendor.postal_code %} {{ vendor.postal_code }}{% endif %}{% if vendor.country %}, {{ vendor.country }}{% endif %}</div>
+                        </div>
+                        {% if vendor.contact_person %}
+                        <div class="info-item">
+                            <div class="info-label">Contact Person</div>
+                            <div class="info-value">{{ vendor.contact_person }}</div>
+                        </div>
+                        {% endif %}
+                        {% if vendor.official_email %}
+                        <div class="info-item">
+                            <div class="info-label">Email</div>
+                            <div class="info-value">{{ vendor.official_email }}</div>
+                        </div>
+                        {% endif %}
+                        {% if vendor.official_phone %}
+                        <div class="info-item">
+                            <div class="info-label">Phone</div>
+                            <div class="info-value">{{ vendor.official_phone }}</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h2>About This Vendor</h2>
+                    <p>{{ vendor.business_name }}{% if vendor.selling_category %} specializes in {{ vendor.get_selling_category_display|lower }}{% endif %}.{% if vendor.contact_person %} Contact {{ vendor.contact_person }} for quality products and reliable service.{% else %} Offering quality products and reliable service.{% endif %}</p>
+                </div>
+
+                {% if products %}
+                <div class="section">
+                    <h2>What We Offer</h2>
+                    <p>Browse our catalog of {{ products|length }} product{{ products|length|pluralize }} below.</p>
+                </div>
+                {% endif %}  
+            </div>
+            
+            <div class="products-section">
+                <div class="products-header header">
+                    <h1>Products & Services</h1>
+                    <p class="products-subheader">Browse the vendor's catalog of offerings</p>
+                </div>
+
+                <div class="products-grid">
+                    {% for product in products %}
+                    <div class="product-card">
+                        <a href="{% url 'product_detail' product.slug %}">
+                        <div class="product-image">
+                            {% if product.main_image %}
+                                <img src="{{ product.main_image.url }}" alt="{{ product.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                            {% else %}
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M3 18v-6a9 9 0 0 1 18 0v6"></path>
+                                    <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path>
+                                </svg>
+                            {% endif %}
+                        </div>
+                        <div class="product-info">
+                            <div class="product-title">{{ product.name|truncatewords:3 }}</div>
+                            {% if product.category %}
+                            <div class="product-category">{{ product.category.name }}</div>
+                            {% endif %}
+                            <div class="product-description">{{ product.description|truncatewords:10 }}</div>
+                            <div class="product-footer">
+                                <div class="product-price">{{ currency_symbol }}{{ product.price|intcomma }}</div>
+                                <div class="product-rating">
+                                    <span class="star">★</span>
+                                    <span> - - </span>
+                                </div>
+                            </div>
+                        </div>
+                        </a>
+                    </div>
+                    {% empty %}
+                    <div class="product-card">
+                        <p>No products available yet.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="reviews-wrapper">
+                <a href="/vendor-review/" class="reviews-link">
+                    <div class="reviews-section">
+                        <div class="reviews-heading">
+                            <h2 class="reviews-title">Customer Reviews</h2>
+                            <p class="reviews-description">What customers are saying about this vendor</p>
+                        </div>
+
+                        <div class="reviews-content">
+                            <div class="rating-summary">
+                                <div class="overall-rating"> - - </div>
+                                <div class="stars-display">
+                                    <span class="star-filled">★</span>
+                                    <span class="star-filled">★</span>
+                                    <span class="star-filled">★</span>
+                                    <span class="star-filled">★</span>
+                                    <span class="star-filled">★</span>
+                                </div>
+                                <div class="total-reviews"> - - reviews</div>
+
+                                <div class="rating-breakdown">
+                                    <div class="rating-row">
+                                        <span class="rating-stars">5 ★</span>
+                                        <div class="rating-bar-container">
+                                            <div class="rating-bar-fill" style="width: 0%;"></div>
+                                        </div>
+                                        <span class="rating-count"> - - </span>
+                                    </div>
+                                    <div class="rating-row">
+                                        <span class="rating-stars">4 ★</span>
+                                        <div class="rating-bar-container">
+                                            <div class="rating-bar-fill" style="width: 0%;"></div>
+                                        </div>
+                                        <span class="rating-count"> - - </span>
+                                    </div>
+                                    <div class="rating-row">
+                                        <span class="rating-stars">3 ★</span>
+                                        <div class="rating-bar-container">
+                                            <div class="rating-bar-fill" style="width: 0%;"></div>
+                                        </div>
+                                        <span class="rating-count"> - - </span>
+                                    </div>
+                                    <div class="rating-row">
+                                        <span class="rating-stars">2 ★</span>
+                                        <div class="rating-bar-container">
+                                            <div class="rating-bar-fill" style="width: 0%;"></div>
+                                        </div>
+                                        <span class="rating-count"> - - </span>
+                                    </div>
+                                    <div class="rating-row">
+                                        <span class="rating-stars">1 ★</span>
+                                        <div class="rating-bar-container">
+                                            <div class="rating-bar-fill" style="width: 0%;"></div>
+                                        </div>
+                                        <span class="rating-count"> - - </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="reviews-list">
+                                <div class="review-card">
+                                    <div class="review-header">
+                                        <div class="reviewer-info">
+                                            <div class="reviewer-avatar">👩‍🦰</div>
+                                            <div class="reviewer-details">
+                                                <div class="reviewer-name">Chinwe Okafor</div>
+                                                <div class="review-rating">
+                                                    <div class="review-stars">
+                                                        <span class="review-star">★</span>
+                                                        <span class="review-star">★</span>
+                                                        <span class="review-star">★</span>
+                                                        <span class="review-star">★</span>
+                                                        <span class="review-star">★</span>
+                                                    </div>
+                                                    <span class="verifi-badge">Verified Purchase</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="review-date">Oct 15, 2025</div>
+                                    </div>
+                                    <p class="review-text">Excellent service! The product arrived earlier than expected and was exactly as described. The vendor was very responsive to my questions.</p>
+                                </div>
+
+                                <div class="review-card">
+                                    <div class="review-header">
+                                        <div class="reviewer-info">
+                                            <div class="reviewer-avatar" style="background: linear-gradient(135deg, #4facfe, #00f2fe);">👨</div>
+                                            <div class="reviewer-details">
+                                                <div class="reviewer-name">Adebayo Adeyemi</div>
+                                                <div class="review-rating">
+                                                    <div class="review-stars">
+                                                        <span class="review-star">★</span>
+                                                        <span class="review-star">★</span>
+                                                        <span class="review-star">★</span>
+                                                        <span class="review-star">★</span>
+                                                        <span class="review-star empty">★</span>
+                                                    </div>
+                                                    <span class="verifi-badge">Verified Purchase</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="review-date">Oct 10, 2025</div>
+                                    </div>
+                                    <p class="review-text">Great quality products and fair prices. Only minor issue was the packaging could be better, but the items were undamaged.</p>
+                                </div>
+
+                                <div class="review-card">
+                                    <div class="review-header">
+                                        <div class="reviewer-info">
+                                            <div class="reviewer-avatar" style="background: linear-gradient(135deg, #fa709a, #fee140);">👩</div>
+                                            <div class="reviewer-details">
+                                                <div class="reviewer-name">Chukwuemeka Nwosu</div>
+                                                <div class="review-rating">
+                                                    <div class="review-stars">
+                                                        <span class="review-star">★</span>
+                                                        <span class="review-star">★</span>
+                                                        <span class="review-star">★</span>
+                                                        <span class="review-star">★</span>
+                                                        <span class="review-star">★</span>
+                                                    </div>
+                                                    <span class="verifi-badge">Verified Purchase</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="review-date">Sep 28, 2025</div>
+                                    </div>
+                                    <p class="review-text">Fantastic vendor! They helped me choose the right product for my needs and provided detailed technical information. Highly recommended!</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+        <div class="right subcont">
+            <div class="metrics-container">
+                <div class="section-header">
+                    <h2 class="section-title">Performance Metrics</h2>
+                    <p class="section-subtitle">Track record and key performance indicators</p>
+                </div>
+
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <svg class="metric-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                            </svg>
+                            <span class="metric-label">Successful Deliveries</span>
+                        </div>
+                        <div class="metric-value">{{vendor.total_sales}}</div>
+                        <div class="metric-subtitle"></div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <svg class="metric-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                            <span class="metric-label">Average Response Time</span>
+                        </div>
+                        <div class="metric-value"> < 4<span style="font-size: 18px; font-weight: 600;"> hours</span></div>
+                        <div class="metric-subtitle">Typical delivery: Within 2 business days</div>
+                    </div>
+                </div>
+
+                <!-- Metric to calculate the reliability of products gotten from courier -->
+                <div class="progress-metric">
+                    <div class="progress-header">
+                        <div class="progress-label-wrapper">
+                            <svg class="progress-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                            </svg>
+                            <span class="progress-label">Product Reliability Index</span>
+                        </div>
+                        <span class="progress-value"> - - </span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 0%;"></div>
+                    </div>
+                    <div class="metric-info">
+                        <span class="progress-subtitle">Based on customer feedback and return rates</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="support-container">
+                <div class="section-header">
+                    <h2 class="section-title">Contact & Support</h2>
+                    <p class="section-subtitle">Get in touch with the vendor</p>
+                </div>
+
+                <div class="response-time-card">
+                    <svg class="time-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    <div class="time-content">
+                        <div class="time-label">Average Response Time</div>
+                        <div class="time-value"> < 4 hours </div>
+                    </div>
+                </div>
+
+                <div class="support-options-title">Support Options</div>
+
+                <a href="{{ vendor.instagramlink }}" target="_blank" class="support-option">
+                    <img src="{% static '/images/logos/instagram.svg' %}" alt="instalogo" class="option-icon">
+                    <span class="option-text">Link to Vendor Instagram</span>
+                </a>
+
+                <a href="mailto:{{ vendor.official_email }}" target="_blank" class="support-option">
+                    <img src="{% static '/images/icons/gmail.png' %}" alt="gmailcon" class="option-icon">
+                    <span class="option-text">Mail the vendor</span>
+                </a>
+
+                <a href="tel:{{ vendor.official_phone }}" class="support-option">
+                    <svg class="option-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                    </svg>
+                    <span class="option-text">Phone Support -> <strong>{{ vendor.official_phone }}</strong></span>
+                </a>
+
+                <div class="support-option">
+                    <svg class="option-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                    <span class="option-text">Technical Documentation & FAQ</span>
+                </div>
+
+                <a href="{{vendor.instagramlink}}" target="_blank">
+                <button class="send-message-btn">
+                    <svg class="message-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    Send Message
+                </button>
+                </a>
+
+                <button class="warrantycont" onclick="openModal('warrantyModal')">
+                    <svg class="option-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#6edd70">
+                        <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                        <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                        <g id="SVGRepo_iconCarrier"> 
+                            <path d="M11.3586 20.6831C11.5639 20.7901 11.6666 20.8436 11.809 20.8713C11.92 20.8929 12.08 20.8929 12.191 20.8713C12.3334 20.8436 12.4361 20.7901 12.6414 20.6831C14.54 19.6939 20 16.4612 20 12.0001V8.21772C20 7.4182 20 7.01845 19.8692 6.67482C19.7537 6.37126 19.566 6.10039 19.3223 5.88564C19.0465 5.64255 18.6722 5.50219 17.9236 5.22146L12.5618 3.21079C12.3539 3.13283 12.25 3.09385 12.143 3.07839C12.0482 3.06469 11.9518 3.06469 11.857 3.07839C11.75 3.09385 11.6461 3.13283 11.4382 3.21079L6.0764 5.22146C5.3278 5.50219 4.9535 5.64255 4.67766 5.88564C4.43398 6.10039 4.24627 6.37126 4.13076 6.67482C4 7.01845 4 7.4182 4 8.21772V12.0001C4 16.4612 9.45996 19.6939 11.3586 20.6831Z" stroke="#6edd70" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            </path> 
+                        </g>
+                    </svg>
+                    <span>Warranty Information</span>
+                </button>
+            </div>
+        </div>
+        
+    </div>
+
+    <section id="trustlux">
+        <h2>Why Trust LUXA?</h2>
+        <p>As a growing start-up, we're committed to earning your trust through 
+            transparency, quality and exeptional service.
+        </p>
+        <div id="services">
+            <div class="indservice">
+                <img src="{% static '/images/icons/lock.png' %}" alt="notfound" class="serviceicons">
+                <h5>Secure Service</h5>
+                <p>Your data and payments are protected with <br>enterprise-grade security.</p>
+            </div>
+            <div class="indservice">
+                <img src="{% static '/images/icons/parcel.png' %}" alt="notfound" class="serviceicons">
+                <h5>Fast Delivery</h5>
+                <p>Quick and reliable shipping with real-time <br>tracking updates.</p>
+            </div>
+            <div class="indservice">
+                <img src="{% static '/images/icons/heartshake.png' %}" alt="notfound" class="serviceicons">
+                <h5>24/7 Support</h5>
+                <p>Our dedicated team is here to help you every <br>step of the way.</p>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- MODAL FOR VENDOR WARRANTY INFO -->
+<div id="warrantyModal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-header">
+            <h3 style="display: flex; align-items: center; gap: 8px;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6edd70" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                </svg>
+                Warranty & Returns
+            </h3>
+            <button class="close-modal" onclick="closeModal('warrantyModal')">&times;</button>
+        </div>
+        
+        <div style="padding: 10px 0 20px 0; color: #4a5568; line-height: 1.6; font-size: 0.95rem; max-height: 400px; overflow-y: auto;">
+            {% if vendor.warrantyinfo %}
+                {{ vendor.warrantyinfo|linebreaks }}
+            {% else %}
+                <div style="text-align: center; padding: 30px 10px; color: #a0aec0;">
+                    <i class="bi bi-info-circle" style="font-size: 2rem; display: block; margin-bottom: 10px; opacity: 0.5;"></i>
+                    <p>This vendor has not provided specific warranty or return policies.</p>
+                    <p style="font-size: 0.85rem; margin-top: 10px;">Please contact them directly for inquiries regarding product guarantees.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block luxaslide %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function openModal(id) { 
+        const el = document.getElementById(id);
+        el.style.display = 'flex';
+        // Small delay to allow display:flex to apply before opacity transition
+        setTimeout(() => el.classList.add('show'), 10);
+    }
+    
+    function closeModal(id) { 
+        const el = document.getElementById(id);
+        el.classList.remove('show');
+        setTimeout(() => el.style.display = 'none', 300); // Wait for transition
+    }
+
+    // Close modal when clicking on the dark overlay background
+    window.onclick = function(event) {
+        if (event.target.classList.contains('modal-overlay')) {
+            event.target.classList.remove('show');
+            setTimeout(() => event.target.style.display = 'none', 300);
+        }
+    }
+</script>
+{% endblock %}
