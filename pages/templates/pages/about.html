@@ -1,0 +1,204 @@
+{% extends "MAIN/base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}About Us Page{% endblock %}
+
+{% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=Arima+Madurai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static '/css/index.css' %}">
+<link rel="stylesheet" href="{% static '/css/about.css' %}">
+{% endblock %}
+
+{% block content %} 
+<section id="sub_nav">
+    <ul id="subnavli">
+        {% for cat in categories %}
+        <li class="subcat">
+            <a href="{% url 'category_detail' cat.slug %}#category-products"
+            class="{% if request.resolver_match.kwargs.slug == cat.slug %}active{% endif %}">{{ cat.name }}</a>
+        </li>
+        {% endfor %}
+    </ul>
+</section>
+
+<section class="about-hero">
+    <div class="container hero-content">
+
+        <span class="tag">OUR STORY</span>
+       
+        <h1 >
+             Redefining Online
+            <span class="h-bot">Shopping in Africa</span>
+        </h1>
+        <p>
+            Nigeria’s premium marketplace — trust, innovation, and beautiful
+            design powering the future of e-commerce.
+        </p>
+
+    </div>
+</section>
+
+
+<section class="mission">
+
+    <div class="container  mission-wrapper">
+
+        <div class="mission-track">
+
+            <div class="mission-card">
+                <div class="icon">◎</div>
+                <h3>Our Mission</h3>
+                <p>Trustworthy, premium shopping powered by cutting-edge technology like 3D product visualization.</p>
+            </div>
+
+            <div class="mission-card">
+                <div class="icon">◇</div>
+                <h3>Our Vision</h3>
+                <p>West Africa's most innovative e-commerce platform where vendors and customers thrive together.</p>
+            </div>
+
+            <div class="mission-card">
+                <div class="icon">△</div>
+                <h3>Our Values</h3>
+                <p>Transparency, design excellence, vendor empowerment, and relentless customer focus.</p>
+            </div>
+
+            <!-- Duplicate Card -->
+                <div class="mission-card">
+                <div class="icon">◎</div>
+                <h3>Our Mission</h3>
+                <p>Trustworthy, premium shopping powered by cutting-edge technology like 3D product visualization.</p>
+            </div>
+
+            <div class="mission-card">
+                <div class="icon">◇</div>
+                <h3>Our Vision</h3>
+                <p>West Africa's most innovative e-commerce platform where vendors and customers thrive together.</p>
+            </div>
+
+            <div class="mission-card">
+                <div class="icon">△</div>
+                <h3>Our Values</h3>
+                <p>Transparency, design excellence, vendor empowerment, and relentless customer focus.</p>
+            </div>
+
+
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<section class="journey">
+
+    <div class="container journey-grid">
+
+        <div class="journey-image">
+            <div class="placeholder">L</div>
+        </div>
+
+        <div class="journey-text">
+
+            <span class="tag">THE JOURNEY</span>
+
+            <h2>
+            Built in Nigeria,
+            <span>for Africa</span>
+            </h2>
+
+            <p>
+                Luxa was born from a frustration — online shopping in Nigeria meant
+                compromising between trust and quality.
+            </p>
+
+            <p>
+                We changed that with thoughtful design and immersive 3D previews.
+                Today, Luxa empowers buyers and sellers — a marketplace Nigeria
+                can be proud of.
+            </p>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<section class="future">
+
+    <h2>What We're Building Toward</h2>
+
+    <div class="future-grid container">
+
+        <div class="future-card">
+            <span class="goal-number">01</span>
+
+            <div class="goal-text">
+                <h4>3D Product Ecosystem</h4>
+                <p>Inspect products from every angle — reducing returns, building confidence.</p>
+            </div>
+        </div>
+
+        <div class="future-card">
+            <span class="goal-number">02</span>
+
+            <div class="goal-text">
+                <h4>Vendor Empowerment</h4>
+                <p>World-class tools to manage products, track orders, and grow.</p>
+            </div>
+        </div>
+
+        <div class="future-card">
+            <span class="goal-number">03</span>
+
+            <div class="goal-text">
+                <h4>Secure Escrow Payments</h4>
+                <p>Customers pay confidently, vendors get paid reliably.</p>
+            </div>
+        </div>
+
+        <div class="future-card">
+            <span class="goal-number">04</span>
+
+            <div class="goal-text">
+                <h4>Design-Forward Experience</h4>
+                <p>Proving African tech leads globally in design quality.</p>
+            </div>
+        </div>
+
+    </div>
+
+</section>
+
+
+<section class="cta">
+
+    <h2>Ready to explore?</h2>
+
+    <p>
+      Discover products from trusted Nigerian vendors today.
+    </p>
+
+    <!-- Default Button -->
+    <a href="{% url 'index' %}" class="cta-btn">
+        Start Shopping <span class="arrow">→</span>
+    </a>
+
+    <!-- Disabled Example (optional) -->
+    <!--
+    <a href="#" class="cta-btn disabled">
+        Start Shopping <span class="arrow">→</span>
+    </a>
+    -->
+
+</section>
+
+{% endblock %}
+
+{% block luxaslide %}
+{% endblock %}

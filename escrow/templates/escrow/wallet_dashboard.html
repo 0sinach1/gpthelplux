@@ -1,0 +1,998 @@
+{% extends 'MAIN/base.html' %} 
+{% load hosts %}
+{% load static %}
+{% load humanize %} 
+
+{% block title %}
+Escrow Wallet - {{ wallet_type }}
+{% endblock %}  
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/wallet_dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+{% if wallet_type != 'COURIER' %}
+<div class="return-nav-pills">
+    <a href="{% url 'index' %}" class="return-pill">
+        <span style="font-size: 1.1rem; line-height: 0;">←</span> Main Store
+    </a>
+    <a href="{% host_url 'crave_dashboard' host 'crave' %}" class="return-pill crave-pill">
+        <span style="font-size: 1.1rem; line-height: 0;">←</span> Luxa Crave
+    </a>
+</div>
+{% else %}
+{% endif %}
+
+<div class="dashboard-container">
+    
+    <div class="wallet-tabs">
+        {% if wallet_type == 'COURIER' %}
+        <a href="{% url 'courier_dashboard' %}" class="tab-btn" id="backtocourierpg" style="background: #2c3e50; color: white; display: flex; align-items: center; gap: 8px; margin-right: 10px; padding-left: 15px; padding-right: 20px;">
+            <span style="font-size: 1.2rem; line-height: 0;">←</span> Courier Dashboard
+        </a>
+        {% endif %}
+        <a href="?view=customer" class="tab-btn {% if wallet_type == 'CUSTOMER' %}active{% endif %}">Customer Wallet</a>
+        {% if request.user.vendor_profile %}
+        <a href="?view=vendor" class="tab-btn {% if wallet_type == 'VENDOR' %}active{% endif %}">Vendor Wallet</a>
+        {% endif %}
+        {% if request.user.courier_profile %}
+        <a href="?view=courier" class="tab-btn {% if wallet_type == 'COURIER' %}active{% endif %}">Courier Wallet</a>
+        {% endif %}
+
+        <button onclick="openModal('manageBanksModal')" class="tab-btn" style="margin-left: auto; background: white; border: 1px solid #ddd; display: flex; align-items: center; gap: 8px;">
+            <span>🏦</span> Linked Withdrawal Accounts 
+        </button>
+        <a href="{% url 'change_wallet_pin' %}" class="tab-btn" style="background: white; border: 1px solid #ddd; display: flex; align-items: center; gap: 8px; text-decoration: none; color: #333;">
+            <span>🔐</span> Change Pin
+        </a>
+    </div>
+
+    <div class="balance-master-card" 
+         style="{% if wallet_type == 'COURIER' %}border-top: 4px solid #e67e22;{% endif %}"> <div class="balance-main">
+            <div class="balance-label">
+                {% if wallet_type == 'COURIER' %}Courier Earnings{% else %}Available Balance{% endif %}
+            </div>
+            <div class="balance-amount-large">₦{{ wallet.available_balance|intcomma }}</div>
+            
+            <div class="action-group">
+                {% if wallet_type == 'CUSTOMER' %}
+                <button onclick="openModal('depositModal')" class="action-btn btn-deposit">
+                    <span>+</span> Fund Wallet
+                </button>
+                {% endif %}
+
+                <button onclick="openModal('withdrawModal')" class="action-btn btn-withdraw"> 
+                    <span>↘</span> Withdraw
+                </button>
+            </div>
+        </div>
+
+        <div class="balance-side">
+            {% if wallet_type == 'CUSTOMER' %}
+                <div class="mini-stat-card locked" onclick="openTxnModal('Locked Funds', 'escrow')">
+                    <div class="mini-content">
+                        <h4>Locked Escrow</h4>
+                        <p>₦{{ wallet.locked_escrow|intcomma }}</p>
+                    </div>
+                    <div class="mini-icon">🔒</div>
+                </div>
+                <small style="color:#aaa; font-size:0.75rem; text-align:center;">Click to see held funds</small>
+
+            {% elif wallet_type == 'COURIER' %}
+                <div class="mini-stat-card pending" style="background:#fff8e1; border:1px solid #ffe0b2;" onclick="openTxnModal('Delivery History', 'courier_earnings')">
+                    <div class="mini-content">
+                        <h4 style="color:#f57c00;">Lifetime Earnings</h4>
+                        <p style="color:#e65100;">₦{{ courier_lifetime_earnings|intcomma }}</p>
+                    </div>
+                    <div class="mini-icon" style="background:#ffe0b2;">🚚</div>
+                </div>
+                <small style="color:#aaa; font-size:0.75rem; text-align:center;">Click to view earning history</small>
+            {% else %}
+                <div class="mini-stat-card pending" onclick="openTxnModal('Pending Clearing', 'pending')">
+                    <div class="mini-content">
+                        <h4>Pending Clearing</h4>
+                        <p>₦{{ wallet.pending_clearing|intcomma }}</p>
+                    </div>
+                    <div class="mini-icon">⏳</div>
+                </div>
+                <small style="color:#aaa; font-size:0.75rem; text-align:center;">Funds in transit</small>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="table-header">
+        <h3>Transaction History</h3>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="history-table" id="mainTxnTable">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Description</th>
+                    <th>Ref</th>
+                    <th>Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for txn in transactions %}
+                <tr class="txn-row"
+                    data-desc="{{ txn.description|lower }}"
+                    data-amount="{{ txn.amount|stringformat:'.2f' }}" 
+                    onclick="showTransactionDetails(
+                        '{{ txn.reference }}', 
+                        '{{ txn.amount|stringformat:'.2f' }}', 
+                        '{{ txn.description|escapejs }}', 
+                        '{{ txn.timestamp|date:"M d, Y • h:i A" }}', 
+                        '{{ txn.transaction_type }}'
+                    )">
+                    <td>{{ txn.timestamp|date:"M d, H:i" }}</td>
+                    <td>{{ txn.description|truncatechars:40 }}</td>
+                    <td style="font-family: monospace; color: #666;">{{ txn.reference|slice:":10" }}...</td>
+                    <td>
+                        <span class="status-badge {% if txn.amount > 0 %}bg-green-light{% else %}bg-red-light{% endif %}">
+                            {% if txn.amount > 0 %}+{% endif %}₦{{ txn.amount|intcomma }}
+                        </span>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" style="text-align: center; padding: 30px; color: #999;">No transactions yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<div id="linkBankModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Link Bank Account</h3>
+            <button class="close-modal" onclick="closeModal('linkBankModal')">&times;</button>
+        </div>
+        <form onsubmit="submitBankLink(event)">
+            <p style="color:#666; font-size: 0.9em; margin-bottom: 15px;">
+                Find your bank and enter your account number.
+            </p>
+
+            <label style="font-size: 0.85em; font-weight: 600; color: #333;">Bank Name</label>
+            
+            <div class="bank-search-container">
+                <input type="text" id="bankSearchInput" class="form-input" 
+                       placeholder="Type to search bank..." 
+                       onkeyup="filterBanks()" 
+                       onfocus="showBankList()"
+                       style="margin-bottom: 0; border-radius: 6px 6px 0 0;">
+                
+                <div id="bankListContainer" class="bank-list-dropdown">
+                    <div style="padding:10px; color:#999; text-align:center;">Loading banks...</div>
+                </div>
+
+                <input type="hidden" id="selectedBankCode" required>
+                <input type="hidden" id="selectedBankName" required>
+            </div>
+
+            <label style="font-size: 0.85em; font-weight: 600; color: #333;">Account Number</label>
+            <input type="text" id="accNumberInput" class="form-input" 
+                   placeholder="e.g. 0123456789" maxlength="10" pattern="\d{10}" required>
+            
+            <button type="submit" class="action-btn btn-deposit" id="linkBtn">Verify & Save</button>
+        </form>
+    </div>
+</div>
+
+<div id="manageBanksModal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-header">
+            <h3>Manage Bank Accounts</h3>
+            <button class="close-modal" onclick="closeModal('manageBanksModal')">&times;</button>
+        </div>
+        
+        <p style="color:#666; font-size:0.9em; margin-bottom:15px;">
+            Select the account to use for withdrawals.
+        </p>
+
+        <div style="max-height: 350px; overflow-y: auto; margin-bottom: 20px;">
+            {% for bank in wallet.bank_accounts.all %}
+                <div style="padding: 15px; border: 1px solid {% if bank.is_default %}var(--accent-green){% else %}#eee{% endif %}; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; background: {% if bank.is_default %}#f0fff4{% else %}white{% endif %};">
+                    
+                    <div style="flex: 1;">
+                        <div style="font-weight: 700; color: #2c3e50; font-size: 1rem;">{{ bank.bank_name }}</div>
+                        <div style="font-size: 0.9em; color: #555; font-family: monospace; letter-spacing: 1px;">{{ bank.account_number }}</div>
+                        <div style="font-size: 0.8em; color: #999;">{{ bank.account_name|title }}</div>
+                    </div>
+
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        {% if bank.is_default %}
+                            <span style="color: var(--accent-green); font-weight: 700; font-size: 0.75rem; background: white; padding: 4px 8px; border-radius: 12px; border: 1px solid var(--accent-green);">
+                                ● In Use
+                            </span>
+                        {% else %}
+                            <button onclick="setActiveBank({{ bank.id }})" 
+                                    style="padding: 6px 12px; border: 1px solid #ddd; background: white; border-radius: 6px; cursor: pointer; font-size: 0.85em; font-weight: 600; color: #555;">
+                                Select
+                            </button>
+                            
+                            <button onclick="deleteBank({{ bank.id }})" title="Remove Account"
+                                    style="background: none; border: none; cursor: pointer; padding: 5px; color: #bd1313; transition: 0.2s;">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                </svg>
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            {% empty %}
+                <div style="text-align: center; padding: 30px; color: #999; background: #f9f9f9; border-radius: 8px;">
+                    <p>No accounts linked yet.</p>
+                </div>
+            {% endfor %}
+        </div>
+
+        <button onclick="closeModal('manageBanksModal'); openLinkBankModal()" class="action-btn btn-deposit" style="background: var(--primary-color);">
+            + Link Another Account
+        </button>
+    </div>
+</div>
+
+<div id="depositModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Fund Your Wallet</h3>
+            <button class="close-modal" onclick="closeModal('depositModal')">&times;</button>
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+            <label style="font-size:0.85rem; font-weight:600; color:#555;">Amount to Fund (₦)</label>
+            <input type="number" id="depositAmount" class="form-input" placeholder="e.g. 5000" onkeyup="calculateFee()" onchange="calculateFee()">
+        </div>
+
+        <div id="feeBreakdown" style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #eee; display:none;">
+            <div style="display:flex; justify-content:space-between; margin-bottom: 8px; font-size: 0.9rem; color:#666;">
+                <span>Transaction Fee:</span>
+                <span id="displayFee">₦0.00</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-weight: 700; color:#333; border-top: 1px solid #ddd; padding-top: 8px;">
+                <span>Total to Pay:</span>
+                <span id="displayTotal" style="color: var(--primary-color);">₦0.00</span>
+            </div>
+            <small style="display:block; margin-top:5px; color:#888; font-size:0.75rem;">
+                This total will be deducted from your bank account to ensure your wallet receives the full amount.
+            </small>
+        </div>
+
+        <button onclick="initiateDeposit()" class="action-btn btn-deposit">Pay Now</button>
+    </div>
+</div>
+
+<div id="withdrawModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Withdraw Funds</h3>
+            <button class="close-modal" onclick="closeModal('withdrawModal')">&times;</button>
+        </div>
+        
+        <div style="background: #fff8e1; border: 1px solid #ffe0b2; border-radius: 8px; padding: 12px 15px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <div style="background: #f39c12; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0;">
+                <i class="bi bi-info-circle-fill"></i>
+            </div>
+            <div>
+                <strong style="color: #d68910; font-size: 0.95rem; display: block;">Withdrawal Fees Apply</strong>
+                <span style="color: #e67e22; font-size: 0.8rem;">Paystack charges us withdrawal fees, and we need to add them here to continue to give the best experience.</span>
+            </div>
+        </div>
+
+        {% if not wallet.paystack_recipient_code %}
+            <div style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                ⚠️ You must link a bank account first.
+            </div>
+            <button onclick="openLinkBankModal()" class="action-btn btn-withdraw">Link Bank Account</button>
+        {% else %}
+            <p style="margin-bottom:5px; color:#666;">Available: <strong>₦{{ wallet.available_balance|intcomma }}</strong></p>
+            
+            <input type="number" id="withdrawAmount" class="form-input" placeholder="Amount to withdraw" onkeyup="calculateWithdrawFee()" onchange="calculateWithdrawFee()">
+            
+            <div id="withdrawFeeBreakdown" style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #eee; display:none;">
+                <div style="display:flex; justify-content:space-between; margin-bottom: 8px; font-size: 0.9rem; color:#666;">
+                    <span>Amount to Bank:</span>
+                    <span id="displayWithdrawAmount">₦0.00</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-bottom: 8px; font-size: 0.9rem; color:#666;">
+                    <span>Transfer Fee:</span>
+                    <span id="displayWithdrawFee" style="color: #c0392b;">₦0.00</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-weight: 700; color:#333; border-top: 1px solid #ddd; padding-top: 8px;">
+                    <span>Total Deducted:</span>
+                    <span id="displayWithdrawTotal" style="color: #c0392b;">₦0.00</span>
+                </div>
+            </div>
+
+            <button onclick="initiateWithdraw()" class="action-btn btn-deposit" id="withdrawBtn">Confirm Withdraw</button>
+        {% endif %}
+    </div>
+</div>
+
+<div id="txnModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="txnModalTitle">Transactions</h3>
+            <button class="close-modal" onclick="closeModal('txnModal')">&times;</button>
+        </div>
+        <div class="txn-list-container" id="txnModalBody">
+            </div>
+    </div>
+</div>
+
+<div id="transactionDetailModal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 400px; text-align: center;">
+        <div class="modal-header">
+            <h3>Transaction Details</h3>
+            <button class="close-modal" onclick="closeModal('transactionDetailModal')">&times;</button>
+        </div>
+
+        <div style="padding: 20px 0;">
+            <div id="detailIcon" style="width: 60px; height: 60px; background: #f0f0f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-size: 1.5rem;">
+                📄
+            </div>
+
+            <h2 id="detailAmount" style="font-size: 2rem; margin: 0 0 5px; color: #333;">₦0.00</h2>
+            <span id="detailType" style="background: #eee; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; color: #666; font-weight: 600;">TYPE</span>
+
+            <div style="margin-top: 25px; text-align: left; background: #f9f9f9; padding: 15px; border-radius: 8px;">
+                <div style="margin-bottom: 12px;">
+                    <label style="font-size: 0.75rem; color: #999; display: block; margin-bottom: 2px;">DESCRIPTION</label>
+                    <div id="detailDesc" style="font-size: 0.95rem; color: #333; line-height: 1.4;">...</div>
+                </div>
+
+                <div style="margin-bottom: 12px;">
+                    <label style="font-size: 0.75rem; color: #999; display: block; margin-bottom: 2px;">DATE & TIME</label>
+                    <div id="detailDate" style="font-size: 0.95rem; color: #333;">...</div>
+                </div>
+
+                <div>
+                    <label style="font-size: 0.75rem; color: #999; display: block; margin-bottom: 2px;">REFERENCE ID</label>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span id="detailRef" style="font-family: monospace; font-size: 1rem; color: #333;">...</span>
+                        <button onclick="copyRef()" style="background: none; border: none; color: var(--primary-color); cursor: pointer; font-size: 0.8rem; font-weight: 600;">
+                            COPY
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- FLOATING SETTLEMENT DELAY NOTIFICATION -->
+<div id="settlementNotification" style="display: none; position: fixed; top: 20px; right: 20px; z-index: 9999; width: 350px; background: white; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); overflow: hidden; animation: slideInRight 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); border-left: 5px solid #f39c12;">
+    <div style="padding: 16px 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px; color: #d68910;">
+                <i class="bi bi-clock-history" style="font-size: 1.2rem;"></i>
+                <span style="font-weight: 800; font-size: 0.9rem;">Processing Delay</span>
+            </div>
+            <button onclick="closeSettlementNotification()" style="background: none; border: none; font-size: 1.2rem; color: #999; cursor: pointer; padding: 0;">&times;</button>
+        </div>
+        <p style="margin: 0; font-size: 0.85rem; color: #555; line-height: 1.5;">
+            Your funds are secure! However, recent payments are still being cleared by our banking partners. 
+            <br><br>
+            Please wait <strong>12–24 hours</strong> for the funds to fully settle before attempting to withdraw. We apologize for the delay.
+        </p>
+    </div>
+</div>
+
+<!-- DARK OVERLAY -->
+<div id="policyOverlay" onclick="closePolicyNotice()" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6); z-index: 9998; backdrop-filter: blur(3px); opacity: 0; transition: opacity 0.3s ease;"></div>
+
+<!-- GLOBAL 24HR WITHDRAWAL POLICY NOTICE -->
+<div id="policyNoticeToast" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -45%) scale(0.95); z-index: 9999; width: 90%; max-width: 420px; background: white; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.25); overflow: hidden; opacity: 0; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+    
+    <!-- Top Accent Bar -->
+    <div style="height: 6px; background: var(--primary-color, #2D1B69); width: 100%;"></div>
+
+    <div style="padding: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="background: #eff6ff; color: #3b82f6; width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.4rem;">
+                    <i class="bi bi-clock-history"></i>
+                </div>
+                <h3 style="margin: 0; font-weight: 800; font-size: 1.1rem; color: #1e293b;">Withdrawal Policy</h3>
+            </div>
+            <button onclick="closePolicyNotice()" style="background: #f1f5f9; border: none; width: 30px; height: 30px; border-radius: 50%; font-size: 1.2rem; color: #64748b; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">&times;</button>
+        </div>
+        
+        <p style="margin: 0 0 20px 0; font-size: 1rem; color: #475569; line-height: 1.6;">
+            Due to standard banking settlement schedules, newly deposited funds or recent earnings take <strong>up to 24 hours</strong> to become <strong>available</strong> for withdrawal. 
+            <br><br>
+            We appreciate your patience as we ensure your funds are securely cleared!
+        </p>
+
+        <button onclick="closePolicyNotice()" style="width: 100%; padding: 12px; background: var(--primary-color, #2D1B69); color: white; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+            I Understand
+        </button>
+    </div>
+</div>
+
+<style>
+    @keyframes slideDownFade {
+        0% { top: -50px; opacity: 0; }
+        100% { top: 20px; opacity: 1; }
+    }
+
+    @keyframes slideInRight {
+        0% { transform: translateX(120%); opacity: 0; }
+        100% { transform: translateX(0); opacity: 1; }
+    }
+</style>
+
+{% endblock %}
+
+<!-- JAVASCRIPT --> 
+
+{% block extra_js %}
+
+<script src="https://js.paystack.co/v1/inline.js"></script>
+<script>
+    const CONFIG = {
+        key: "{{ paystack_public_key }}",
+        email: "{{ request.user.email }}",
+        walletType: "{{ wallet_type }}",
+        csrf: "{{ csrf_token }}"
+    };
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Parse URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const depositAmount = urlParams.get('deposit_amount');
+        const fromSource = urlParams.get('from');
+
+        // THIS IS FOR WHEN THE WITHDRAW FUNTIONALITY IS TEMPORARILY DOWN
+        // alert("⚠️⚠️ Please do not deposit more than what is necessary for the transaction. ⚠️⚠️ \nThe withdraw functionality is under maintenance.")
+
+        // --- SHOW THE 24HR POLICY MODAL ---
+        // Wait 1 second after page load, then fade in the overlay and pop the modal
+        setTimeout(() => {
+            const policyToast = document.getElementById('policyNoticeToast');
+            const overlay = document.getElementById('policyOverlay');
+            
+            if (policyToast && overlay) {
+                // First, display the elements so they exist on screen
+                overlay.style.display = 'block';
+                policyToast.style.display = 'block';
+                
+                // Force browser reflow to ensure the transition animates
+                void policyToast.offsetWidth;
+                
+                // Now apply the visible states
+                overlay.style.opacity = '1';
+                policyToast.style.opacity = '1';
+                policyToast.style.transform = 'translate(-50%, -50%) scale(1)';
+            }
+        }, 1000);
+
+        // Helper function to cleanly close both the overlay and the modal
+        window.closePolicyNotice = function() {
+            const toast = document.getElementById('policyNoticeToast');
+            const overlay = document.getElementById('policyOverlay');
+            
+            if (toast && overlay) {
+                // Animate them out
+                overlay.style.opacity = '0';
+                toast.style.opacity = '0';
+                toast.style.transform = 'translate(-50%, -45%) scale(0.95)';
+                
+                // Wait for the 0.3s CSS transition to finish before hiding them completely
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                    toast.style.display = 'none';
+                }, 300);
+            }
+        };
+
+        if (depositAmount && fromSource === 'checkout') {
+            // 1. Pre-fill the amount input
+            const amountInput = document.getElementById('depositAmount');
+            if (amountInput) {
+                // Round up to nearest whole number just in case
+                amountInput.value = Math.ceil(parseFloat(depositAmount));
+            }
+
+            // 2. Show a specific notification/banner
+            // Create a banner dynamically or unhide one
+            const banner = document.createElement('div');
+            banner.style.cssText = "background: #fff3cd; color: #856404; padding: 15px; margin-bottom: 20px; border-radius: 8px; border: 1px solid #ffeeba; text-align: center;";
+            banner.innerHTML = `<strong>Insufficient Funds for Order:</strong> Please deposit ₦${parseFloat(depositAmount).toLocaleString()} to complete your checkout.`;
+            
+            // Insert banner before the main dashboard container content
+            const container = document.querySelector('.dashboard-container');
+            container.insertBefore(banner, container.firstChild);
+
+            // 3. Auto-open the deposit modal
+            openModal('depositModal');
+        }
+    });
+
+    // --- UI Logic ---
+    function openModal(id) { 
+        const el = document.getElementById(id);
+        el.style.display = 'flex';
+        // Small delay to allow display:flex to apply before adding opacity class for transition
+        setTimeout(() => el.classList.add('show'), 10);
+    }
+    
+    function closeModal(id) { 
+        const el = document.getElementById(id);
+        el.classList.remove('show');
+        setTimeout(() => el.style.display = 'none', 300); // Wait for transition
+    }
+
+    // New: Filter transactions for the modal
+    function openTxnModal(title, filterType) {
+        document.getElementById('txnModalTitle').innerText = title;
+        const container = document.getElementById('txnModalBody');
+        const rows = document.querySelectorAll('#mainTxnTable tbody tr');
+        let count = 0;
+        
+        // Clear previous items to prevent duplicates if you click multiple times
+        container.innerHTML = ''; 
+
+        rows.forEach(row => {
+            const desc = (row.getAttribute('data-desc') || '').toLowerCase();
+            const amount = parseFloat(row.getAttribute('data-amount') || 0);
+            let match = false;
+
+            if (filterType === 'escrow') {
+                if (desc.includes('escrow') || desc.includes('lock') || (desc.includes('order') && amount < 0)) {
+                    match = true;
+                }
+            } 
+            else if (filterType === 'pending') {
+                if (desc.includes('pending') || desc.includes('clearing')) {
+                    match = true;
+                }
+            }
+            // --- NEW: COURIER FILTER ---
+            else if (filterType === 'courier_earnings') {
+                // Strictly matches the signal description "Delivery Earning: #..."
+                if (desc.includes('delivery earning') || desc.includes('delivery fee')) {
+                    match = true;
+                }
+            }
+
+            if (match) {
+                const date = row.cells[0].innerText;
+                const text = row.cells[1].innerText;
+                const money = row.cells[3].innerHTML; 
+                
+                const item = document.createElement('div');
+                item.className = 'txn-item';
+                item.style.borderBottom = "1px solid #eee";
+                item.style.padding = "10px 0";
+                item.innerHTML = `
+                    <div class="txn-meta">
+                        <span class="txn-desc" style="font-weight:600; color:#333;">${text}</span>
+                        <div class="txn-date" style="font-size:0.8rem; color:#999;">${date}</div>
+                    </div>
+                    <div>${money}</div>
+                `;
+                container.appendChild(item);
+                count++;
+            }
+        });
+
+        if (count === 0) {
+            container.innerHTML = '<p style="text-align:center; color:#999; padding:20px;">No earnings found yet.</p>';
+        }
+
+        openModal('txnModal');
+    }
+
+    // DYNAMIC FEE CALCULATOR
+    function calculateFee() {
+        const inputVal = parseFloat(document.getElementById('depositAmount').value);
+        const breakdown = document.getElementById('feeBreakdown');
+        
+        if (!inputVal || inputVal <= 0) {
+            breakdown.style.display = 'none';
+            return;
+        }
+
+        breakdown.style.display = 'block';
+
+        // --- NEW LOGIC: TIERED FEES ---
+        let fee = 0;
+        
+        if (inputVal > 0 && inputVal <= 4999) {
+            fee = 100;
+        } else if (inputVal >= 5000 && inputVal <= 9999) {
+            fee = 150;
+        } else if (inputVal >= 10000 && inputVal <= 14999) {
+            fee = 250;
+        } else if (inputVal >= 15000 && inputVal <= 19999) {
+            fee = 350;
+        } else if (inputVal >= 20000 && inputVal <= 24999) {
+            fee = 450;
+        } else if (inputVal >= 25000 && inputVal <= 29999) {
+            fee = 550;
+        } else if (inputVal >= 30000) {
+            fee = 650;
+        }
+
+        // Assuming this is a deposit, they pay the fee ON TOP of the deposit amount.
+        // If it's a withdrawal, it would be inputVal - fee.
+        let total = inputVal + fee; 
+        // --------------------------------
+
+        // Visual Updates
+        const feeElement = document.getElementById('displayFee');
+        
+        // Update the UI to show the calculated fee
+        feeElement.innerText = "₦" + fee.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}); 
+        feeElement.style.color = "#c0392b"; // Red to indicate a charge (removed the green "free" color)
+        feeElement.style.fontWeight = "bold";
+        feeElement.style.fontSize = "1.2em";
+
+        // Show the total amount to be charged
+        document.getElementById('displayTotal').innerText = "₦" + total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+        // Store for payment (Paystack/Flutterwave usually expect the lowest currency unit, e.g., Kobo)
+        finalChargeAmount = Math.ceil(total * 100); 
+    }
+
+    // DYNAMIC WITHDRAWAL FEE CALCULATOR
+    function calculateWithdrawFee() {
+        const inputVal = parseFloat(document.getElementById('withdrawAmount').value);
+        const breakdown = document.getElementById('withdrawFeeBreakdown');
+        
+        if (!inputVal || inputVal <= 0) {
+            breakdown.style.display = 'none';
+            return;
+        }
+
+        breakdown.style.display = 'block';
+
+        // The Logic: FREE for Courier Advance, otherwise ₦25 below 10k, ₦50 for 10k+
+        let fee = 0;
+        if (CONFIG.walletType !== 'COURIER_ADVANCE') {
+            fee = inputVal < 5000 ? 15 : 30;
+        }
+        
+        let totalDeduction = inputVal + fee;
+
+        document.getElementById('displayWithdrawAmount').innerText = "₦" + inputVal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        document.getElementById('displayWithdrawFee').innerText = "₦" + fee.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        document.getElementById('displayWithdrawTotal').innerText = "₦" + totalDeduction.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+
+    // 2. UPDATED DEPOSIT FUNCTION
+    function initiateDeposit() {
+        const amountInput = document.getElementById('depositAmount').value;
+        if (!amountInput || amountInput < 100) return alert("Minimum deposit is ₦100");
+
+        // Use the calculated total (finalChargeAmount) instead of just the input
+        if (finalChargeAmount === 0) calculateFee(); // Safety check
+
+        const handler = PaystackPop.setup({
+            key: CONFIG.key,
+            email: CONFIG.email,
+            amount: finalChargeAmount, // WE CHARGE THE TOTAL (Principal + Fee)
+            currency: "NGN",
+            metadata: { 
+                wallet_type: CONFIG.walletType,
+                custom_fields: [
+                    { display_name: "Wallet Funding", variable_name: "funding_amt", value: amountInput }
+                ]
+            },
+            callback: function(response) {
+                alert("Payment Successful! Processing deposit...");
+                setTimeout(() => window.location.reload(), 3000); // Give webhook time to fire
+            },
+            onClose: function() { alert("Transaction cancelled."); }
+        });
+        handler.openIframe();
+        closeModal('depositModal');
+    }
+
+    // --- 2. WITHDRAW LOGIC ---
+    function initiateWithdraw() {
+        const amount = document.getElementById('withdrawAmount').value;
+        const btn = document.getElementById('withdrawBtn');
+        
+        if (!amount) return;
+
+        const idempotencyKey = crypto.randomUUID();
+
+        btn.disabled = true;
+        btn.innerText = "Processing...";
+
+        fetch("{% url 'withdraw_funds' %}", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-CSRFToken": CONFIG.csrf },
+            body: JSON.stringify({ 
+                amount: parseFloat(amount), 
+                wallet_type: CONFIG.walletType, 
+                idempotency_key: idempotencyKey 
+            })
+        })
+        .then(async res => {
+            const data = await res.json().catch(() => ({ error: "Server Error: Could not parse response" }));
+            
+            if (!res.ok || data.error) {
+                // --- NEW: CATCH THE SETTLEMENT DELAY ERROR ---
+                if (data.error_code === 'settlement_delay') {
+                    closeModal('withdrawModal'); // Close the withdrawal window
+                    document.getElementById('settlementNotification').style.display = 'block'; // Show floating message
+                    
+                    // Auto-hide after 10 seconds
+                    setTimeout(closeSettlementNotification, 10000); 
+                } else {
+                    // Standard Error
+                    alert("❌ " + (data.error || "Transaction Failed"));
+                }
+                
+                btn.disabled = false;
+                btn.innerText = "Confirm Withdraw";
+            } else {
+                // Success
+                alert(`✅ Success! ₦${amount} sent to ${data.destination}`);
+                window.location.reload();
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("❌ Network or Server Error. Please check console.");
+            btn.disabled = false;
+            btn.innerText = "Confirm Withdraw";
+        });
+    }
+
+    // Helper to close the notification manually
+    function closeSettlementNotification() {
+        const notif = document.getElementById('settlementNotification');
+        if (notif) notif.style.display = 'none';
+    }
+
+    // --- 3. LINK BANK LOGIC ---
+    let allBanks = []; 
+
+    function openLinkBankModal() {
+        closeModal('withdrawModal');
+        closeModal('manageBanksModal');
+        openModal('linkBankModal');
+        
+        // Reset inputs completely
+        document.getElementById('bankSearchInput').value = '';
+        document.getElementById('selectedBankCode').value = '';
+        document.getElementById('selectedBankName').value = '';
+        document.getElementById('accNumberInput').value = '';
+        
+        const listContainer = document.getElementById('bankListContainer');
+        listContainer.classList.remove('show');
+
+        // Fetch banks
+        if (allBanks.length === 0) {
+            listContainer.innerHTML = '<div style="padding:10px; color:#999; text-align:center;">Loading...</div>';
+            fetch('https://api.paystack.co/bank?currency=NGN')
+            .then(res => res.json())
+            .then(data => {
+                if(data.status) {
+                    allBanks = data.data.sort((a, b) => a.name.localeCompare(b.name));
+
+                    // 2. INJECT TEST BANK (Fix for your issue)
+                    // Only needed if you are using Test Keys, but safe to add always in dev
+                    const testBank = {
+                        name: "TEST BANK (Paystack)",
+                        code: "000" // Special code for testing
+                    };
+                    
+                    // Add Test Bank at the very top
+                    allBanks = [testBank, ...allBanks];
+
+                    renderBankList(allBanks);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                listContainer.innerHTML = '<div style="padding:10px; color:red;">Failed to load banks</div>';
+            });
+        } else {
+            renderBankList(allBanks);
+        }
+    }
+
+    function renderBankList(banks) {
+        const container = document.getElementById('bankListContainer');
+        container.innerHTML = '';
+        if(banks.length === 0) {
+            container.innerHTML = '<div style="padding:10px; color:#999;">No banks found</div>';
+            return;
+        }
+        banks.forEach(bank => {
+            const div = document.createElement('div');
+            div.className = 'bank-option';
+            div.innerText = bank.name;
+            // Pass Name explicitly
+            div.onclick = () => selectBank(bank.code, bank.name);
+            container.appendChild(div);
+        });
+    }
+
+    function filterBanks() {
+        // Clear selection if user types, forcing them to re-select
+        document.getElementById('selectedBankCode').value = '';
+        document.getElementById('selectedBankName').value = '';
+        
+        const query = document.getElementById('bankSearchInput').value.toLowerCase();
+        const filtered = allBanks.filter(b => b.name.toLowerCase().includes(query));
+        renderBankList(filtered);
+        document.getElementById('bankListContainer').classList.add('show');
+    }
+
+    function selectBank(code, name) {
+        // Set the hidden values that will be sent to Backend
+        document.getElementById('selectedBankCode').value = code;
+        document.getElementById('selectedBankName').value = name;
+        
+        // Update the visible input
+        document.getElementById('bankSearchInput').value = name;
+        
+        // Hide the dropdown
+        document.getElementById('bankListContainer').classList.remove('show');
+    }
+
+    function submitBankLink(e) {
+        e.preventDefault();
+        
+        const bankCode = document.getElementById('selectedBankCode').value;
+        const bankName = document.getElementById('selectedBankName').value;
+        const accNum = document.getElementById('accNumberInput').value;
+        const btn = document.getElementById('linkBtn');
+
+        // STRICT VALIDATION
+        if(!bankCode || !bankName) {
+            return alert("Please select a bank from the list. (Do not just type the name, click the option).");
+        }
+        if(!accNum || accNum.length < 10) {
+            return alert("Please enter a valid 10-digit account number.");
+        }
+
+        btn.disabled = true;
+        btn.innerText = "Verifying...";
+
+        fetch("{% url 'link_bank_account' %}", { 
+            method: "POST",
+            headers: { 
+                "Content-Type": "application/json", 
+                "X-CSRFToken": CONFIG.csrf 
+            },
+            body: JSON.stringify({ 
+                account_number: accNum, 
+                bank_code: bankCode, 
+                bank_name: bankName, // We are explicitly sending the name here
+                wallet_type: CONFIG.walletType 
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) {
+                alert("Error: " + data.error);
+                btn.disabled = false;
+                btn.innerText = "Verify & Save";
+            } else {
+                alert("Success! " + data.account_name + " linked.");
+                window.location.reload();
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            btn.disabled = false;
+            btn.innerText = "Verify & Save";
+            alert("Network Error. Check console.");
+        });
+    }
+
+    // --- DELETE BANK LOGIC ---
+    function deleteBank(bankId) {
+        if(!confirm("Are you sure you want to remove this bank account?")) return;
+
+        // Use button as loading indicator if needed, but alert is fine for now
+        fetch("{% url 'delete_bank_account' %}", {
+            method: "POST",
+            headers: { 
+                "Content-Type": "application/json", 
+                "X-CSRFToken": CONFIG.csrf 
+            },
+            body: JSON.stringify({ bank_id: bankId })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) {
+                alert("Cannot Remove: " + data.error);
+            } else {
+                alert("Account removed.");
+                window.location.reload();
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Network error occurred.");
+        });
+    }
+
+    // --- 4. SET ACTIVE BANK LOGIC ---
+    function setActiveBank(bankId) {
+        // Optimistic UI update (optional, but makes it feel fast)
+        // For now, we'll just show a loading state on the clicked button if possible, 
+        // or just rely on the page reload.
+
+        fetch("{% url 'set_active_bank' %}", {
+            method: "POST",
+            headers: { 
+                "Content-Type": "application/json", 
+                "X-CSRFToken": CONFIG.csrf 
+            },
+            body: JSON.stringify({ 
+                bank_id: bankId, 
+                wallet_type: CONFIG.walletType 
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) {
+                alert("Error: " + data.error);
+            } else {
+                // Success! Reload to update the "In Use" badge and the Withdraw Modal
+                window.location.reload(); 
+            }
+        })
+        .catch(err => console.error(err));
+    }
+
+    // --- 5. TRANSACTION DETAIL LOGIC ---
+    function showTransactionDetails(ref, amountRaw, desc, date, type) {
+        const amount = parseFloat(amountRaw);
+        
+        // 1. Set Text Content
+        document.getElementById('detailDesc').innerText = desc;
+        document.getElementById('detailDate').innerText = date;
+        document.getElementById('detailRef').innerText = ref;
+        document.getElementById('detailType').innerText = type.replace(/_/g, ' '); // e.g. PURCHASE_LOCK -> PURCHASE LOCK
+
+        // 2. Format Amount & Color
+        const amountEl = document.getElementById('detailAmount');
+        const iconEl = document.getElementById('detailIcon');
+        
+        // Format number with commas
+        const formattedAmount = "₦" + Math.abs(amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        
+        if (amount > 0) {
+            amountEl.innerText = "+" + formattedAmount;
+            amountEl.style.color = "#27ae60"; // Green
+            iconEl.style.background = "#eafaf1";
+            iconEl.style.color = "#27ae60";
+            iconEl.innerText = "↙"; // Arrow In
+        } else {
+            amountEl.innerText = "-" + formattedAmount;
+            amountEl.style.color = "#c0392b"; // Red
+            iconEl.style.background = "#fdedec";
+            iconEl.style.color = "#c0392b";
+            iconEl.innerText = "↗"; // Arrow Out
+        }
+
+        // 3. Open the Modal
+        openModal('transactionDetailModal');
+    }
+
+    // Helper to copy the reference ID
+    function copyRef() {
+        const refText = document.getElementById('detailRef').innerText;
+        navigator.clipboard.writeText(refText).then(() => {
+            alert("Reference copied to clipboard!");
+        });
+    }
+</script>
+{% endblock %}

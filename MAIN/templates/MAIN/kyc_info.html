@@ -1,0 +1,58 @@
+{% extends "MAIN/base.html" %}
+{% load static %}
+
+{% block title %}KYC Terms & Purpose - Luxa{% endblock %}
+
+{% block content %}
+<div style="min-height: 85vh; padding: 40px 20px; display: flex; justify-content: center; align-items: flex-start;">
+    
+    <div style="background: white; width: 100%; max-width: 700px; border-radius: 16px; padding: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">
+        
+        <div style="border-bottom: 1px solid #f1f5f9; padding-bottom: 20px; margin-bottom: 30px; display: flex; align-items: center; justify-content: space-between;">
+            <h2 style="color: #1e293b; font-weight: 800; margin: 0; font-size: 1.5rem;">KYC Purpose & Terms</h2>
+            <i class="fas fa-file-contract" style="color: #cbd5e1; font-size: 1.5rem;"></i>
+        </div>
+
+        <div style="margin-bottom: 30px;">
+            <h3 style="color: #960ffa; font-size: 1.1rem; font-weight: 700; margin-bottom: 15px;">Why do we need this?</h3>
+            <p style="color: #475569; line-height: 1.6; font-size: 0.95rem;">
+                At <strong>Luxa.ng</strong>, we prioritize the safety of your high-value transactions. This Know Your Customer (KYC) process is strictly designed to:
+            </p>
+            <ul style="color: #475569; line-height: 1.6; font-size: 0.95rem; margin-top: 10px;">
+                <li><strong>Secure Delivery:</strong> Verify that the person placing the order is the same person receiving it.</li>
+                <li><strong>Courier Safety:</strong> Minimize delivery errors and disputes by providing couriers with verified recipient details.</li>
+                <li><strong>Fraud Prevention:</strong> protect the marketplace community from identity theft and unauthorized purchases.</li>
+            </ul>
+        </div>
+
+        <div style="background: #f8fafc; padding: 20px; border-radius: 12px; margin-bottom: 30px; border: 1px solid #e2e8f0;">
+            <h3 style="color: #1e293b; font-size: 1rem; font-weight: 700; margin-bottom: 10px;">
+                <i class="fas fa-shield-alt" style="color: #10b981; margin-right: 8px;"></i> Data Privacy Commitment
+            </h3>
+            <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 0; line-height: 1.5;">
+                Your data is <strong>encrypted</strong> and stored securely. We do not sell your personal documents to third parties. Your ID is used solely for verification and is accessible only to authorized compliance staff and the specific courier assigned to your delivery.
+            </p>
+        </div>
+
+        <div style="margin-bottom: 40px;">
+            <h3 style="color: #960ffa; font-size: 1.1rem; font-weight: 700; margin-bottom: 15px;">Terms & Conditions</h3>
+            <div style="color: #475569; font-size: 0.9rem; line-height: 1.6;">
+                <p>By submitting your documents for verification, you agree to the following:</p>
+                <ol style="padding-left: 20px;">
+                    <li style="margin-bottom: 10px;"><strong>Accuracy:</strong> You declare that the documents provided are valid, unexpired, and authentic representations of your identity.</li>
+                    <li style="margin-bottom: 10px;"><strong>Ownership:</strong> You are not impersonating any other individual or entity.</li>
+                    <li style="margin-bottom: 10px;"><strong>Revocation:</strong> Luxa reserves the right to revoke verified status or suspend accounts if falsified documents are detected.</li>
+                    <li><strong>Processing Time:</strong> Verification may take up to 24-48 hours. You will be notified via email upon completion.</li>
+                </ol>
+            </div>
+        </div>
+
+        <div style="text-align: right; border-top: 1px solid #f1f5f9; padding-top: 20px;">
+            <a href="javascript:history.back()" style="display: inline-block; padding: 12px 25px; background: #960ffa; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; transition: background 0.2s;">
+                Understood, Return to Verification
+            </a>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

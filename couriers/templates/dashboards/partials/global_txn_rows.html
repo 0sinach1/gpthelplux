@@ -1,0 +1,45 @@
+{% load humanize %}
+
+{% for txn in transactions %}
+<tr class="clickable-row" onclick="jumpToUserLedger('{{ txn.wallet.user.username }}')">
+    
+    <td>
+        <div style="font-weight: 600; font-size: 0.9rem;">{{ txn.wallet.user.first_name }} {{ txn.wallet.user.last_name }}</div>
+        <div style="font-size: 0.75rem; color: var(--text-muted);">@{{ txn.wallet.user.username }}</div>
+    </td>
+    
+    <td>{{ txn.timestamp|date:"M d, H:i" }}</td>
+    <td><span style="font-family: monospace; color: var(--text-muted); font-size: 0.8rem;">{{ txn.reference }}</span></td>
+    
+    <td>
+        <span class="badge" style="background: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">
+            {% if txn.wallet.wallet_type == 'COURIER_ADVANCE' %}ADVANCE
+            {% else %}{{ txn.wallet.wallet_type }}
+            {% endif %}
+        </span>
+    </td>
+    
+    <td>
+        {% if txn.transaction_type == 'CREDIT' or txn.transaction_type == 'DEPOSIT' or txn.transaction_type == 'PURCHASE_RELEASE' %}
+            <span class="badge badge-credit">{{ txn.transaction_type }}</span>
+        {% elif txn.transaction_type == 'PURCHASE_LOCK' %}
+            <span class="badge badge-lock">{{ txn.transaction_type }}</span>
+        {% else %}
+            <span class="badge badge-debit">{{ txn.transaction_type }}</span>
+        {% endif %}
+    </td>
+    
+    <td class="{% if txn.amount > 0 %}amount-pos{% else %}amount-neg{% endif %}">
+        {% if txn.amount > 0 %}+{% endif %}₦{{ txn.amount|intcomma }}
+    </td>
+    
+    <td style="font-weight: 600;">₦{{ txn.running_balance|intcomma }}</td>
+</tr>
+{% empty %}
+<tr>
+    <td colspan="7" style="text-align: center; padding: 40px; color: var(--text-muted);">
+        <i class="bi bi-inbox" style="font-size: 2rem; display: block; margin-bottom: 10px;"></i>
+        No transactions match these filters.
+    </td>
+</tr>
+{% endfor %}

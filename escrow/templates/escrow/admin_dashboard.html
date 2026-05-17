@@ -1,0 +1,382 @@
+{% extends 'MAIN/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Escrow Management Dashboard - Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-dashboard-container {
+        max-width: 1400px;
+        margin: 30px auto;
+        padding: 0 20px;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .dashboard-header {
+        margin-bottom: 30px;
+    }
+
+    .dashboard-header h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 10px;
+    }
+
+    .dashboard-header p {
+        color: #64748b;
+        font-size: 0.95rem;
+    }
+
+    .summary-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 40px;
+    }
+
+    .summary-card {
+        background: white;
+        border-radius: 12px;
+        padding: 24px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .summary-card h3 {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin: 0 0 12px 0;
+    }
+
+    .summary-card .amount {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin: 0;
+    }
+
+    .summary-card.total-revenue .amount {
+        color: #960ffa;
+    }
+
+    .dashboard-panels {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
+
+    .panel {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .panel-header {
+        background: #f8fafc;
+        padding: 20px 24px;
+        border-bottom: 2px solid #e2e8f0;
+    }
+
+    .panel-header h2 {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin: 0;
+    }
+
+    .panel-body {
+        padding: 24px;
+    }
+
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+    }
+
+    .data-table thead {
+        background: #f8fafc;
+    }
+
+    .data-table th {
+        padding: 12px 16px;
+        text-align: left;
+        font-weight: 600;
+        color: #475569;
+        border-bottom: 2px solid #e2e8f0;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .data-table td {
+        padding: 12px 16px;
+        border-bottom: 1px solid #f1f5f9;
+        color: #334155;
+    }
+
+    .data-table tbody tr:hover {
+        background: #f8fafc;
+    }
+
+    .data-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .badge-delivered {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .badge-processing {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .badge-cancelled {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .badge-paid {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .badge-refunded {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .currency {
+        font-family: 'Courier New', monospace;
+        font-weight: 600;
+        color: #1e293b;
+    }
+
+    .breakdown-list {
+        max-height: 500px;
+        overflow-y: auto;
+    }
+
+    .breakdown-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .breakdown-item:last-child {
+        border-bottom: none;
+    }
+
+    .breakdown-item-info {
+        flex: 1;
+    }
+
+    .breakdown-item-order {
+        font-weight: 600;
+        color: #1e293b;
+        font-size: 0.9rem;
+    }
+
+    .breakdown-item-meta {
+        font-size: 0.8rem;
+        color: #64748b;
+        margin-top: 4px;
+    }
+
+    .breakdown-item-amount {
+        font-family: 'Courier New', monospace;
+        font-weight: 700;
+        color: #1e293b;
+        font-size: 1rem;
+    }
+
+    .no-data {
+        text-align: center;
+        padding: 40px;
+        color: #94a3b8;
+        font-style: italic;
+    }
+
+    @media (max-width: 1024px) {
+        .data-table {
+            font-size: 0.8rem;
+        }
+        
+        .data-table th,
+        .data-table td {
+            padding: 8px 12px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-dashboard-container">
+    <div class="dashboard-header">
+        <h1>Escrow Management Dashboard</h1>
+        <p>Complete overview of all transactions, delivery fees, and platform revenue</p>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="summary-cards">
+        <div class="summary-card">
+            <h3>Total Orders</h3>
+            <p class="amount">{{ total_orders|intcomma }}</p>
+        </div>
+        <div class="summary-card">
+            <h3>Total Delivery Fees</h3>
+            <p class="amount">₦{{ total_delivery_fees|floatformat:2|intcomma }}</p>
+        </div>
+        <div class="summary-card">
+            <h3>Total Luxa Cut</h3>
+            <p class="amount">₦{{ total_luxa_cut|floatformat:2|intcomma }}</p>
+        </div>
+        <div class="summary-card total-revenue">
+            <h3>Platform Revenue</h3>
+            <p class="amount">₦{{ total_platform_revenue|floatformat:2|intcomma }}</p>
+        </div>
+    </div>
+
+    <!-- Three Panels -->
+    <div class="dashboard-panels">
+        
+        <!-- Panel 1: Order Transactions -->
+        <div class="panel">
+            <div class="panel-header">
+                <h2>Order Transactions</h2>
+            </div>
+            <div class="panel-body">
+                <div style="overflow-x: auto;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Order #</th>
+                                <th>Customer</th>
+                                <th>Vendor</th>
+                                <th>Date</th>
+                                <th>Subtotal</th>
+                                <th>Delivery Fee</th>
+                                <th>Luxa Cut</th>
+                                <th>Customer Total</th>
+                                <th>Vendor Payout</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for txn in order_transactions %}
+                            <tr>
+                                <td><strong>{{ txn.order_number }}</strong></td>
+                                <td>{{ txn.customer }}</td>
+                                <td>{{ txn.vendor }}</td>
+                                <td>{{ txn.created_at|date:"M d, Y" }}</td>
+                                <td class="currency">₦{{ txn.subtotal|floatformat:2|intcomma }}</td>
+                                <td class="currency">₦{{ txn.delivery_fee|floatformat:2|intcomma }}</td>
+                                <td class="currency">
+                                    {% if txn.luxa_cut_amount > 0 %}
+                                        ₦{{ txn.luxa_cut_amount|floatformat:2|intcomma }} ({{ txn.luxa_cut_percentage|floatformat:0 }}%)
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+                                <td class="currency"><strong>₦{{ txn.customer_total|floatformat:2|intcomma }}</strong></td>
+                                <td class="currency">₦{{ txn.vendor_payout|floatformat:2|intcomma }}</td>
+                                <td>
+                                    <span class="badge badge-{{ txn.status|lower }}">{{ txn.status }}</span>
+                                    <br>
+                                    <small style="color: #64748b; margin-top: 4px; display: block;">{{ txn.payment_status }}</small>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="10" class="no-data">No orders found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel 2: Delivery Fees -->
+        <div class="panel">
+            <div class="panel-header">
+                <h2>Delivery Fees Breakdown</h2>
+                <p style="margin: 8px 0 0 0; color: #64748b; font-size: 0.9rem;">
+                    Total Earned: <strong style="color: #1e293b;">₦{{ total_delivery_fees|floatformat:2|intcomma }}</strong>
+                </p>
+            </div>
+            <div class="panel-body">
+                <div class="breakdown-list">
+                    {% for item in delivery_fee_breakdown %}
+                    <div class="breakdown-item">
+                        <div class="breakdown-item-info">
+                            <div class="breakdown-item-order">Order #{{ item.order_number }}</div>
+                            <div class="breakdown-item-meta">
+                                {{ item.customer__first_name }} {{ item.customer__last_name }} → {{ item.vendor__business_name }} • {{ item.created_at|date:"M d, Y" }}
+                            </div>
+                        </div>
+                        <div class="breakdown-item-amount">
+                            ₦{{ item.delivery_fee|floatformat:2|intcomma }}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="no-data">No delivery fees recorded yet</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel 3: Luxa Cut -->
+        <div class="panel">
+            <div class="panel-header">
+                <h2>Luxa Cut Breakdown</h2>
+                <p style="margin: 8px 0 0 0; color: #64748b; font-size: 0.9rem;">
+                    Total Earned: <strong style="color: #1e293b;">₦{{ total_luxa_cut|floatformat:2|intcomma }}</strong>
+                </p>
+            </div>
+            <div class="panel-body">
+                <div class="breakdown-list">
+                    {% for item in luxa_cut_breakdown %}
+                    <div class="breakdown-item">
+                        <div class="breakdown-item-info">
+                            <div class="breakdown-item-order">Order #{{ item.order_number }}</div>
+                            <div class="breakdown-item-meta">
+                                {{ item.customer__first_name }} {{ item.customer__last_name }} → {{ item.vendor__business_name }} • 
+                                {{ item.luxa_cut_percentage|floatformat:0 }}% of ₦{{ item.subtotal|floatformat:2|intcomma }} • 
+                                {{ item.created_at|date:"M d, Y" }}
+                            </div>
+                        </div>
+                        <div class="breakdown-item-amount">
+                            ₦{{ item.luxa_cut_amount|floatformat:2|intcomma }}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="no-data">No Luxa cuts recorded yet</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

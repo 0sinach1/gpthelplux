@@ -1,0 +1,266 @@
+{% load static %}
+{% load hosts %}
+{% load humanize %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <style>
+    /* Theme Definitions */
+    .theme-standard-light { --bg: #f4f7f6; --text: #1e293b; --accent: #3b82f6; --side: #f8fafc; --card: #ffffff; }
+    .theme-dark-theme { --bg: #0f172a; --text: #f8fafc; --accent: #fbbf24; --side: #111827; --card: #1e293b; }
+    .theme-luxa-crisp { --bg: #f0fdf4; --text: #14532d; --accent: #22c55e; --side: #dcfce7; --card: #ffffff; }
+    .theme-lmu-arena { --bg: #fffbeb; --text: #b45309; --accent: #d97706; --side: #fef3c7; --card: #ffffff; }
+
+    /* GLOBAL APPLICATION: This forces the theme on the whole layout */
+    body[class^="theme-"] { background-color: var(--bg) !important; color: var(--text); transition: 0.3s; }
+    
+    body[class^="theme-"] .crave-sidebar { background-color: var(--side) !important; }
+    body[class^="theme-"] .crave-topbar { background-color: var(--card) !important; border-bottom: 1px solid rgba(0,0,0,0.05); }
+    body[class^="theme-"] .crave-main-wrapper { background-color: var(--bg) !important; }
+    
+    /* Logo & Nav coloring */
+    body[class^="theme-"] .sidebar-header h2 span { color: var(--accent) !important; }
+    body[class^="theme-"] .nav-item.active { background-color: var(--accent) !important; color: white !important; }
+    body[class^="theme-"] .nav-label { color: var(--text) !important; opacity: 0.7; }
+    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Luxa Campus Dashboard{% endblock %}</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{% static 'css/luxa_crave/base_crave.css' %}">
+    <link href="https://fonts.cdnfonts.com/css/gagalin" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Arima:wght@100..700&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+
+    <link rel="icon" type="image/png" sizes="50x50" href="{% static '/images/titlelogo.png' %}" >
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+
+    <div class="crave-layout">
+        
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <aside class="crave-sidebar" id="craveSidebar">
+            <a href="{% url 'crave_dashboard' %}" style="text-decoration: none;">
+                <div class="sidebar-header">
+                    <h2><img src="{% static '/images/titlelogo.png' %}" alt="logo" id="luxalogo"> <span>Crave</span></h2>
+                </div>
+            </a>
+            
+            <div class="uni-context">
+                <div class="uni-context-label">Current Campus</div>
+                <div class="uni-context-name">
+                    {{ university.name|default:"Select Campus" }}
+                    <a href="{% url 'crave_entry' %}?change=true" style="color:var(--text-light);" title="Change University Profile"><i class="bi bi-toggles"></i></a>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-label">Services & Outlets</div>
+                
+                {% for outlet in university.university_outlet_set.all %}
+                    <a href="{% url 'outlet_terminal' outlet.id %}" class="nav-item {% if current_outlet == outlet %}active{% endif %}">
+                        <span class="material-symbols-outlined" style="margin-right: 10px; font-size: 20px;">
+                            {{ outlet.icon_url }}
+                        </span>
+                        {{ outlet.name }}
+                    </a>
+                    {% empty %}
+                    <div style="padding: 10px; font-size: 0.85rem; color: var(--text-light);">
+                        No outlets available yet.
+                    </div>
+                {% endfor %}
+            </nav>
+
+            <!-- 1. DESKTOP SUPPORT WIDGET -->
+            <div class="support-widget desktop-only">
+                <div class="support-icon">
+                    <i class="bi bi-headset"></i> <span>Support</span>
+                </div>
+                <div class="support-menu">
+                    <div class="sm-title">Need Help?</div>
+                    <a href="mailto:thebrandluxa@gmail.com" target="_blank"><i class="bi bi-envelope-fill" style="color: #ea4335;"></i> Email Us</a>
+                    <a href="https://wa.me/2348073704847" target="_blank"><i class="bi bi-whatsapp" style="color: #25d366;"></i> WhatsApp</a>
+                    <a href="https://instagram.com/thebrandluxa" target="_blank"><i class="bi bi-instagram" style="color: #e1306c;"></i> Instagram</a>
+                </div>
+            </div>
+
+            <div class="sidebar-footer mobile-only">
+                <!-- 2. MOBILE SUPPORT WIDGET -->
+                <div class="support-widget" style="width: 100%; margin-bottom: 15px; padding: 0;">
+                    <div class="support-icon" style="justify-content: center; background: #e8e1f3; color: var(--crave-primary);">
+                        <i class="bi bi-headset"></i> <span>Contact Support</span>
+                    </div>
+                    <div class="support-menu mobile-menu-override">
+                        <div class="sm-title">Need Help?</div>
+                        <a href="mailto:thebrandluxa@gmail.com" target="_blank"><i class="bi bi-envelope-fill" style="color: #ea4335;"></i> Email Us</a>
+                        <a href="https://wa.me/2340000000000" target="_blank"><i class="bi bi-whatsapp" style="color: #25d366;"></i> WhatsApp</a>
+                        <a href="https://instagram.com/thebrandluxa" target="_blank"><i class="bi bi-instagram" style="color: #e1306c;"></i> Instagram</a>
+                    </div>
+                </div>
+
+                <a href="{% host_url 'editprofile' host 'default' %}" class="user-profile" style="background: white; border: 1px solid var(--border-color); width: 100%; justify-content: center; margin-bottom: 10px;">
+                    <div class="user-avatar">
+                        {% if user.customer_profile.profile_picture %}
+                            <img src="{{ user.customer_profile.profile_picture.url }}" alt="Profile">
+                        {% else %}
+                            <i class="bi bi-person-fill"></i>
+                        {% endif %}
+                    </div>
+                    <div class="user-info" style="text-align: left;">
+                        <span class="user-name">{{ user.first_name }} {{ user.last_name }}</span>
+                        <span class="user-role">Customer</span>
+                    </div>
+                </a>
+                <a href="{% url 'crave_logout' %}" class="top-action-btn" style="background: #fef2f2; color: #ef4444; border: 1px solid #fecaca; width: 100%; border-radius: 30px; padding: 12px; display: flex; justify-content: center; align-items: center; gap: 8px;">
+                    <i class="bi bi-box-arrow-right"></i> <span style="color: #ef4444; bottom: 0;">Logout</span>
+                </a>
+            </div>
+        </aside>
+
+        <div class="crave-main-wrapper">
+            
+            <header class="crave-topbar">
+                <div class="topbar-left">
+                    <button class="mobile-menu-btn" id="mobileMenuBtn">
+                        <i class="bi bi-list"></i>
+                    </button>
+                    {% block navlinks %}
+                    <a href="{% host_url 'index' host 'default' %}">
+                        <i class="bi bi-arrow-left-circle-fill"></i> 
+                        <span class="desktop-text">Return to Main Store</span>
+                    </a>
+                    {% endblock %}
+                </div>
+
+                <div class="topbar-right">
+
+                    <a href="{% url 'profile_settings' university.id %}" class="top-action-btn" title="Profile Settings" style="margin-right: 10px; text-decoration: none;">
+                        <i class="bi bi-gear-fill"></i>
+                    </a>
+
+                    <div class="wallet-pill-wrapper">
+                        <div class="wallet-pill" title="Escrow Balance">
+                            <i class="bi bi-wallet2"></i>
+                            {% for wallet in user.wallets.all %}
+                                {% if wallet.wallet_type == "CUSTOMER" %}
+                                    ₦{{ wallet.available_balance|default:"0.00"|intcomma }}
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="wallet-dropdown">
+                            {% for wallet in user.wallets.all %}
+                                {% if wallet.wallet_type == 'CUSTOMER' %}
+                                    <div class="wp-section">
+                                        <div class="wp-label">
+                                            <span class="badge-type badge-customer">PERSONAL</span> CUSTOMER WALLET
+                                        </div>
+                                        
+                                        <div class="wp-balance-main">
+                                            ₦{{ wallet.available_balance|intcomma }}
+                                        </div>
+                                        
+                                        <div class="wp-balance-sub">
+                                            <span><i class="bi bi-lock-fill"></i> Locked: ₦{{ wallet.locked_escrow|intcomma }}</span>
+                                        </div>
+
+                                        <div class="wp-actions">
+                                            <a href="{% host_url 'wallet_dashboard' host 'default' %}" class="btn-wp">
+                                                Go to Wallet <i class="bi bi-arrow-right"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            {% empty %}
+                                <div class="wp-section" style="text-align:center; color:#8d6e63;">
+                                    <p>No wallet active.</p>
+                                    <a href="/escrow/dashboard/" class="btn-wp">Activate Wallet</a>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <a href="{% host_url 'editprofile' host 'default' %}" class="user-profile desktop-only">
+                        <div class="user-info" style="text-align: right;">
+                            <span class="user-name">{{ user.first_name }} {{ user.last_name }}</span>
+                            <span class="user-role">Customer</span>
+                        </div>
+                        <div class="user-avatar">
+                            {% if user.customer_profile.profile_picture %}
+                                <img src="{{ user.customer_profile.profile_picture.url }}" alt="Profile">
+                            {% else %}
+                                <i class="bi bi-person-fill"></i>
+                            {% endif %}
+                        </div>
+                    </a>
+
+                    <a href="{% url 'crave_logout' %}" class="top-action-btn desktop-only" title="Logout">
+                        <i class="bi bi-box-arrow-right"></i>
+                    </a>
+                </div>
+            </header>
+            {% block settings %}
+            {% if university.on_break %}
+                <!-- THE "ON BREAK" SNAZZY BANNER -->
+                <div class="crave-break-wrapper fade-in-up">
+                    <div class="crave-break-card">
+                        
+                        <!-- Decorative Background Elements -->
+                        <div class="break-decor shape-1"></div>
+                        <div class="break-decor shape-2"></div>
+
+                        <!-- Floating 3D-esque Icon -->
+                        <div class="break-icon-container">
+                            <div class="floating-icon">☕</div> <!-- You can swap this with , 🏖️, or 🛑 -->
+                        </div>
+
+                        <!-- Text Content -->
+                        <div class="break-content">
+                            <h2 class="break-title">Currently On Hold!</h2>
+                            <p class="break-text">
+                                <strong>{{ university.name }}</strong> deliveries are currently on a short break. 
+                                Our couriers are refueling and the Outlets are prepping for the next rush. 
+                                Hold tight—we'll be back to satisfy your cravings soon!
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                {% block content %}
+                {% endblock %}
+            {% endif %}
+            {% endblock %}
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuBtn = document.getElementById('mobileMenuBtn');
+            const sidebar = document.getElementById('craveSidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+
+            if (menuBtn && sidebar && overlay) {
+                menuBtn.addEventListener('click', () => {
+                    sidebar.classList.add('active');
+                    overlay.classList.add('active');
+                });
+
+                overlay.addEventListener('click', () => {
+                    sidebar.classList.remove('active');
+                    overlay.classList.remove('active');
+                });
+            }
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

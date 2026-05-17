@@ -1,0 +1,296 @@
+{% extends "MAIN/base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Eligibility Check{% endblock %}
+
+{% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+    .eligibility-wrapper {
+        background-color: #f8fafc;
+        min-height: calc(100vh - 80px);
+        padding: 40px 20px;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .order-card {
+        max-width: 900px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+        border: 1px solid #e2e8f0;
+    }
+
+    .card-header {
+        padding: 24px 32px;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: white;
+    }
+
+    .card-body {
+        padding: 32px;
+    }
+
+    /* Status Banners */
+    .status-banner {
+        padding: 20px;
+        border-radius: 12px;
+        margin-bottom: 30px;
+        display: flex;
+        gap: 15px;
+        align-items: flex-start;
+    }
+    
+    .status-success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
+    .status-error { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
+    .status-warning { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
+
+    .status-icon { font-size: 1.5rem; margin-top: 2px; }
+    .status-content h4 { margin: 0 0 5px 0; font-weight: 700; }
+    .status-content p { margin: 0; font-size: 0.95rem; opacity: 0.9; line-height: 1.5; }
+
+    /* Product Table */
+    .table-container {
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 30px;
+    }
+
+    .item-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.95rem;
+    }
+
+    .item-table th {
+        background: #f8fafc;
+        padding: 12px 20px;
+        text-align: left;
+        font-weight: 600;
+        color: #64748b;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .item-table td {
+        padding: 16px 20px;
+        border-bottom: 1px solid #f1f5f9;
+        color: #334155;
+        vertical-align: middle;
+    }
+
+    .item-table tr:last-child td { border-bottom: none; }
+
+    .product-info { display: flex; align-items: center; gap: 12px; }
+    .product-thumb { width: 40px; height: 40px; border-radius: 6px; background: #f1f5f9; object-fit: cover; }
+    .product-name { font-weight: 600; color: #0f172a; display: block; }
+    
+    .badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    .badge-std { background: #f1f5f9; color: #475569; }
+    .badge-same { background: #e0e7ff; color: #4338ca; }
+    .badge-fail { background: #fee2e2; color: #991b1b; }
+
+    /* Action Buttons */
+    .actions-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        padding-top: 20px;
+        border-top: 1px solid #f1f5f9;
+    }
+
+    .btn {
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border: none;
+        transition: all 0.2s;
+    }
+
+    .btn-primary { background: #000; color: white; }
+    .btn-primary:hover { background: #1f2937; transform: translateY(-1px); }
+
+    .btn-outline { background: white; border: 1px solid #cbd5e1; color: #475569; }
+    .btn-outline:hover { background: #f8fafc; border-color: #94a3b8; }
+
+    .btn-danger { background: #ef4444; color: white; }
+    .btn-danger:hover { background: #dc2626; }
+
+    /* Failed Item Highlight */
+    .row-failed { background-color: #fef2f2; }
+    .row-failed td { color: #991b1b; }
+
+    /* NEW: Alert Styles (Same as above for consistency) */
+    .alert-box {
+        padding: 15px;
+        border-radius: 12px;
+        margin-bottom: 25px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        font-weight: 500;
+    }
+    .alert-success { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+    .alert-error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+    .alert-info { background: #eff6ff; color: #1e40af; border: 1px solid #dbeafe; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="eligibility-wrapper">
+    <div class="order-card">
+        
+        <div class="card-header">
+            <div>
+                <h2 style="margin: 0; font-size: 1.5rem; color: #111;">Eligibility Check</h2>
+                <span style="color: #64748b; font-size: 0.9rem;">Order #{{ draft.id|stringformat:".8s" }}</span>
+            </div>
+            <a href="{% url 'order_dispatch_prompt' draft.id %}" style="color: #64748b; text-decoration: none; font-weight: 600; font-size: 0.9rem;">
+                &larr; Back to Dispatch Options
+            </a>
+        </div>
+
+        <div class="card-body">
+
+            {% if messages %}
+                {% for message in messages %}
+                    {% if 'onboarding_popup' not in message.tags %}
+                    <div class="alert-box alert-{{ message.tags|default:'info' }}">
+                        <i class="fas fa-info-circle"></i>
+                        {{ message }}
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+            
+            {% if engine_status == 'approved' or engine_status == 'eligible' %}
+                <div class="status-banner status-success">
+                    <i class="fas fa-check-circle status-icon"></i>
+                    <div class="status-content">
+                        <h4>Eligibility Passed!</h4>
+                        <p>All items in this order qualify for {{ draft.get_delivery_type_display }}. You are ready to proceed to payment.</p>
+                    </div>
+                </div>
+
+            {% elif engine_status == 'density_limit_exceeded' %}
+                <div class="status-banner status-warning">
+                    <i class="fas fa-map-marker-alt status-icon"></i>
+                    <div class="status-content">
+                        <h4>Too Many Stops ({{ location_count }}/10)</h4>
+                        <p>Same-Day delivery is limited to 10 unique pickup locations to ensure speed. Please remove items or switch to Standard Delivery.</p>
+                    </div>
+                </div>
+
+            {% else %}
+                <div class="status-banner status-error">
+                    <i class="fas fa-exclamation-triangle status-icon"></i>
+                    <div class="status-content">
+                        <h4>Eligibility Failed</h4>
+                        <p>{{ engine_message|linebreaksbr }}</p>
+                    </div>
+                </div>
+            {% endif %}
+
+
+            <h4 style="margin-bottom: 15px; font-size: 1rem; color: #475569;">Order Manifest</h4>
+            <div class="table-container">
+                <table class="item-table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Vendor & Location</th>
+                            <th>Qty</th>
+                            <th style="text-align: right;">Price</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in display_items %}
+                            {% with str_id=item.product_id|stringformat:"s" %}
+                            <tr class="{% if str_id in bad_product_ids %}row-failed{% endif %}">
+                                <td>
+                                    <div class="product-info">
+                                        {% if item.image_url %}
+                                            <img src="{{ item.image_url }}" class="product-thumb">
+                                        {% endif %}
+                                        <div>
+                                            <span class="product-name">{{ item.name }}</span>
+                                            {% if str_id in bad_product_ids %}
+                                                <span class="badge badge-fail">Ineligible</span>
+                                            {% else %}
+                                                <span class="badge badge-same">{{ item.delivery_display }}</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div style="font-weight: 500;">{{ item.vendor }}</div>
+                                    <div style="font-size: 0.8rem; color: #94a3b8;">
+                                        <i class="fas fa-map-pin" style="margin-right: 4px;"></i> {{ item.location|truncatechars:25 }}
+                                    </div>
+                                </td>
+                                <td>x{{ item.qty }}</td>
+                                <td style="text-align: right;">₦{{ item.price|intcomma }}</td>
+                            </tr>
+                            {% endwith %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+
+            <div class="actions-footer">
+                
+                {% if engine_status == 'approved' or engine_status == 'eligible' %}
+                    <form method="POST" action="{% url 'proceed_to_checkout' order_id %}"> 
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary">
+                            Proceed to Payment <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </form>
+
+                {% else %}
+                    <form method="POST" action="{% url 'handle_eligibility_failure' order_id %}">
+                        {% csrf_token %}
+                        
+                        <button type="submit" name="action" value="proceed_standard_current" class="btn btn-outline">
+                            Switch to Standard Delivery
+                        </button>
+
+                        {% if bad_product_ids %}
+                        <button type="submit" name="action" value="proceed_eligible" class="btn btn-outline">
+                            Remove Ineligible Items
+                        </button>
+                        {% endif %}
+                        
+                        <button type="submit" name="action" value="cancel" class="btn btn-primary">
+                            Fix in Editor
+                        </button>
+                    </form>
+                {% endif %}
+
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

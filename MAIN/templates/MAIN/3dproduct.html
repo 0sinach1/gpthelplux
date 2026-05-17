@@ -1,0 +1,498 @@
+{% extends 'base.html' %} {% load static %} {% block title %}{{ product.name }}
+— Interactive 3D{% endblock %} {% block extra_css %}
+<link rel="stylesheet" href="{% static 'MAIN/css/products.css' %}" />
+{% endblock %} {% block content %}
+<div class="container page-wrapper">
+  {# Back link #}
+  <a
+    href="/category/{{ product.category.slug }}/"
+    class="breadcrumb"
+    style="margin-bottom: var(--sp-5)"
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="14"
+      height="14"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke-width="2.5"
+      stroke="currentColor"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"
+      />
+    </svg>
+    Back to {{ product.category.name }}
+  </a>
+
+  {# Product name + interactive badge #}
+  <div class="flex items-center gap-3 mb-6" style="flex-wrap: wrap">
+    <h1 style="font-size: clamp(18px, 2.5vw, 26px); font-weight: 700">
+      {{ product.name }}
+    </h1>
+    <span
+      style="
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 12px;
+        background: var(--clr-accent-bg);
+        border: 1px solid rgba(124, 92, 191, 0.3);
+        border-radius: var(--r-pill);
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--clr-accent-2);
+        letter-spacing: 0.05em;
+      "
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="12"
+        height="12"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke-width="1.8"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9"
+        />
+      </svg>
+      INTERACTIVE 3D
+    </span>
+  </div>
+
+  <div class="view3d-layout">
+    {# ── Left: 3D viewer ── #}
+    <div>
+      <div class="view3d-canvas-wrap" id="viewer3d">
+        {# Expand button #}
+        <button
+          class="view3d-expand-btn"
+          id="expandBtn"
+          aria-label="Expand viewer"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="2"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15"
+            />
+          </svg>
+        </button>
+
+        {# 3D interactive badge top-right #}
+        <span class="view3d-badge view3d-badge--interactive"
+          >INTERACTIVE 3D</span
+        >
+
+        {# The active 3D view image #}
+        <img
+          src="{{ model_views.front.url|default:product.cover_image.url }}"
+          alt="{{ product.name }} 3D view"
+          id="active3DImage"
+          style="transition: opacity 0.2s ease"
+        />
+
+        {# Drag hint #}
+        <div class="view3d-drag-hint">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.8"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M15.042 21.672L13.684 16.6m0 0l-2.51 2.225.569-9.47 5.227 7.917-3.286-.672zm-7.518-.267A8.25 8.25 0 1120.25 10.5M8.288 14.212A5.25 5.25 0 1117.25 10.5"
+            />
+          </svg>
+          Drag to rotate
+        </div>
+      </div>
+
+      {# Zoom + rotate controls #}
+      <div class="view3d-zoom-row mt-2">
+        <button class="view3d-zoom-btn" title="Zoom in" onclick="zoom3D(1.1)">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="2.5"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607zM10.5 7.5v6m3-3h-6"
+            />
+          </svg>
+        </button>
+        <button class="view3d-zoom-btn" title="Zoom out" onclick="zoom3D(0.9)">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="2.5"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607zM13.5 10.5h-6"
+            />
+          </svg>
+        </button>
+        <button
+          class="view3d-zoom-btn"
+          title="Rotate left"
+          onclick="rotateView('left')"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="2"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"
+            />
+          </svg>
+        </button>
+        <button
+          class="view3d-zoom-btn"
+          title="Rotate right"
+          onclick="rotateView('right')"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="2"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 00-3.7-3.7 48.678 48.678 0 00-7.324 0 4.006 4.006 0 00-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3l-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 003.7 3.7 48.657 48.657 0 007.324 0 4.006 4.006 0 003.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3l-3 3"
+            />
+          </svg>
+        </button>
+        <button
+          class="view3d-zoom-btn"
+          title="Reset view"
+          onclick="resetView()"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="2"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5l5.25 5.25"
+            />
+          </svg>
+        </button>
+      </div>
+
+      {# View angle buttons #}
+      <div class="view3d-controls mt-3">
+        {% with views="Front,Slide,Back,Top,Bottom" %} {% for view_name in
+        views|split:"," %}
+        <button
+          class="view3d-ctrl-btn {% if view_name == 'Front' %}active{% endif %}"
+          onclick="switchAngle(this, '{{ view_name|lower }}')"
+          data-view="{{ view_name|lower }}"
+        >
+          {{ view_name }}
+        </button>
+        {% endfor %} {% endwith %}
+        <button
+          class="view3d-ctrl-btn"
+          style="
+            background: var(--clr-accent);
+            border-color: var(--clr-accent);
+            color: #fff;
+          "
+          disabled
+        >
+          Isometric
+        </button>
+      </div>
+    </div>
+    {# /3D viewer column #} {# ── Right: product info ── #}
+    <div class="view3d-info">
+      <p class="view3d-info__category">{{ product.category.name }}</p>
+      <h2 class="view3d-info__title">{{ product.name }}</h2>
+      <p class="view3d-info__price">₦{{ product.price|floatformat:2 }}</p>
+      <p class="view3d-info__desc">
+        {{ product.description|truncatewords:40 }} {% if
+        product.description|wordcount > 40 %}
+        <a href="#" class="view3d-info__readmore">(Read More)</a>
+        {% endif %}
+      </p>
+
+      {# Textures #} {% if textures %}
+      <div class="view3d-textures">
+        <p class="view3d-textures__label">Textures</p>
+        <div class="texture-pills">
+          {% for texture in textures %}
+          <button
+            class="texture-pill {% if forloop.first %}active{% endif %}"
+            onclick="selectTexture(this, '{{ texture.name }}')"
+          >
+            {{ texture.name }}
+          </button>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %} {# Colour variants #}
+      <div class="view3d-variants">
+        <p class="view3d-variants__label">Colour Variants</p>
+        {% if colour_variants %}
+        <div class="colour-swatches">
+          {% for colour in colour_variants %}
+          <button
+            class="colour-swatch {% if forloop.first %}active{% endif %}"
+            style="background:{{ colour.hex }};"
+            title="{{ colour.name }}"
+            onclick="selectColour(this)"
+          ></button>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p class="variants-none">No colour variants for this product.</p>
+        {% endif %}
+      </div>
+
+      {# Product details #}
+      <div class="view3d-details">
+        <p class="view3d-details__label">Product Details</p>
+        <div class="product-details-list">
+          <div class="product-detail-row">
+            <span class="product-detail-row__key">SKU</span>
+            <span class="product-detail-row__value"
+              >{{ product.sku|default:"—" }}</span
+            >
+          </div>
+          <div class="product-detail-row">
+            <span class="product-detail-row__key">Stock</span>
+            <span class="product-detail-row__value"
+              >{{ product.stock }} unit{{ product.stock|pluralize }}</span
+            >
+          </div>
+          <div class="product-detail-row">
+            <span class="product-detail-row__key">Vendor</span>
+            <span class="product-detail-row__value">
+              <a href="{% url 'vendor_detail' vendor.id %}"
+                >{{ vendor.business_name }}</a
+              >
+            </span>
+          </div>
+          <div class="product-detail-row">
+            <span class="product-detail-row__key">Category</span>
+            <span class="product-detail-row__value"
+              >{{ product.category.name }}</span
+            >
+          </div>
+        </div>
+      </div>
+
+      <a
+        href="{% url 'product_detail' product.slug %}"
+        style="
+          font-size: 13px;
+          color: var(--clr-accent-2);
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          margin-bottom: var(--sp-5);
+        "
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="14"
+          height="14"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="1.8"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"
+          />
+        </svg>
+        View full product page
+      </a>
+
+      <a
+        href="{% url 'product_detail' product.slug %}"
+        class="btn btn--primary btn--lg w-full"
+        style="justify-content: center"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="1.8"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"
+          />
+        </svg>
+        View Full Details
+      </a>
+    </div>
+  </div>
+  {# /view3d-layout #} {# ── Related products ── #} {% if related_products %}
+  <div class="related-products">
+    <p class="related-products__title">The Perfect Partner</p>
+    <div class="related-grid">
+      {% for rp in related_products %}
+      <a href="{% url 'product3d' rp.slug %}" class="related-card">
+        <div class="related-card__img">
+          {% if rp.cover_image %}
+          <img
+            src="{{ rp.cover_image.url }}"
+            alt="{{ rp.name }}"
+            loading="lazy"
+          />
+          {% endif %}
+        </div>
+        <div class="related-card__body">
+          <p class="related-card__name">{{ rp.name }}</p>
+          <p class="related-card__price">₦{{ rp.price|floatformat:0 }}</p>
+          {% if rp.has_3d_model %}
+          <p class="related-card__3d">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.8"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9"
+              />
+            </svg>
+            View in 3D →
+          </p>
+          {% endif %}
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %} {% block extra_js %}
+<script>
+  // ── View model images (keyed by angle) ──
+  const modelViews = {
+    {% for angle, view in model_views.items %}
+      '{{ angle }}': '{{ view.url }}',
+    {% endfor %}
+  };
+
+  function switchAngle(btn, angle) {
+    document.querySelectorAll('.view3d-ctrl-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const img = document.getElementById('active3DImage');
+    if (modelViews[angle]) {
+      img.style.opacity = '0';
+      setTimeout(() => { img.src = modelViews[angle]; img.style.opacity = '1'; }, 150);
+    }
+  }
+
+  function selectTexture(btn, name) {
+    document.querySelectorAll('.texture-pill').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  function selectColour(btn) {
+    document.querySelectorAll('.colour-swatch').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  let zoomLevel = 1;
+  function zoom3D(factor) {
+    zoomLevel = Math.max(0.5, Math.min(3, zoomLevel * factor));
+    document.getElementById('active3DImage').style.transform = `scale(${zoomLevel})`;
+  }
+
+  function rotateView(dir) {
+    const img = document.getElementById('active3DImage');
+    const angles = Object.keys(modelViews);
+    const currentSrc = img.src;
+    const currentAngle = angles.find(a => modelViews[a] && currentSrc.includes(modelViews[a].split('/').pop())) || angles[0];
+    let idx = angles.indexOf(currentAngle);
+    idx = dir === 'right' ? (idx + 1) % angles.length : (idx - 1 + angles.length) % angles.length;
+    if (modelViews[angles[idx]]) {
+      img.style.opacity = '0';
+      setTimeout(() => { img.src = modelViews[angles[idx]]; img.style.opacity = '1'; }, 150);
+    }
+  }
+
+  function resetView() {
+    zoomLevel = 1;
+    const img = document.getElementById('active3DImage');
+    img.style.transform = 'scale(1)';
+  }
+
+  // ── Drag to rotate ──
+  (function() {
+    const viewer = document.getElementById('viewer3d');
+    let isDragging = false, startX = 0;
+    const angles = Object.keys(modelViews);
+    let currentIdx = 0;
+
+    viewer.addEventListener('mousedown', e => { isDragging = true; startX = e.clientX; });
+    viewer.addEventListener('touchstart', e => { isDragging = true; startX = e.touches[0].clientX; });
+
+    document.addEventListener('mousemove', e => {
+      if (!isDragging || angles.length < 2) return;
+      const diff = e.clientX - startX;
+      if (Math.abs(diff) > 40) {
+        currentIdx = diff > 0
+          ? (currentIdx - 1 + angles.length) % angles.length
+          : (currentIdx + 1) % angles.length;
+        if (modelViews[angles[currentIdx]]) {
+          document.getElementById('active3DImage').src = modelViews[angles[currentIdx]];
+        }
+        startX = e.clientX;
+      }
+    });
+
+    document.addEventListener('mouseup', () => { isDragging = false; });
+    document.addEventListener('touchend', () => { isDragging = false; });
+  })();
+</script>
+{% endblock %}

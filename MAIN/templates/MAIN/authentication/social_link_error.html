@@ -1,0 +1,30 @@
+{% extends "MAIN/base.html" %}
+{% block title %}Account Exists | Luxa Crave{% endblock %}
+
+{% block content %}
+<div style="min-height: 80vh; display: flex; align-items: center; justify-content: center; padding: 20px;">
+    <div style="background: white; max-width: 450px; width: 100%; border-radius: 20px; padding: 40px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">
+        
+        <div style="width: 70px; height: 70px; background: #fffbeb; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; color: #f59e0b; font-size: 2rem;">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+        </div>
+
+        <h2 style="font-weight: 800; color: #1e293b; margin-bottom: 10px;">Account Already Exists</h2>
+        
+        <p style="color: #64748b; font-size: 0.95rem; line-height: 1.5; margin-bottom: 25px;">
+            An account using the email <strong style="color: #1e293b;">{{ email }}</strong> is already registered on LUXA with a standard password.
+        </p>
+
+        <div style="background: #f8fafc; padding: 15px; border-radius: 12px; border-left: 4px solid #960ffa; margin-bottom: 25px; text-align: left;">
+            <p style="margin: 0; font-size: 0.85rem; color: #475569;">
+                <strong>How to fix this:</strong><br>
+                Please log in using your standard username and password. Once logged in, you can link your Google account in your profile settings.
+            </p>
+        </div>
+
+        <a href="{% url 'login' %}" style="display: block; width: 100%; background: #2D1B69; color: white; padding: 15px; border-radius: 12px; text-decoration: none; font-weight: 700; transition: 0.2s;">
+            Return to Login
+        </a>
+    </div>
+</div>
+{% endblock %}

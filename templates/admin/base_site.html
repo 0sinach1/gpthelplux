@@ -1,0 +1,33 @@
+{% extends "admin/base.html" %}
+{% load static %}
+{% load i18n static %}
+
+{# 1. RESTORE THE TITLE logic so it doesn't show the URL #}
+{% block title %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{# 2. RESTORE THE BRANDING logic so it shows 'Django Administration' #}
+{% block branding %}
+<h1 id="site-name"><a href="{% url 'admin:index' %}">{{ site_header|default:_('Django administration') }}</a></h1>
+{% endblock %}
+
+{% block content %}
+    {# Your Notification Logic #}
+    {% if notifications %}
+        <div class="notification-bar" style="background: #79aec8; color: white; padding: 10px; margin-bottom: 20px;">
+            {% for note in notifications %}
+                <p style="margin: 0;">{{ note.message }}</p>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    {{ block.super }} 
+{% endblock %}
+
+{% block footer %}
+    {{ block.super }}
+    <script src="{% static 'js/admin_notifications.js' %}"></script>
+    <script>
+        // Temporary Debugging Helper
+        console.log("🔔 Notification Script Loaded!");
+    </script>
+{% endblock %}

@@ -1,0 +1,195 @@
+<style>
+    .matrix-map-container {
+        background: #1e293b; /* Dark slate background matching your image */
+        border-radius: 16px;
+        padding: 25px 20px;
+        font-family: 'Inter', system-ui, sans-serif;
+        color: white;
+    }
+
+    .matrix-global-eta {
+        text-align: center;
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 1px dashed #334155;
+    }
+
+    .matrix-global-eta h4 {
+        margin: 0;
+        font-size: 0.75rem;
+        color: #94a3b8;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .matrix-global-eta .eta-time {
+        font-size: 2.5rem;
+        font-weight: 900;
+        color: #10b981; /* Bright green */
+        margin: 5px 0 0 0;
+    }
+
+    /* THE NODE SYSTEM */
+    .route-node {
+        display: flex;
+        position: relative;
+        margin-bottom: 25px;
+    }
+    
+    .route-node:last-child {
+        margin-bottom: 0;
+    }
+
+    /* The Vertical Line */
+    .route-node::before {
+        content: '';
+        position: absolute;
+        left: 9px; /* Centers under the 20px dot */
+        top: 25px;
+        bottom: -30px; /* Extends to next node */
+        width: 2px;
+    }
+    .route-node:last-child::before {
+        display: none; /* No line after the last node */
+    }
+
+    .node-dot {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        z-index: 2;
+        margin-right: 15px;
+        margin-top: 2px;
+    }
+
+    .node-info h5 {
+        margin: 0 0 4px 0;
+        font-size: 1rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .node-meta {
+        font-size: 0.8rem;
+        font-weight: 600;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+    }
+
+    /* --- SPECIFIC NODE STATES --- */
+
+    /* 1. Burned / Past Nodes */
+    .node-burned::before { background: #475569; } /* Solid grey line */
+    .node-burned .node-dot { background: #64748b; }
+    .node-burned .node-info h5 { color: #94a3b8; text-decoration: line-through; }
+    .node-burned .node-meta { display: none; } /* Hide ETAs for past nodes */
+
+    /* 2. Genesis Node (Special start color) */
+    .node-genesis::before { background: #475569; }
+    .node-genesis .node-dot { background: #8b5cf6; } /* Purple */
+    .node-genesis .node-info h5 { color: #c4b5fd; }
+    .node-genesis .node-meta { display: none; }
+
+    /* 3. Current Anchor */
+    .node-current::before { background: repeating-linear-gradient(to bottom, #3b82f6 0, #3b82f6 5px, transparent 5px, transparent 10px); } /* Dashed blue line to future */
+    .node-current .node-dot { 
+        background: #3b82f6; 
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+        animation: mapPulse 1.5s infinite;
+    }
+    .node-current .node-info h5 { color: #60a5fa; }
+    .node-current .node-meta { color: #94a3b8; }
+
+    /* 4. Future Nodes */
+    .node-future::before { background: repeating-linear-gradient(to bottom, #334155 0, #334155 5px, transparent 5px, transparent 10px); }
+    .node-future .node-dot { background: #0ea5e9; } /* Light Blue */
+    .node-future .node-info h5 { color: #f8fafc; }
+    .node-future .node-meta .walk { color: #94a3b8; }
+    .node-future .node-meta .wait { color: #f59e0b; } /* Amber */
+
+    /* Final Destination (Green) */
+    .node-future:last-child .node-dot { background: #10b981; }
+
+    @keyframes mapPulse {
+        0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
+        70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+    }
+</style>
+
+<div class="matrix-map-container">
+    
+    <div class="matrix-global-eta">
+        <h4><i class="bi bi-broadcast" style="color: #3b82f6;"></i> LIVE ROUTE ETA</h4>
+        <h2 class="eta-time live-countdown-timer" data-start="{{ active_batch.started_at|date:'c' }}" data-eta="{{ active_batch.total_eta_minutes }}">
+            {{ active_batch.total_eta_minutes|floatformat:0 }}m 00s
+        </h2>
+    </div>
+
+    <div class="matrix-node-list">
+        
+        {% with matrix=active_batch.matrix_manifest %}
+        {% if matrix and matrix.status == "recalculated" %}
+
+            {% if matrix.genesis != matrix.new_anchor and matrix.genesis not in matrix.burned_nodes %}
+            <div class="route-node node-genesis">
+                <div class="node-dot"></div>
+                <div class="node-info">
+                    <h5>START: {{ matrix.genesis|cut:"male_"|cut:"fem_"|cut:"acad_"|cut:"senate_"|cut:"hub_"|cut:"_" }}</h5>
+                </div>
+            </div>
+            {% endif %}
+
+            {% for burned in matrix.burned_nodes %}
+            <div class="route-node node-burned">
+                <div class="node-dot"></div>
+                <div class="node-info">
+                    <h5>{{ burned|cut:"male_"|cut:"fem_"|cut:"acad_"|cut:"senate_"|cut:"hub_"|cut:"_" }}</h5>
+                </div>
+            </div>
+            {% endfor %}
+
+            <div class="route-node node-current">
+                <div class="node-dot"></div>
+                <div class="node-info">
+                    <h5>📍 CURRENT: {{ matrix.new_anchor|cut:"male_"|cut:"fem_"|cut:"acad_"|cut:"senate_"|cut:"hub_"|cut:"_" }}</h5>
+                    <div class="node-meta">
+                        <span>Physical Location</span>
+                    </div>
+                </div>
+            </div>
+
+            {% for leg in matrix.manifest %}
+            <div class="route-node node-future">
+                <div class="node-dot"></div>
+                <div class="node-info">
+                    <h5>{{ leg.end_node|cut:"male_"|cut:"fem_"|cut:"acad_"|cut:"senate_"|cut:"hub_"|cut:"_" }}</h5>
+                    <div class="node-meta">
+                        <span class="walk"><i class="bi bi-person-walking"></i> {{ leg.leg_walk_time|floatformat:0 }}m walk</span>
+                        
+                        {% if leg.leg_wait_time > 0 %}
+                        <span class="wait"><i class="bi bi-egg-fried"></i> {{ leg.leg_wait_time|floatformat:0 }}m wait</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+
+        {% else %}
+            <div style="text-align: center; color: #64748b; padding: 20px;">
+                <i class="bi bi-check-circle-fill" style="font-size: 2.5rem; color: #10b981; margin-bottom: 10px; display: block;"></i>
+                <h3 style="color: #f8fafc; margin: 0 0 5px 0;">Route Cleared</h3>
+                <p style="font-size: 0.85rem; margin: 0;">You have arrived at your final destination.</p>
+            </div>
+        {% endif %}
+        {% endwith %}
+
+    </div>
+</div>

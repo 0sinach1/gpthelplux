@@ -1,0 +1,337 @@
+{% extends "MAIN/base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Cart{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static '/css/cart.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div id="heading" style="text-align: center; padding: 20px;">
+    <h1>Your Cart</h1>
+    <p>Review your selections before checkout.</p>
+</div>
+
+<div id="container">
+    <div class="category">    
+        <div class="checkout-container">
+            {% if cart_items %}
+                {% for item in cart_items %}
+                <div class="product-item" 
+                     data-item-id="{{ item.id }}" 
+                     data-stock="{{ item.product.stock_quantity }}"
+                     data-price="{{ item.product.price }}"> 
+                     
+                    <div class="product-details">
+                        {% if item.product.main_image %}
+                            <img src="{{ item.product.main_image.url }}" alt="{{ item.product.name }}" class="product-img">
+                        {% else %}
+                            <img src="{% static '/images/icons/cart.png' %}" alt="{{ item.product.name }}" class="product-img">
+                        {% endif %}
+                        
+                        <div class="productd">
+                            <h3><a href="{% url 'product_detail' item.product.slug %}" class="black_a">{{ item.product.name }}</a></h3>
+                            <p class="desc">{{ item.product.category.name|default:"General" }}</p>
+                            
+                            {% if item.variants.exists %}
+                            <p class="desc" style="font-size: 0.9em; color: #666; margin-top: 5px;">
+                                {% for v in item.variants.all %}
+                                    <span style="display:inline-block; margin-right: 8px; background: #f5f5f5; padding: 2px 6px; border-radius: 4px;">
+                                        <strong>{{ v.variant_type }}:</strong> {{ v.variant_value }}
+                                    </span>
+                                {% endfor %}
+                            </p>
+                            {% endif %}
+                            
+                            <div class="actions">
+                                <div class="quantity">
+                                    <button class="quantity-minus" type="button" data-item-id="{{ item.id }}">-</button>
+                                    <span class="quantity-amt" data-item-id="{{ item.id }}">{{ item.quantity }}</span>
+                                    <button class="quantity-plus" type="button" data-item-id="{{ item.id }}">+</button>
+                                </div>
+
+                                {% if item.product.has_variants %}
+                                <div class="edit-details">
+                                    <button type="button" class="edit-details-btn" 
+                                            data-item-id="{{ item.id }}" 
+                                            data-product-id="{{ item.product.id }}" 
+                                            data-current-variants="[{% for v in item.variants.all %}{{ v.id }}{% if not forloop.last %}, {% endif %}{% endfor %}]"
+                                            style="background: none; border: 1px solid #ddd; padding: 5px 10px; cursor: pointer; border-radius: 4px; font-size: 0.9em;">
+                                        ✏️ Edit 
+                                    </button>
+                                </div>
+                                {% endif %}
+                                
+                                <div class="save">
+                                    <button type="button" class="save-for-later-btn" data-product-id="{{ item.product.id }}" style="background: none; border: none; cursor: pointer; color: inherit;">
+                                        <span>♡</span> Save
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="rightpro">
+                        <button class="delete-btn" type="button" data-item-id="{{ item.id }}">✕</button>
+                        <div class="price">
+                            {{ currency_symbol }}<span class="item-subtotal" data-item-id="{{ item.id }}">{{ item.subtotal|floatformat:2|intcomma }}</span>
+                        </div>
+                    </div> 
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-cart">
+                    <p>Your cart is empty. <a href="{% url 'index' %}">Start shopping</a></p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if cart_items %}
+    <div id="checkoutcont">
+        <h4>Order Summary</h4>
+        <div class="pricesum">
+            <div class="subtot flex" style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                <p class="bold">Subtotal</p>
+                <p>{{ currency_symbol }}<span id="cart-subtotal">{{ subtotal|floatformat:2|intcomma }}</span></p>
+            </div>
+            <div class="shipes flex" style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                <p class="bold">VAT and Charges</p>
+                <p>{{ currency_symbol }}<span id="shipping-estimate">{{ shipping_estimate|floatformat:2|intcomma }}</span></p>
+            </div>
+        </div>
+        <hr style="margin: 15px 0;">
+        
+        <div id="total" class="flex bold" style="display:flex; justify-content:space-between; font-weight:bold; font-size:1.1em;">
+            <p>Total</p>
+            <p id="totnum">{{ currency_symbol }}<span id="cart-total">{{ total|floatformat:2|intcomma }}</span></p>
+        </div>
+        
+        <a href="{% url 'order_create_form' %}?delivery_type=standard_delivery" class="btn" id="standard-delivery-btn">
+            🚀 Standard Delivery
+            <span style="display:block; font-size:0.8em; font-weight:normal; opacity:0.9;">Check eligibility & assign courier</span>
+        </a>
+        <div href="" class="btn" id="same-day-delivery-btn" disabled> <!-- <{% url 'order_create_form' %}?delivery_type=same_day_delivery> link and channge <div> to <a> -->
+            Same-Day Delivery
+            <span style="display:block; font-size:0.8em; font-weight:normal; opacity:0.9;">Check eligibility & assign courier</span>
+            <div class="hover-banner1">
+                <p>Same day delivery is not yet available!</p>
+            </div>
+        </div>
+        
+    </div>
+    {% endif %}
+</div>
+
+<div id="editDetailsModal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+    <div class="modal-content" style="background: white; padding: 30px; border-radius: 8px; max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto;">
+        <h2 style="margin-top: 0;">Edit Options</h2>
+        <form id="editDetailsForm">
+            <input type="hidden" id="edit-item-id" name="item_id">
+            
+            <div id="dynamic-variants-container"></div>
+            
+            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 30px;">
+                <button type="button" id="cancel-edit-btn" style="padding: 10px 20px; background: #f0f0f0; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;">Cancel</button>
+                <button type="submit" style="padding: 10px 20px; background: #000; color: white; border: none; border-radius: 4px; cursor: pointer;">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div> 
+
+{% endblock %}
+
+{% block luxaslide %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // --- 1. SINGLE EVENT LISTENER ---
+    const container = document.getElementById('container');
+    
+    if (container && !container.getAttribute('data-listener-attached')) {
+        container.setAttribute('data-listener-attached', 'true');
+
+        container.addEventListener('click', function(e) {
+            
+            // A. Handle Plus/Minus/Delete (Keep existing logic)
+            if (e.target.matches('.quantity-plus')) { e.preventDefault(); updateQuantity(e.target, 1); }
+            if (e.target.matches('.quantity-minus')) { e.preventDefault(); updateQuantity(e.target, -1); }
+            if (e.target.matches('.delete-btn')) { 
+                e.preventDefault(); 
+                if (confirm('Remove item?')) removeFromCart(e.target.getAttribute('data-item-id')); 
+            }
+
+            // B. Handle "Edit Details" (Dynamic Modal)
+            const editBtn = e.target.closest('.edit-details-btn');
+            if (editBtn) {
+                e.preventDefault();
+                const itemId = editBtn.getAttribute('data-item-id');
+                const productId = editBtn.getAttribute('data-product-id');
+                // Parse the list of IDs: [1, 2, 3]
+                const currentVariants = JSON.parse(editBtn.getAttribute('data-current-variants') || "[]");
+                
+                openEditModal(itemId, productId, currentVariants);
+            }
+        });
+    }
+
+    // --- 2. DYNAMIC MODAL GENERATOR ---
+    function openEditModal(itemId, productId, currentVariants) {
+        document.getElementById('edit-item-id').value = itemId;
+        const container = document.getElementById('dynamic-variants-container');
+        container.innerHTML = '<p>Loading options...</p>';
+        document.getElementById('editDetailsModal').style.display = 'flex';
+
+        fetch(`/cart/get-variants/${productId}/`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    container.innerHTML = '';
+                    
+                    // Loop through groups (Handle, Body, Size, etc.)
+                    // data.groups = { 'Handle': [{id:1, value:'Red'}], 'Body': ... }
+                    for (const [groupName, options] of Object.entries(data.groups)) {
+                        
+                        const wrapper = document.createElement('div');
+                        wrapper.style.marginBottom = '20px';
+                        
+                        const label = document.createElement('label');
+                        label.textContent = groupName + ':';
+                        label.style.display = 'block';
+                        label.style.fontWeight = 'bold';
+                        label.style.marginBottom = '8px';
+                        
+                        const select = document.createElement('select');
+                        select.name = 'variants'; // Important: All selects have same name for getlist()
+                        select.style.width = '100%';
+                        select.style.padding = '8px';
+                        select.style.border = '1px solid #ddd';
+                        select.style.borderRadius = '4px';
+                        
+                        // Default option
+                        const defaultOpt = document.createElement('option');
+                        defaultOpt.value = '';
+                        defaultOpt.textContent = `Select ${groupName}`;
+                        select.appendChild(defaultOpt);
+                        
+                        // Populate options
+                        options.forEach(opt => {
+                            const optionEl = document.createElement('option');
+                            optionEl.value = opt.id;
+                            optionEl.textContent = opt.value;
+                            
+                            // Check if this ID is in the user's current selection
+                            if (currentVariants.includes(opt.id)) {
+                                optionEl.selected = true;
+                            }
+                            select.appendChild(optionEl);
+                        });
+                        
+                        wrapper.appendChild(label);
+                        wrapper.appendChild(select);
+                        container.appendChild(wrapper);
+                    }
+                    
+                } else {
+                    container.innerHTML = '<p style="color:red">Failed to load options.</p>';
+                }
+            })
+            .catch(err => console.error(err));
+    }
+
+    // --- 3. SUBMIT EDIT FORM ---
+    const editDetailsForm = document.getElementById('editDetailsForm');
+    if (editDetailsForm) {
+        editDetailsForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const itemId = document.getElementById('edit-item-id').value;
+            const formData = new FormData(editDetailsForm); // Automatically grabs all 'variants' selects
+            
+            fetch(`/cart/update-variants/${itemId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                },
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('editDetailsModal').style.display = 'none';
+                    location.reload(); 
+                } else {
+                    alert(data.error || 'Update failed');
+                }
+            });
+        });
+        editDetailsForm.querySelector('#cancel-edit-btn').addEventListener('click', function() {
+            document.getElementById('editDetailsModal').style.display = 'none';
+        });
+    }
+
+    // ... (Keep existing updateQuantity, removeFromCart, addToWishlist, getCookie functions) ...
+    // Note: Ensure updateQuantity uses the same logic as before.
+    
+    function updateQuantity(btn, change) {
+        // ... (Paste your existing updateQuantity logic here, ensure it handles comma removal correctly) ...
+        const itemId = btn.getAttribute('data-item-id');
+        const row = document.querySelector(`.product-item[data-item-id="${itemId}"]`);
+        const qtySpan = row.querySelector('.quantity-amt');
+        const priceSpan = row.querySelector('.item-subtotal');
+        const currentQty = parseInt(qtySpan.textContent);
+        const maxStock = parseInt(row.getAttribute('data-stock'));
+        const rawPrice = row.getAttribute('data-price'); 
+        const unitPrice = parseFloat(rawPrice.replace(/,/g, '')); 
+        let newQty = currentQty + change;
+        if (newQty < 1) return;
+        if (newQty > maxStock) { alert(`Only ${maxStock} available.`); return; }
+        
+        qtySpan.textContent = newQty;
+        const newSubtotal = (unitPrice * newQty).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        if(priceSpan) priceSpan.textContent = newSubtotal;
+
+        fetch(`/cart/update/${itemId}/`, {
+            method: 'POST',
+            headers: {'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/x-www-form-urlencoded'},
+            body: `quantity=${newQty}`
+        }).then(res => res.json()).then(data => {
+            if (data.success) {
+                document.getElementById('cart-subtotal').textContent = data.cart_subtotal;
+                document.getElementById('cart-total').textContent = data.total;
+            } else { qtySpan.textContent = currentQty; alert(data.error); }
+        });
+    }
+
+    function removeFromCart(itemId) {
+        fetch(`/cart/remove/${itemId}/`, { method: 'POST', headers: { 'X-CSRFToken': getCookie('csrftoken') } })
+        .then(res => res.json()).then(data => { if(data.success) location.reload(); else alert(data.error); });
+    }
+    
+    function addToWishlist(productId) {
+        fetch(`/wishlist/add/${productId}/`, { method: 'POST', headers: { 'X-CSRFToken': getCookie('csrftoken') } })
+        .then(res => res.json()).then(data => alert(data.success ? (data.message || 'Added to wishlist') : data.error));
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+});
+</script>
+{% endblock %}

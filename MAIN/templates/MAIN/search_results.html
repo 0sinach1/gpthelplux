@@ -1,0 +1,47 @@
+{% extends "MAIN/base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Search Results{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/category.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Search Results{% if query %} for "{{ query }}"{% endif %}</h1>
+    
+    {% if products %}
+        <div class="products-grid">
+            {% for product in products %}
+            <div class="product-card">
+                <a href="{% url 'product_detail' product.slug %}">
+                    {% if product.main_image %}
+                        <img src="{{ product.main_image.url }}" alt="{{ product.name }}" class="product-image">
+                    {% else %}
+                        <div class="product-image-placeholder"></div>
+                    {% endif %}
+                    <div class="product-info">
+                        <h3 class="product-name">{{ product.name }}</h3>
+                        <p class="product-price">{{ currency_symbol }}{{ product.price|floatformat:2|intcomma }}</p>
+                        {% if product.vendor %}
+                            <p class="product-vendor">by {{ product.vendor.business_name }}</p>
+                        {% endif %}
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        {% if query %}
+            <p>No products found matching "{{ query }}".</p>
+        {% else %}
+            <p>Please enter a search query.</p>
+        {% endif %}
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block luxaslide %}
+{% endblock %}

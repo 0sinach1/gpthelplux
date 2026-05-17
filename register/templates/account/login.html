@@ -1,0 +1,66 @@
+{% extends "MAIN/base.html" %}
+{% load i18n %}
+{% load account socialaccount %}
+{% load crispy_forms_tags %}
+
+{% block title %}Sign In{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 500px; margin: 50px auto; padding: 20px;">
+    
+    <div class="text-center mb-4">
+        <h2 class="purple">Welcome Back</h2>
+        <p class="text-muted">Please sign in to continue</p>
+    </div>
+
+    {# --- Google Sign In Button --- #}
+    <!-- Google login -->
+
+    <div class="text-center text-muted mb-3">- OR -</div>
+
+    {# --- Manual Login Form --- #}
+    <form class="login" method="POST" action="{% url 'account_login' %}">
+        {% csrf_token %}
+        
+        {# Display form errors cleanly #}
+        {% if form.errors %}
+            <div class="alert alert-danger">
+                {{ form.non_field_errors }}
+                {% for field in form %}
+                    {% if field.errors %}
+                        {{ field.label }}: {{ field.errors|striptags }}<br>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {# Email Field #}
+        <div class="mb-3">
+            <label for="id_login" class="form-label">Email</label>
+            <input type="email" name="login" placeholder="E-mail address" class="form-control" required id="id_login">
+        </div>
+
+        {# Password Field #}
+        <div class="mb-3">
+            <label for="id_password" class="form-label">Password</label>
+            <input type="password" name="password" placeholder="Password" class="form-control" required id="id_password">
+            <div class="text-end mt-1">
+                <a href="{% url 'account_reset_password' %}" style="font-size: 0.9em; color: #666;">Forgot Password?</a>
+            </div>
+        </div>
+
+        {% if redirect_field_value %}
+        <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+        {% endif %}
+
+        <div class="d-grid gap-2 mt-4">
+            <button class="btn btn-primary" type="submit" style="border-radius: 50px; padding: 10px;">Sign In</button>
+        </div>
+    </form>
+
+    <div class="text-center mt-4">
+        <p>Don't have an account? <a href="{% url 'account_signup' %}" class="purple">Sign Up</a></p>
+    </div>
+
+</div>
+{% endblock %}

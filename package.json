@@ -1,0 +1,30 @@
+{
+  "name": "luxa_ecommerce",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TheDarkPhoenix15/LUXA_ECOMMERCE_MAIN.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/TheDarkPhoenix15/LUXA_ECOMMERCE_MAIN/issues"
+  },
+  "homepage": "https://github.com/TheDarkPhoenix15/LUXA_ECOMMERCE_MAIN#readme",
+  "dependencies": {
+    "three": "^0.181.0"
+  },
+  "devDependencies": {
+    "vite": "^7.2.2"
+  }
+
+}

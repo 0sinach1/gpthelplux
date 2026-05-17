@@ -1,0 +1,627 @@
+{% extends "luxa_crave/base_crave.html" %}
+{% load hosts %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Secure Checkout | Luxa Crave{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/luxa_crave/crave_checkout.css' %}">
+{% endblock %}
+
+{% block navlinks %}
+    <a href="javascript:history.back()">
+        <i class="bi bi-arrow-left-circle-fill"></i> 
+        Return
+    </a>
+{% endblock %}
+
+{% block content %}
+<div class="checkout-wrapper fade-in-up">
+    
+    <div class="checkout-header">
+        <h1>Secure Checkout</h1>
+        <p>Review your details and complete your campus delivery order.</p>
+    </div>
+
+    <div id="crave-checkout-alerts" style="display: none; margin-bottom: 25px;"></div>
+
+    <form method="POST" action="#" class="checkout-grid" id="checkout-form">
+        {% csrf_token %}
+        
+       <div class="checkout-panel shipping-panel">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <i class="bi bi-geo-alt-fill" style="color: var(--luxa-purple);"></i>
+                    <h3>Delivery Information</h3>
+                </div>
+                <span class="panel-subtitle">• Please ensure the data inputted is accurate</span>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px 0; margin-bottom: 25px; border-bottom: 1px solid var(--border-color); border-top: 1px solid var(--border-color);">
+                <div>
+                    <span style="font-weight: 800; color: #db2777; display: block; font-size: 0.95rem;">Deliver to Proxy</span>
+                    <span style="font-size: 0.8rem; color: var(--text-light);">Have someone else receive your order</span>
+                    
+                    {% if not crave_profile.default_proxy or not crave_profile.default_proxy.proxy_name %}
+                        <br><a href="{% url 'profile_settings' university.id %}#proxy-section" style="font-size: 0.8rem; color: var(--crave-primary); font-weight: 700; text-decoration: underline; margin-top: 5px; display: inline-block;">Setup a Proxy First</a>
+                    {% endif %}
+                </div>
+                <label class="crave-switch">
+
+                    <input type="checkbox" name="use_proxy" id="proxy-checkout-toggle" 
+                        {% if crave_profile.proxy_enabled and crave_profile.default_proxy.proxy_name %}checked{% endif %}
+                        {% if not crave_profile.default_proxy or not crave_profile.default_proxy.proxy_name %}disabled{% endif %}
+                        onchange="toggleCheckoutProxy()"> 
+                        
+                        <!-- Disabled by default, will be enabled by JS after page load if conditions are met -->
+                    <span class="crave-slider {% if not crave_profile.default_proxy or not crave_profile.default_proxy.proxy_name %}disabled-slider{% endif %}"></span>
+                </label> 
+            </div>
+
+            <div id="checkout-proxy-info" style="display: {% if crave_profile.proxy_enabled and crave_profile.default_proxy.proxy_name %}block{% else %}none{% endif %}; background: #fdf2f8; border: 1px solid #fbcfe8; border-radius: 12px; padding: 20px; margin-bottom: 25px;">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                    <i class="bi bi-shield-lock-fill" style="color: #db2777; font-size: 1.2rem;"></i>
+                    <h4 style="margin: 0; color: #9d174d; font-weight: 800; font-size: 1rem;">Proxy Delivery Active</h4>
+                </div>
+                <p style="font-size: 0.85rem; color: #be185d; margin-bottom: 10px; line-height: 1.5;">
+                    Your order will be handed over to your authorized proxy. Your personal address below will be ignored.
+                </p>
+                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px dashed #f9a8d4; display: flex; align-items: center; gap: 15px;">
+                    {% if crave_profile.default_proxy.proxy_photo %}
+                        <img src="{{ crave_profile.default_proxy.proxy_photo.url }}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;" alt="Proxy">
+                    {% else %}
+                        <div style="width: 40px; height: 40px; border-radius: 50%; background: #fce7f3; color: #db2777; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;"><i class="bi bi-person-fill"></i></div>
+                    {% endif %}
+                    <div>
+                        <strong style="display: block; color: #831843; font-size: 0.9rem;">
+                            {{ crave_profile.default_proxy.proxy_name|default:"Unnamed Proxy" }}
+                            <!-- NEW: Displays the gender in a tiny matching badge -->
+                            <span style="font-size: 0.7rem; background: #fbcfe8; color: #9d174d; padding: 2px 6px; border-radius: 6px; margin-left: 5px; text-transform: uppercase; font-weight: 800;">
+                                {{ crave_profile.default_proxy.proxy_gender|default:"Male" }}
+                            </span>
+                        </strong>
+                        <span style="font-size: 0.8rem; color: #be185d;">
+                            {{ crave_profile.default_proxy.proxy_location.value|default:"-" }}, 
+                            {{ crave_profile.default_proxy.proxy_building.value|default:"-" }} - 
+                            Room {{ crave_profile.default_proxy.proxy_address|default:"-" }} <br>
+                            with seed phrase of <b>{{ crave_profile.default_proxy.proxy_seed_phrase_hash|default:"- -" }}</b>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="customer-location-wrapper" class="{% if crave_profile.proxy_enabled and crave_profile.default_proxy.proxy_name %}disabled-form{% endif %}">
+                <div class="form-group">
+                    <label>HOSTEL / BUILDING (ZONE)</label>
+                    <select name="campus_address" id="checkout-location" onchange="filterBuildings('checkout-location', 'checkout-building')" {% if not crave_profile.proxy_enabled or not crave_profile.default_proxy.proxy_name %}required{% endif %}>
+                        <option value="">Select your Hostel/Building...</option>
+                        {% for loc in locations %}
+                            <option value="{{ loc.id }}" {% if crave_profile.campus_address.id == loc.id %}selected{% endif %}>
+                                {{ loc.value }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <small>* The general zone or parent building of your location.</small>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>HALL / WING</label>
+                        <select name="campus_building" id="checkout-building" {% if not crave_profile.proxy_enabled or not crave_profile.default_proxy.proxy_name %}required{% endif %}>
+                            <option value="">Select Hall/Wing...</option>
+                            {% for bldg in buildings %}
+                                <option value="{{ bldg.id }}" data-zone-id="{{ bldg.parent_location.id }}" {% if crave_profile.campus_building.id == bldg.id %}selected{% endif %}>
+                                    {{ bldg.value }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>ROOM NUMBER</label>
+                        <input type="text" name="room_number" id="checkout-room" value="{{ crave_profile.room_number|default:'' }}" placeholder="e.g. A204" {% if not crave_profile.proxy_enabled or not crave_profile.default_proxy.proxy_name %}required{% endif %}>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="form-group">
+                <label>EXTRA LANDMARK / INSTRUCTIONS (Optional)</label>
+                <textarea id="checkout-instructions" name="extra_instructions" rows="2" placeholder="e.g. Wait at the porter's lodge..."></textarea>
+            </div>
+
+            <div class="form-group" style="margin-top: 15px;">
+                <label>YOUR PHONE NUMBER</label>
+                <input type="tel" name="phone" value="{{ request.user.customer_profile.phone_number|default:'' }}" placeholder="+234 00 00 00">
+            </div>
+        </div>
+
+        <div class="checkout-panel summary-panel">
+            <h3 class="summary-title">Order Summary</h3>
+            
+            <div class="summary-items-list" id="checkout-items-list">
+                </div>
+
+            <div class="cost-breakdown">
+                <div class="cost-row">
+                    <span>Subtotal</span>
+                    <span id="checkout-subtotal">₦0.00</span>
+                </div>
+                <div class="cost-row">
+                    <span>Delivery Fee <small id="checkout-delivery-calc" style="color:var(--crave-primary); font-weight:700; margin-left:5px;"></small></span>
+                    <span id="checkout-delivery">₦0.00</span>
+                </div>
+                <div id="checkout-wait-fee-row" style="display: none; justify-content: space-between; align-items: center; padding: 12px 0; border-top: 1px dashed #e2e8f0; border-bottom: 1px dashed #e2e8f0; margin-bottom: 10px;">
+                    <span style="font-size: 0.85rem; font-weight: 700; color: #b45309;">Rush Hour Wait Fee</span>
+                    <span id="checkout-wait-fee-price" style="font-weight: 800; color: #d97706;"></span>
+                </div>
+                <div id="checkout-surcharge-section" style="display: none; flex-direction: column; gap: 8px; margin: 10px 0; padding: 12px; background: #fff5f5; border-radius: 8px; border: 1px solid #fed7d7;">
+                    <div style="font-size: 0.7rem; font-weight: 800; color: #c53030; text-transform: uppercase; border-bottom: 1px solid #feb2b2; padding-bottom: 4px;">
+                        High Influence Itemized Surcharge
+                    </div>
+                    
+                    <div id="checkout-surcharge-breakdown-list" style="display: flex; flex-direction: column; gap: 6px;"></div>
+                    
+                    <div class="cost-row" style="margin-top: 5px; border-top: 1px dashed #feb2b2; padding-top: 5px; font-weight: 700; color: #c53030;">
+                        <span>Surcharge Subtotal</span>
+                        <span id="checkout-surcharge">₦0.00</span>
+                    </div>
+                </div>
+                <div class="cost-row total-row">
+                    <span>Total</span>
+                    <span class="total-price" id="checkout-total">₦0.00</span>
+                </div>
+            </div>
+
+            <!-- --- NEW: VIP PREFERRED COURIER TOGGLE --- -->
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+                <div>
+                    <span style="font-weight: 800; color: var(--luxa-purple); display: block; font-size: 0.75rem; margin-bottom: 4px;">
+                        <i class="bi bi-star-fill" style="color: #f59e0b; margin-right: 4px;"></i> VIP Preferred Courier
+                    </span>
+                    <span style="font-size: 0.75rem; color: var(--text-light); line-height: 1.3; display: block;">
+                        Bypass the queue. Handpick a specific courier to deliver your order instantly.
+                    </span>
+                </div>
+                <label class="vip-switch">
+                    <input type="checkbox" id="vip-courier-toggle" onchange="toggleVipCourier()"> 
+                    <span class="vip-slider"></span>
+                </label> 
+            </div>
+            <!-- ----------------------------------------- -->
+
+            <div class="secure-payment-badge">
+                <i class="bi bi-lock-fill"></i>
+                <div>
+                    <strong>Secure Payment</strong>
+                    <span>Wallet / Escrow System</span>
+                </div>
+            </div>
+
+            <div class="checkout-actions-container" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
+                {% if university %}
+                    <button type="button" class="btn-complete-safe" onclick="initiateCheckout(true)">
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                            <i class="bi bi-shield-check"></i> Verify Availability & Pay
+                        </div>
+                        <small style="font-size: 0.7rem; font-weight: 600; opacity: 0.9; margin-top: 2px; display: block;">
+                            Engine pings kitchen to verify stock before charging.
+                        </small>
+                    </button>
+
+                    <button type="button" class="btn-complete-fast" onclick="initiateCheckout(false)">
+                        Instant Push (Skip Verification) <i class="bi bi-lightning-charge-fill" style="color: #f59e0b;"></i>
+                    </button>
+                {% else %}
+                    <button type="button" class="btn-complete-order" onclick="initiateCheckout(false, true)" style="width: 100%; background: var(--crave-dark); color: white; padding: 18px; border-radius: 12px; border: none; font-size: 1.1rem; font-weight: 700; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; transition: all 0.3s;">
+                        Complete Order <i class="bi bi-arrow-right"></i>
+                    </button>
+                {% endif %}
+            </div>
+            
+            <div class="return-link">
+                <a href="javascript:history.back()"><i class="bi bi-arrow-left"></i> Return to Outlet Terminal</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- MODALS SECTION -->
+<div id="modal-kyc-warning" class="kyc-modal-overlay">
+    <div class="kyc-modal">
+        <div class="kyc-icon-circle">
+            <i class="bi bi-shield-lock-fill"></i>
+        </div>
+        <h3 class="kyc-title">Identity Verification</h3>
+        <p class="kyc-text">
+            Your Identity is not yet verified. A verified identity ensures safer campus deliveries.
+        </p>
+        <div class="kyc-actions">
+            <a href="{% host_url 'submit_kyc' host 'default' %}" class="btn-kyc-primary" style="text-decoration: none;">
+                Verify Identity Now
+            </a>
+            <button type="button" class="btn-kyc-secondary" onclick="openProfileEdit()">
+                Continue Unverified
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="modal-kyc-pending" class="kyc-modal-overlay">
+    <div class="kyc-modal">
+        <div class="kyc-icon-circle" style="background: #fffbeb; color: #d97706;">
+            <i class="bi bi-hourglass-split"></i>
+        </div>
+        <h3 class="kyc-title">Verification Under Review</h3>
+        <p class="kyc-text">
+            Your identity verification is currently being reviewed by our team. You can continue placing your order unverified for now.
+        </p>
+        <div class="kyc-actions">
+            <button type="button" class="btn-kyc-primary" onclick="openProfileEdit()">
+                Continue Unverified
+            </button>
+            <button type="button" class="btn-kyc-secondary" onclick="closeModals()">
+                Cancel
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="modal-profile-edit" class="kyc-modal-overlay">
+    <div class="kyc-modal" style="text-align: left;">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <h3 class="kyc-title" style="margin-bottom: 5px;">Confirm Details</h3>
+            <p class="kyc-text" style="margin-bottom: 0;">Ensure these details match your student ID.</p>
+        </div>
+
+        <div class="profile-edit-form">
+            <div style="display: flex; justify-content: center; margin-bottom: 20px;">
+                <label for="modal_profile_pic" style="cursor: pointer; position: relative;">
+                    {% if request.user.customer_profile.profile_picture %}
+                        <img src="{{ request.user.customer_profile.profile_picture.url }}" id="preview_img" 
+                             style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #e2e8f0;">
+                    {% else %}
+                        <div id="preview_placeholder" 
+                             style="width: 80px; height: 80px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; border: 2px solid #e2e8f0;">
+                            <i class="bi bi-camera-fill" style="color: #94a3b8; font-size: 1.5rem;"></i>
+                        </div>
+                        <img id="preview_img" src="" style="display: none; width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #e2e8f0;">
+                    {% endif %}
+                    <div style="position: absolute; bottom: 0; right: 0; background: var(--luxa-purple, #960ffa); width: 25px; height: 25px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid white;">
+                        <i class="bi bi-pencil-fill" style="color: white; font-size: 0.7rem;"></i>
+                    </div>
+                </label>
+                <input type="file" id="modal_profile_pic" accept="image/*" style="display: none;" onchange="previewProfileImage(this)">
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                <div>
+                    <label style="font-size: 0.75rem; font-weight: 700; color: var(--text-light);">First Name</label>
+                    <input type="text" id="modal_fname" style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none;" value="{{ request.user.first_name }}">
+                </div>
+                <div>
+                    <label style="font-size: 0.75rem; font-weight: 700; color: var(--text-light);">Last Name</label>
+                    <input type="text" id="modal_lname" style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none;" value="{{ request.user.last_name }}">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px;">
+                <div>
+                    <label style="font-size: 0.75rem; font-weight: 700; color: var(--text-light);">Phone Number</label>
+                    <input type="text" id="modal_phone" style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none;" value="{{ request.user.customer_profile.phone_number }}">
+                </div>
+                <div>
+                    <label style="font-size: 0.75rem; font-weight: 700; color: var(--text-light);">Gender</label>
+                    <select id="modal_gender" style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; background: white;" required>
+                        <option value="" disabled {% if not request.user.customer_profile.gender %}selected{% endif %}>Select...</option>
+                        <option value="male" {% if request.user.customer_profile.gender == 'male' or request.user.customer_profile.gender == 'male' %}selected{% endif %}>Male</option>
+                        <option value="female" {% if request.user.customer_profile.gender == 'female' or request.user.customer_profile.gender == 'female' %}selected{% endif %}>Female</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px;">
+                <div>
+                    <label style="font-size: 0.75rem; font-weight: 700; color: var(--text-light);">Social Platform</label>
+                    <select id="modal_social_platform" style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; background: white;">
+                        {% with platform=request.user.customer_profile.social_media_platform %}
+                            <option value="" disabled {% if not platform %}selected{% endif %}>Select Platform...</option>
+                            <option value="WHATSAPP" {% if platform == 'WHATSAPP' %}selected{% endif %}>WhatsApp</option>
+                            <option value="INSTAGRAM" {% if platform == 'INSTAGRAM' %}selected{% endif %}>Instagram</option>
+                        {% endwith %}
+                    </select>
+                </div>
+                <div>
+                    <label style="font-size: 0.75rem; font-weight: 700; color: var(--text-light);">Social Handle</label>
+                    <input type="text" id="modal_social_handle" 
+                        placeholder="@username"
+                        style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none;" 
+                        value="{{ request.user.customer_profile.social_media_handle }}">
+                </div>
+            </div>
+
+            <p style="font-size: 0.75rem; color: #ef4444; text-align: center; margin-bottom: 15px; background: #fef2f2; padding: 10px; border-radius: 8px;">We will not be liable for any delivery issues that may arise due to incorrect information.</p>
+            
+            <div class="kyc-actions">
+                <button type="button" class="btn-kyc-primary" onclick="triggerProfileUpdateWarning()">Save & Continue</button>
+                <button type="button" class="btn-kyc-secondary" onclick="closeModals()">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="modal-update-warning" class="kyc-modal-overlay">
+    <div class="kyc-modal">
+        <div class="kyc-icon-circle" style="background: #fff7ed; color: #ea580c;">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+        </div>
+        <h3 class="kyc-title">Update Profile?</h3>
+        <p class="kyc-text">
+            This will <strong>permanently update</strong> your main profile details (Name, Picture, Phone) on Luxa.
+        </p>
+        <div class="kyc-actions">
+            <button type="button" class="btn-kyc-primary" onclick="submitFinalOrder()">Yes, Update & Pay</button>
+            <button type="button" class="btn-kyc-secondary" onclick="openProfileEdit()">Back to Edit</button>
+        </div>
+    </div>
+</div>
+
+<div id="modal-pin-verify" class="kyc-modal-overlay">
+    <div class="kyc-modal" style="text-align: center;">
+        <div class="kyc-icon-circle" style="background: #f3e8ff; color: var(--luxa-purple, #960ffa);">
+            <i class="bi bi-lock-fill"></i>
+        </div>
+        
+        {% if has_pin %}
+            <!-- STATE 1: NORMAL PIN ENTRY -->
+            <h3 class="kyc-title">Enter Delivery PIN</h3>
+            <p class="kyc-text">
+                Please enter your 4-digit PIN to authorize this transaction. You will provide this same PIN to the courier upon delivery.
+            </p>
+            
+            <div style="margin: 20px 0;">
+                <input type="password" id="checkout_pin_input" maxlength="4" pattern="\d{4}" 
+                       style="font-size: 2rem; letter-spacing: 15px; text-align: center; width: 150px; padding: 10px; border: 2px solid #e2e8f0; border-radius: 8px; outline: none;" 
+                       placeholder="••••" autocomplete="off">
+            </div>
+
+            <div class="kyc-actions">
+                <button type="button" class="btn-kyc-primary" onclick="submitOrderWithPin()">Confirm & Pay</button>
+                <button type="button" class="btn-kyc-secondary" onclick="closeModals()">Cancel</button>
+            </div>
+            
+        {% else %}
+            <!-- STATE 2: MISSING PIN WARNING -->
+            <h3 class="kyc-title">PIN Setup Required</h3>
+            <p class="kyc-text" style="color: #991b1b; background: #fef2f2; padding: 12px; border-radius: 8px; border: 1px solid #fecaca; margin-top: 15px;">
+                You need a 4-digit Delivery PIN to secure your orders. Please set one up before completing checkout.
+            </p>
+
+            <div class="kyc-actions" style="margin-top: 25px; flex-direction: column; gap: 10px; display: flex;">
+                <a href="{% host_url 'setup_delivery_pin' host 'default' %}" target="_blank" class="btn-kyc-primary" style="text-decoration: none; width: 100%; box-sizing: border-box; padding: 12px;">
+                    Step 1: Setup PIN Now <i class="bi bi-box-arrow-up-right" style="margin-left: 5px; font-size: 0.8rem;"></i>
+                </a>
+                
+                <button type="button" onclick="window.location.reload()" class="btn-kyc-secondary" style="width: 100%; border: 2px solid var(--luxa-purple, #960ffa); color: var(--luxa-purple, #960ffa); font-weight: 700; padding: 12px; background: white;">
+                    Step 2: I've Set It Up (Reload) <i class="bi bi-arrow-clockwise" style="margin-left: 5px;"></i>
+                </button>
+            </div>
+            
+            <div style="margin-top: 15px;">
+                <button type="button" onclick="closeModals()" style="background: none; border: none; color: #94a3b8; font-size: 0.85rem; cursor: pointer; text-decoration: underline;">
+                    Cancel Checkout
+                </button>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- --- NEW: VIP COURIER SEARCH MODAL --- -->
+<div id="modal-vip-courier" class="kyc-modal-overlay">
+    <div class="kyc-modal" style="text-align: center;">
+        <div class="kyc-icon-circle" style="background: #fffbeb; color: #f59e0b;">
+            <i class="bi bi-person-badge-fill"></i>
+        </div>
+        
+        <h3 class="kyc-title">Assign Preferred Courier</h3>
+        <p class="kyc-text">
+            Enter the exact username of the courier you want to assign this order to. They must be online and match your delivery gender rules.
+        </p>
+        
+        <div style="margin: 20px 0;">
+            <input type="text" id="vip_courier_username" 
+                   style="font-size: 1.1rem; text-align: center; width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 12px; outline: none; background: #f8fafc; color: #1e293b; font-weight: 700;" 
+                   placeholder="e.g., rider_john" autocomplete="off">
+                   
+            <!-- Error Message Container -->
+            <div id="vip-error-msg" style="display: none; color: #ef4444; font-size: 0.8rem; font-weight: 600; margin-top: 10px; background: #fef2f2; padding: 10px; border-radius: 8px;">
+            </div>
+        </div>
+
+        <div class="kyc-actions">
+            <button type="button" class="btn-kyc-primary" id="btn-verify-vip" onclick="verifyVipCourier()" style="background: #f59e0b; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);">
+                Verify Courier
+            </button>
+            <button type="button" class="btn-kyc-secondary" onclick="cancelVipCourier()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- PROXY INFO MODAL -->
+<div id="modal-proxy-intro" class="kyc-modal-overlay">
+    <div class="kyc-modal" style="text-align: center;">
+        <div class="kyc-icon-circle" style="background: #fce7f3; color: #db2777;">
+            <i class="bi bi-people-fill"></i>
+        </div>
+        
+        <h3 class="kyc-title">Want to Send to someone else?</h3>
+        <p class="kyc-text">
+            Want to get food for that special someone? Or maybe you want to surprise your friend with a meal? 
+            <br><br>
+            Just set up a <strong>Proxy</strong> and turn on the toggle above your delivery address.
+        </p>
+
+        <div class="kyc-actions">
+            {% if not crave_profile.default_proxy or not crave_profile.default_proxy.proxy_name %}
+                <a href="{% url 'profile_settings' university.id %}#proxy-section" class="btn-kyc-primary" style="text-decoration: none; background: #db2777;">
+                    Setup a Proxy Now
+                </a>
+            {% endif %}
+            <button type="button" class="btn-kyc-secondary" onclick="closeProxyModal()">
+                Got it, continue
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="terminal-overlay" class="kyc-modal-overlay">
+    <div class="engine-window">
+        <div class="engine-header">
+            <div style="display: flex; gap: 8px;">
+                <span style="width: 12px; height: 12px; border-radius: 50%; background: #ef4444;"></span>
+                <span style="width: 12px; height: 12px; border-radius: 50%; background: #eab308;"></span>
+                <span style="width: 12px; height: 12px; border-radius: 50%; background: #22c55e;"></span>
+            </div>
+            <div class="engine-title">LUXA ENGINE v3.0</div>
+        </div>
+        
+        <div class="engine-body">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <div class="engine-radar">
+                    <i class="bi bi-shield-check"></i>
+                </div>
+                <h3 style="margin: 0; font-size: 1.2rem; color: #1e293b; font-weight: 800;">Verifying Order</h3>
+                <p style="font-size: 0.85rem; color: #64748b; margin: 5px 0 0 0;">Please wait while we confirm your items with the kitchen.</p>
+            </div>
+            
+            <div id="terminal-logs" class="engine-logs">
+                </div>
+
+            <div id="terminal-cancel-btn-container" style="display: none; text-align: center; margin-top: 15px;">
+                <button type="button" onclick="showTerminalTimeoutOptions()" style="background: transparent; color: #ef4444; border: 1px dashed #fca5a5; border-radius: 8px; font-size: 0.85rem; padding: 6px 12px; cursor: pointer; transition: all 0.2s;">
+                    <i class="bi bi-clock-history"></i> Taking too long? Click here.
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="modal-mini-rebuild" class="kyc-modal-overlay">
+    <div class="kyc-modal" style="text-align: left; max-width: 500px;">
+        <div style="background: #fff1f2; border: 1px solid #fecdd3; padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+            <h4 style="color: #be123c; margin: 0 0 5px 0; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+                <i class="bi bi-exclamation-triangle-fill"></i> Kitchen Update
+            </h4>
+            <p id="rebuild-interceptor-message" style="margin: 0; color: #9f1239; font-size: 0.85rem; font-weight: 600; line-height: 1.4;">
+                </p>
+        </div>
+
+        <h3 class="kyc-title" style="font-size: 1.1rem; margin-bottom: 10px;">Review Your Bag</h3>
+        <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 15px;">We have highlighted the sold-out items. Click the trash icon to remove them from your pack so you can instantly proceed.</p>
+        
+        <div id="mini-pack-builder-container" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 15px; margin-bottom: 25px; max-height: 300px; overflow-y: auto;">
+        </div>
+
+        <div class="kyc-actions">
+            <button class="btn-complete-safe" onclick="submitRebuiltCart()" style="padding: 14px;">
+                Confirm Fix & Continue Checkout <i class="bi bi-arrow-clockwise"></i>
+            </button>
+            <button type="button" class="btn-kyc-secondary" onclick="window.location.href='javascript:history.back()'">
+                Return to Full Menu
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="modal-fast-warning" class="kyc-modal-overlay">
+    <div class="kyc-modal" style="text-align: center;">
+        <div class="kyc-icon-circle" style="background: #fffbeb; color: #f59e0b;">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+        </div>
+        
+        <h3 class="kyc-title">Are you sure?</h3>
+        <p class="kyc-text">
+            You selected <strong>Instant Push</strong>. If any items in your bag are currently sold out in the kitchen, your order may be delayed or cancelled. 
+            <br><br>
+            We highly recommend using Verify Availability so the kitchen can confirm your items before you pay.
+        </p>
+
+        <div class="kyc-actions" style="margin-top: 20px;">
+            <button type="button" class="btn-complete-safe" onclick="switchToSafeMode()" style="padding: 14px; margin-bottom: 10px;">
+                <i class="bi bi-shield-check"></i> Switch to Safe Mode
+            </button>
+            <button type="button" class="btn-kyc-secondary" onclick="confirmFastMode()" style="background: transparent; border: 1px solid #cbd5e1; color: #64748b;">
+                Proceed Anyway (Instant Push)
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="modal-ping-timeout" class="kyc-modal-overlay">
+    <div class="kyc-modal" style="text-align: center;">
+        <div class="kyc-icon-circle" style="background: #fffbeb; color: #f59e0b;">
+            <i class="bi bi-clock-history"></i>
+        </div>
+        
+        <h3 class="kyc-title">Verification Staff is Busy</h3>
+        <p class="kyc-text">
+            We couldn't get an instant stock verification from the kitchen at this time. 
+            <br><br>
+            You can still proceed with your order immediately. But please note that if any items are out of stock, your order may be delayed or cancelled. We recommend trying again in a few moments for a smoother checkout experience.
+        </p>
+
+        <div class="kyc-actions" style="margin-top: 20px;">
+            <button type="button" class="btn-complete-safe" onclick="proceedAfterTimeout()" style="padding: 14px; margin-bottom: 10px;">
+                Proceed with Order
+            </button>
+            <button type="button" class="btn-kyc-secondary" onclick="cancelTimeout()" style="background: transparent; border: 1px solid #cbd5e1; color: #64748b;">
+                Cancel Checkout
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="modal-terminal-options" class="kyc-modal-overlay">
+    <div class="kyc-modal" style="text-align: center;">
+        <div class="kyc-icon-circle" style="background: #fffbeb; color: #f59e0b;">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+        </div>
+        
+        <h3 class="kyc-title">Still Waiting?</h3>
+        <p class="kyc-text">
+            The kitchen is taking a bit longer to verify your items. What would you like to do?
+        </p>
+
+        <div class="kyc-actions" style="margin-top: 20px; flex-direction: column; gap: 10px;">
+            <button type="button" class="btn-complete-safe" onclick="hideTerminalOptionsAndWait()" style="padding: 14px; margin: 0; width: 100%;">
+                <i class="bi bi-hourglass-split"></i> Keep Waiting (Max 3 mins)
+            </button>
+            <button type="button" class="btn-kyc-secondary" onclick="proceedAfterTimeout()" style="padding: 14px; margin: 0; width: 100%; border: 2px solid #3b82f6; color: #3b82f6; background: white; font-weight: 700;">
+                <i class="bi bi-lightning-charge-fill" style="color: #f59e0b;"></i> Skip Check & Proceed
+            </button>
+            <button type="button" class="btn-kyc-secondary" onclick="cancelTimeout()" style="padding: 14px; margin: 0; width: 100%; background: #fef2f2; color: #ef4444; border: 1px solid #fecaca; font-weight: 700;">
+                <i class="bi bi-x-circle"></i> Cancel Checkout
+            </button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // 1. Define the raw data globally HERE where Django can actually render it
+    window.cartDataRaw = '{{ cart_data_json|escapejs }}';
+
+    // --- NEW: Give JS the outlet name ---
+    window.CURRENT_OUTLET_NAME = "{{ target_outlet_name|escapejs }}";
+    
+    // Pass the KYC and gender variables here too, since they use Django tags
+    window.kycStatus = "{{ kyc_status|default:'NONE' }}";
+    window.targetGender = "{{ request.user.customer_profile.gender }}";
+    // The backend does the lazy date check before rendering the page!
+    window.promoPercentage = {{ customer.promo_percentage|default:0 }};
+    window.availablePromoCourions = {{ available_promo_courions|default:0 }}; 
+</script>
+<script src="{% static 'js/luxa_crave/crave_checkout.js' %}"></script>
+{% endblock %}

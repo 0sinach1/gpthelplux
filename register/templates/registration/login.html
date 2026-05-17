@@ -1,0 +1,74 @@
+{% load static %}
+{% load crispy_forms_tags %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log In</title>
+    <link rel="stylesheet" href="{% static '/css/registration.css' %}">
+    <link rel="icon" type="image/png" sizes="50x50" href="{% static '/images/titlelogo.png' %}" >
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div id="luxalogo">
+        <a href="/index/"><img src="{% static '/images/LUXA_Logo.png' %}" alt="luxalogo" id="luxa"></a>
+    </div>
+    <div class="logincont">
+        <h2 class="form_hd">Log in to LUXA.com</h2>
+        <p>Just a little reminder that by continuing with any of the options below,
+           you agree to our <a href="/terms/" class="link">Terms of Service</a> and <a href="/privacy/" class="link">Privacy Policy.</a></p>
+        <div class="actinp">
+            <form method="post" class="form-group loginreg">
+                {% csrf_token %}
+                {{ form|crispy }}
+                <a href="{% url 'password_reset' %}" style="font-size: 0.9rem; color: #960ffa;">Forgot Password?</a>
+                <p>Are you new here? <a href="/register/">Sign up</a></p>
+                <button type="submit" class="subbtn">Log in</button>
+            </form>
+            <!-- <p id="or">OR</p> -->
+            <!-- Removed google login -->
+        </div> 
+    </div>
+</body>
+</html>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 1. Find all password fields on the page
+        const passwordFields = document.querySelectorAll('input[type="password"]');
+
+        passwordFields.forEach(function(passwordInput) {
+            // 2. Create a wrapper div for positioning
+            const wrapper = document.createElement('div');
+            wrapper.classList.add('password-container');
+
+            // 3. Insert the wrapper before the password input
+            passwordInput.parentNode.insertBefore(wrapper, passwordInput);
+
+            // 4. Move the password input into the wrapper
+            wrapper.appendChild(passwordInput);
+
+            // 5. Create the Eye Icon
+            const icon = document.createElement('i');
+            icon.classList.add('fa', 'fa-eye', 'toggle-password-icon');
+            
+            // 6. Add the icon to the wrapper
+            wrapper.appendChild(icon);
+
+            // 7. Add Click Event to the Icon
+            icon.addEventListener('click', function() {
+                // Toggle the type attribute
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+
+                // Toggle the eye / eye-slash icon
+                this.classList.toggle('fa-eye');
+                this.classList.toggle('fa-eye-slash');
+            });
+        });
+    });
+</script>

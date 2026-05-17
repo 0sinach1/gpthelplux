@@ -1,0 +1,79 @@
+<div id="shiftPickerModal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 450px; padding: 30px 25px; background: #f8fafc;">
+        <button class="close-modal" onclick="closeModal('shiftPickerModal')" style="position: absolute; top: 15px; right: 15px;">&times;</button>
+        
+        <div style="text-align: center; margin-bottom: 20px;">
+            <div style="width: 50px; height: 50px; background: #e0f2fe; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #0284c7; margin: 0 auto 10px;">
+                <i class="bi bi-calendar-check"></i>
+            </div>
+            <h3 style="margin: 0; font-size: 1.25rem; color: #1e293b;">{{ schedule_title }}</h3>
+            <p style="font-size: 0.85rem; color: #64748b; margin-top: 5px;">{{ tomorrow_date|default:"Next Day" }}</p>
+        </div>
+
+        {% if not is_post_7pm %}
+        <div style="background: white; border: 1px dashed #cbd5e1; border-radius: 12px; padding: 30px 20px; text-align: center;">
+            <i class="bi bi-clock-history" style="font-size: 2rem; color: #94a3b8; margin-bottom: 10px; display: block;"></i>
+            <h4 style="color: #475569; margin: 0 0 5px 0;">Schedule is Locked</h4>
+            <p style="font-size: 0.85rem; color: #64748b; margin: 0;">Shift selection unlocks exactly at <strong>{{ unlock_time_str }}</strong> today.</p>
+        </div>
+        
+        {% else %}
+        <form id="shift-selection-form" onsubmit="submitShifts(event)">
+            {% csrf_token %}
+            <p style="font-size: 0.8rem; color: #64748b; text-align: center; margin-bottom: 15px;">Tap the 1-hour blocks you commit to working {{ day_label }}.</p>
+            
+            <div style="display: flex; flex-direction: column; margin-bottom: 25px;">
+                {% for block in available_blocks %}
+                <label class="shift-list-wrapper">
+                    <input type="checkbox" name="selected_shifts" value="{{ block.value }}" class="shift-list-checkbox" style="display:none;" {% if block.value in saved_shifts %}checked{% endif %}>
+                    
+                    <div class="shift-list-inner">
+                        <div class="shift-circle">
+                            <i class="bi bi-check"></i>
+                        </div>
+                        <div class="shift-time">{{ block.label }}</div>
+                    </div>
+                </label>
+                {% empty %}
+                <div style="text-align: center; padding: 20px; background: #fffbeb; border: 1px solid #fef3c7; border-radius: 12px; color: #d97706; font-size: 0.85rem;">
+                    <i class="bi bi-info-circle-fill" style="margin-bottom: 5px; display: block; font-size: 1.5rem;"></i> 
+                    Campus is closed {{ day_label }}. No shifts available.
+                </div>
+                {% endfor %}
+            </div>
+
+            <button type="submit" id="btn-submit-shifts" class="btn" style="width: 100%; background: #0284c7; color: white; font-weight: 700; padding: 14px; border-radius: 8px; border: none; font-size: 1rem; cursor: pointer; transition: 0.2s;">
+                Confirm Schedule
+            </button>
+        </form>
+        {% endif %}
+
+        <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e2e8f0; text-align: center;">
+            <p style="font-size: 0.75rem; color: #64748b; margin-bottom: 10px;">Cannot work any shifts {{ day_label }}?</p>
+            <button onclick="openExemptionModal()" style="background: none; border: 1px solid #cbd5e1; color: #475569; padding: 8px 15px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer;">
+                Request Exemption
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="exemptionModal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 400px; padding: 30px 25px;">
+        <button class="close-modal" onclick="closeModal('exemptionModal')" style="position: absolute; top: 15px; right: 15px;">&times;</button>
+        
+        <h3 style="margin: 0 0 10px 0; font-size: 1.25rem; color: #e74c3c;">Request Exemption</h3>
+        <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 20px;">If approved by the Admin, you will not be penalized for missing shifts {{ day_label }}.</p>
+        
+        <form id="exemption-form" onsubmit="submitExemption(event)">
+            {% csrf_token %}
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #555; margin-bottom: 6px;">Reason for Exemption</label>
+                <textarea name="exemption_reason" required rows="4" placeholder="e.g., Departmental exam from 2 PM to 5 PM..." style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 0.9rem; outline: none; resize: none;"></textarea>
+            </div>
+            
+            <button type="submit" id="btn-submit-exemption" class="btn" style="width: 100%; background: #e74c3c; color: white; font-weight: 700; padding: 14px; border-radius: 8px; border: none; font-size: 1rem; cursor: pointer;">
+                Submit for Approval
+            </button>
+        </form>
+    </div>
+</div>

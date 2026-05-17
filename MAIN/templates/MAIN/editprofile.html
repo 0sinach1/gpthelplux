@@ -1,0 +1,218 @@
+{% extends "MAIN/base.html" %}
+{% load static %}
+
+{% block title %}Account Settings{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static '/css/editprofile.css' %}">
+{% endblock %}
+
+{% block content %}
+<div id="main">
+    <header class="page-header">
+        <h1 id="heading">Account Settings</h1>
+        <div class="language-select">
+            <button class="theme-btn">
+                <i class="fas fa-moon"></i>
+            </button>
+        </div>
+    </header>
+
+    <div class="settings-layout">
+        <aside class="profile-sidebar">
+            <div class="profile-section card">
+                <div class="profile-pic-wrapper">
+                    {% if customer.profile_picture %}
+                        <img src="{{ customer.profile_picture.url }}" alt="{{ customer.first_name }}" class="profile-pic">
+                    {% else %}
+                        <div class="profile-pic-placeholder">
+                            <i class="fas fa-user"></i>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <h3 class="profile-name">
+                    {% if customer %}
+                        {{ customer.first_name|capfirst|default:customer.username|capfirst }} {{ customer.last_name|capfirst }}
+                    {% else %}
+                        {{ user.username|capfirst }}
+                    {% endif %}
+                </h3>
+                <p class="profile-email">{{ user.email }}</p>
+
+                <div class="kyc-badge-container">
+                    {% if not user.customer_profile.is_verified %}
+                        {% if user.customer_profile.kyc_profile.status == 'PENDING' %}
+                            <span class="badge badge-pending"><i class="fas fa-hourglass-half"></i> KYC Under Review</span>
+                        {% else %}
+                            <span class="badge badge-unverified"><i class="fas fa-times-circle"></i> Unverified</span>
+                            <a href="{% url 'submit_kyc' %}" class="kyc-link">Verify Now</a>
+                        {% endif %}
+                    {% else %}
+                        <div class="kyc-verified-box">
+                            <span class="badge badge-verified"><i class="fas fa-check-circle"></i> KYC Verified</span>
+                            <span class="tier-badge">Bronze Tier</span>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="profile-actions">
+                    <a href="{% url 'change_password' %}" class="btn-outline">
+                        <i class="fas fa-lock"></i> Password
+                    </a>
+                    <a href="{% url 'change_delivery_pin' %}" class="btn-outline">
+                        <i class="fas fa-key"></i> Delivery PIN
+                    </a>
+                </div>
+            </div>
+        </aside>
+
+        <aside class="settings-form-area">
+            <form method="post" enctype="multipart/form-data" class="settings-form">
+                {% csrf_token %}
+                
+                <section class="form-card card">
+                    <div class="cardheader">
+                        <h2>Personal Information</h2>
+                        <p>Update your basic profile details and how we address you.</p>
+                    </div>
+                    
+                    <div class="info-grid">
+                        <div class="info-box full-width">
+                            <label for="{{ form.profile_picture.id_for_label }}">Profile Picture</label>
+                            <input type="file" name="{{ form.profile_picture.name }}" id="{{ form.profile_picture.id_for_label }}" accept="image/*" class="file-input">
+                            {% if form.profile_picture.errors %}<div class="error">{{ form.profile_picture.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="info-box">
+                            <label for="{{ form.first_name.id_for_label }}">First Name</label>
+                            <input type="text" name="{{ form.first_name.name }}" id="{{ form.first_name.id_for_label }}" value="{{ form.first_name.value|default:'' }}">
+                            {% if form.first_name.errors %}<div class="error">{{ form.first_name.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="info-box">
+                            <label for="{{ form.last_name.id_for_label }}">Last Name</label>
+                            <input type="text" name="{{ form.last_name.name }}" id="{{ form.last_name.id_for_label }}" value="{{ form.last_name.value|default:'' }}">
+                            {% if form.last_name.errors %}<div class="error">{{ form.last_name.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="info-box">
+                            <label for="{{ form.username.id_for_label }}">Username</label>
+                            <input type="text" name="{{ form.username.name }}" id="{{ form.username.id_for_label }}" value="{{ form.username.value|default:'' }}">
+                            {% if form.username.errors %}<div class="error">{{ form.username.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="info-box">
+                            <label for="{{ form.email.id_for_label }}">Email Address</label>
+                            <input type="email" name="{{ form.email.name }}" id="{{ form.email.id_for_label }}" value="{{ form.email.value|default:'' }}">
+                            {% if form.email.errors %}<div class="error">{{ form.email.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="info-box">
+                            <label for="{{ form.phone_number.id_for_label }}">Phone Number - <span style="font-size: 0.8rem; font-weight: 300; color: gray;">Preferrably your WhatsApp Number</span></label>
+                            <input type="text" name="{{ form.phone_number.name }}" id="{{ form.phone_number.id_for_label }}" value="{{ form.phone_number.value|default:'' }}">
+                            {% if form.phone_number.errors %}<div class="error">{{ form.phone_number.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="info-box">
+                            <label for="{{ form.date_of_birth.id_for_label }}">Date of Birth</label>
+                            <input type="date" name="{{ form.date_of_birth.name }}" id="{{ form.date_of_birth.id_for_label }}" value="{{ form.date_of_birth.value|date:'Y-m-d'|default:'' }}">
+                            {% if form.date_of_birth.errors %}<div class="error">{{ form.date_of_birth.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="info-box">
+                            <label for="{{ form.gender.id_for_label }}">Gender</label>
+                            {{ form.gender }} {% if form.gender.errors %}<div class="error">{{ form.gender.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="info-box">
+                            <label for="{{ form.social_media_platform.id_for_label }}">Social Media Platform</label>
+                            {{ form.social_media_platform }} {% if form.social_media_platform.errors %}<div class="error">{{ form.social_media_platform.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="info-box">
+                            <label for="{{ form.social_media_handle.id_for_label }}">Social Media Handle</label>
+                            <input type="text" name="{{ form.social_media_handle.name }}" id="{{ form.social_media_handle.id_for_label }}" value="{{ form.social_media_handle.value|default:'' }}">
+                            {% if form.social_media_handle.errors %}<div class="error">{{ form.social_media_handle.errors }}</div>{% endif %}
+                        </div>
+                    </div>
+                </section>
+
+                <section class="form-card card">
+                    <div class="card-header">
+                        <h2>Default Address Details</h2>
+                        <p>Where should we deliver your campus orders?</p>
+                    </div>
+
+                    <div class="info-grid">
+                        <div class="info-box full-width">
+                            <label for="{{ form.address_line1.id_for_label }}">
+                                Address Line
+                                <span class="tooltip-container">
+                                    <i class="fas fa-info-circle info-icon"></i>
+                                    <span class="tooltip-text">Format: Room number, Hall, University.</span>
+                                </span>
+                            </label>
+                            <textarea name="{{ form.address_line1.name }}" id="{{ form.address_line1.id_for_label }}" rows="2">{{ form.address_line1.value|default:'' }}</textarea>
+                            {% if form.address_line1.errors %}<div class="error">{{ form.address_line1.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="info-box">
+                            <label for="{{ form.city.id_for_label }}">City</label>
+                            <input type="text" name="{{ form.city.name }}" id="{{ form.city.id_for_label }}" value="{{ form.city.value|default:'' }}">
+                            {% if form.city.errors %}<div class="error">{{ form.city.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="info-box">
+                            <label for="{{ form.state.id_for_label }}">State</label>
+                            <input type="text" name="{{ form.state.name }}" id="{{ form.state.id_for_label }}" value="{{ form.state.value|default:'' }}">
+                            {% if form.state.errors %}<div class="error">{{ form.state.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="info-box">
+                            <label for="{{ form.postal_code.id_for_label }}">Postal Code</label>
+                            <input type="text" name="{{ form.postal_code.name }}" id="{{ form.postal_code.id_for_label }}" value="{{ form.postal_code.value|default:'' }}">
+                            {% if form.postal_code.errors %}<div class="error">{{ form.postal_code.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="info-box">
+                            <label for="{{ form.country.id_for_label }}">Country</label>
+                            <input type="text" name="{{ form.country.name }}" id="{{ form.country.id_for_label }}" value="{{ form.country.value|default:'' }}">
+                            {% if form.country.errors %}<div class="error">{{ form.country.errors }}</div>{% endif %}
+                        </div>
+                    </div>
+                </section>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-save">Save All Changes</button>
+                </div>
+            </form>
+          </aside>
+    </div>
+</div>
+
+<section id="trustlux">
+    <h2>Why Trust LUXA?</h2>
+    <p>As a growing start-up, we're committed to earning your trust through 
+        transparency, quality and exeptional service.
+    </p>
+    <div id="services">
+        <div class="indservice">
+            <img src="{% static '/images/icons/lock.png' %}" alt="notfound" class="serviceicons">
+            <h5>Secure Service</h5>
+            <p>Your data and payments are protected with <br>enterprise-grade security.</p>
+        </div>
+        <div class="indservice">
+            <img src="{% static '/images/icons/parcel.png' %}" alt="notfound" class="serviceicons">
+            <h5>Fast Delivery</h5>
+            <p>Quick and reliable shipping with real-time <br>tracking updates.</p>
+        </div>
+        <div class="indservice">
+            <img src="{% static '/images/icons/heartshake.png' %}" alt="notfound" class="serviceicons">
+            <h5>24/7 Support</h5>
+            <p>Our dedicated team is here to help you every <br>step of the way.</p>
+        </div>
+    </div>
+</section>
+  
+{% endblock %}

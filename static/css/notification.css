@@ -1,0 +1,358 @@
+/* =========================================
+   NOTIFICATIONS PAGE STYLES
+   ========================================= */
+
+body {
+    background-color: #fafbfc;
+}
+
+.notif-page-container {
+    max-width: 900px;
+    margin: 40px auto;
+    padding: 0 20px;
+    font-family: 'Inter', 'Poppins', sans-serif;
+    color: #1e293b;
+}
+
+/* HEADER */
+.notif-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 25px;
+}
+
+.nh-left h1 {
+    font-family: 'Arima', serif;
+    font-size: 2.2rem;
+    color: #0f172a;
+    margin: 0 0 5px 0;
+    font-weight: 600;
+}
+
+.nh-left p {
+    color: #64748b;
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+.btn-mark-all {
+    background: transparent;
+    border: 1px solid #cbd5e1;
+    color: #1e293b;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-mark-all:hover {
+    background: #f8fafc;
+    border-color: #94a3b8;
+}
+
+/* TABS */
+.notif-tabs {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.tab-btn {
+    background: transparent;
+    border: 1px solid #e2e8f0;
+    padding: 8px 16px;
+    border-radius: 30px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #475569;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.tab-btn:hover {
+    border-color: #cbd5e1;
+    color: #0f172a;
+}
+
+.tab-btn.active {
+    background: #2e1065; /* Deep purple */
+    color: white;
+    border-color: #2e1065;
+}
+
+.badge {
+    background: #f1f5f9;
+    color: #1e293b;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.tab-btn.active .badge {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+/* NOTIFICATION LIST & CARDS */
+.notif-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.n-card {
+    display: flex;
+    align-items: flex-start;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 20px 25px;
+    transition: box-shadow 0.2s, transform 0.2s;
+    position: relative;
+    overflow: hidden;
+}
+
+.n-card:hover {
+    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+    transform: translateY(-1px);
+}
+
+/* The left side border for Unread */
+.n-card.unread::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: #2e1065;
+}
+
+/* ICONS */
+.n-icon {
+    width: 45px;
+    height: 45px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+    margin-right: 20px;
+}
+
+.n-icon.order { background: #f3f0ff; color: #2e1065; }
+.n-icon.promo { background: #fffbeb; color: #d97706; }
+.n-icon.system { background: #f0fdf4; color: #10b981; }
+
+/* BODY TEXT */
+.n-body {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    padding-right: 20px;
+}
+
+.n-body h4 {
+    margin: 0 0 5px 0;
+    font-size: 1.05rem;
+    color: #0f172a;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.unread-dot {
+    width: 8px;
+    height: 8px;
+    background: #2e1065;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+    margin-top: 6px;
+}
+
+.n-body p {
+    margin: 0 0 10px 0;
+    font-size: 0.9rem;
+    color: #334155;
+    line-height: 1.5;
+}
+
+.n-meta {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* ACTION BUTTONS */
+.n-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.n-btn-view {
+    background: #f3f0ff;
+    color: #2e1065;
+    border: 1px solid #e0d4ff;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+.n-btn-view:hover { background: #e0d4ff; border-color: #c7bbf2; }
+
+.n-btn-light {
+    background: transparent;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.n-btn-light:hover { background: #f8fafc; color: #0f172a; border-color: #cbd5e1; }
+
+.n-btn-trash {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: transparent;
+    color: #94a3b8;
+    border: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.n-btn-trash:hover { background: #fef2f2; color: #ef4444; border-color: #fecaca; }
+
+/* EMPTY STATE */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    background: white;
+    border-radius: 16px;
+    border: 1px dashed #cbd5e1;
+}
+.empty-state h3 { margin: 0 0 10px 0; color: #334155; }
+.empty-state p { margin: 0; color: #94a3b8; font-size: 0.9rem; }
+
+
+/* =========================================
+   MOBILE RESPONSIVENESS
+   ========================================= */
+@media (max-width: 768px) {
+    .notif-page-container {
+        padding: 0 15px;
+    }
+
+    /* Header Alignments */
+    .notif-header {
+        flex-direction: row;
+        align-items: center;
+        gap: 10px;
+    }
+    .nh-left h1 { font-size: 1.5rem; }
+    .nh-left p { font-size: 0.85rem; }
+    .btn-mark-all { padding: 6px 12px; font-size: 0.75rem; }
+
+    /* Segmented Tab Controls */
+    .notif-tabs {
+        display: flex;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 0;
+        margin-bottom: 20px;
+    }
+    .tab-btn {
+        flex: 1;
+        border: none;
+        border-right: 1px solid #e2e8f0;
+        border-radius: 0;
+        padding: 10px 0;
+        justify-content: center;
+        font-size: 0.8rem;
+        gap: 6px;
+    }
+    .tab-btn:last-child { border-right: none; }
+    
+    .tab-btn.active {
+        background: #2e1065;
+        color: white;
+        border-radius: 12px;
+        transform: scale(1.02); /* Slight pop effect */
+        box-shadow: 0 4px 10px rgba(46, 16, 101, 0.15);
+        border-right: none;
+    }
+
+    /* Notification Cards - Grid Layout */
+    .n-card {
+        display: grid;
+        grid-template-columns: 40px 1fr 60px; /* Icon | Text | Action Stack */
+        padding: 15px 12px;
+        gap: 12px;
+        align-items: start;
+    }
+    
+    .n-card.unread::before { width: 3px; }
+    
+    .n-icon {
+        width: 40px; 
+        height: 40px;
+        margin: 0;
+        font-size: 1rem;
+    }
+
+    /* Body Adjustments */
+    .n-body { padding: 0; }
+    .n-body h4 { font-size: 0.85rem; line-height: 1.3; }
+    .unread-dot { margin-top: 5px; } /* Ensures dot aligns with multi-line title */
+    .n-body p { font-size: 0.75rem; margin-bottom: 8px; }
+    .n-meta { font-size: 0.65rem; }
+    
+    /* Actions - Vertical Stack */
+    .n-actions {
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        padding: 0;
+        width: 100%;
+    }
+    
+    .n-btn-view, .n-btn-light {
+        width: 100%;
+        padding: 6px 0;
+        font-size: 0.7rem;
+        display: flex;
+        justify-content: center;
+    }
+    
+    .n-btn-trash {
+        width: 32px; 
+        height: 32px;
+        font-size: 0.8rem;
+        margin-top: 4px; /* Pulls trash can slightly apart from the pills */
+    }
+}

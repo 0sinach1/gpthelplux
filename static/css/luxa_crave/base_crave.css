@@ -1,0 +1,694 @@
+:root {
+    /* New Crave Palette: Green & Dark Brown */
+    --crave-primary: #2D1B69; /* Vibrant Emerald Green */
+    --crave-primary-hover: #3A2580; /* Deeper Green for hovers */
+    --crave-dark: #12111A; /* Deep Espresso Brown */
+    --crave-yellow: #e5df34;
+    
+    --crave-bg: #f7f6fb; /* Warm, subtle cream background */
+    --text-main: #4e342e; /* Soft dark brown for body text */
+    --text-light: #9B7FCC; /* Muted brown-grey for secondary text */
+    --border-color: #e7e0d8; /* Warm border tone */
+    --luxa-purple: #7c3aed; /* Luxa's signature purple for accents */
+    --luxa-purple-hover: #6d28d9; /* Darker purple for hovers */
+    
+    --sidebar-width: 260px;
+    --topbar-height: 70px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+body {
+    background-color: var(--crave-bg);
+    color: var(--text-main);
+    overflow-x: hidden;
+    width: 100%; /* Anti-blowout */
+}
+
+a {
+    color: inherit;
+    text-decoration: none !important;
+}
+
+/* --- LAYOUT WRAPPER --- */
+.crave-layout {
+    display: flex;
+    min-height: 100vh;
+    width: 100%;
+    overflow-x: hidden; /* Prevent horizontal scroll blowout */
+}
+
+/* --- SIDEBAR --- */
+.crave-sidebar {
+    width: var(--sidebar-width);
+    background: #f7f6fb;
+    border-right: 1px solid var(--border-color);
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-header {
+    height: var(--topbar-height);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    position: relative;
+}
+
+.sidebar-header h2 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--crave-dark);
+    margin-left: 5px;
+    margin-top: 5px;
+}
+
+.sidebar-header h2 span { 
+    color: var(--crave-yellow) !important; 
+    font-family: 'Gagalin', sans-serif;
+}
+
+#luxalogo {
+    width: 55px;
+    position: absolute;
+    top: 22%;
+    left: 4%;
+    transform: rotate(12deg);
+}
+
+.uni-context {
+    padding: 20px 24px;
+}
+
+.uni-context-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: var(--crave-primary);
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+.uni-context-name {
+    font-weight: 700;
+    font-size: 1.3rem;
+    color: var(--crave-dark);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.sidebar-nav {
+    padding: 20px 15px;
+    flex-grow: 1;
+    overflow-y: auto;
+}
+
+.nav-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: var(--text-light);
+    font-weight: 700;
+    margin: 0 0 10px 10px;
+    letter-spacing: 0.5px;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 15px;
+    color: var(--text-main);
+    text-decoration: none;
+    border-radius: 10px;
+    margin-bottom: 5px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.nav-item i {
+    margin-right: 12px;
+    font-size: 1.2rem;
+    color: var(--text-light);
+    transition: color 0.2s;
+}
+
+.nav-item:hover, .nav-item.active {
+    background: #e0d9f6;
+    color: var(--crave-primary);
+}
+
+.nav-item:hover i, .nav-item.active i {
+    color: var(--crave-primary);
+}
+
+/* --- MAIN CONTENT AREA --- */
+.crave-main-wrapper {
+    flex-grow: 1;
+    margin-left: var(--sidebar-width);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    min-width: 0; /* CRITICAL: Prevents inner wide content from blowing out layout */
+    width: calc(100% - var(--sidebar-width)); 
+}
+
+/* --- TOP NAVIGATION --- */
+.crave-topbar {
+    height: var(--topbar-height);
+    background: #f7f6fb; 
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 30px;
+    position: fixed;
+    top: 0;
+    left: var(--sidebar-width);
+    right: 0;
+    z-index: 1000;
+}
+
+.topbar-left a {
+    color: var(--luxa-purple);
+    text-decoration: none;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: color 0.2s;
+}
+
+.topbar-left a:hover { color: var(--luxa-purple-hover); }
+
+.topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.wallet-pill {
+    background: #e8e1f3;
+    padding: 6px 15px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--crave-dark);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.wallet-pill:hover {
+    cursor: pointer;
+    background: #ccb8e7;
+    border: 2px solid var(--crave-primary);
+}
+
+.wallet-pill i { color: var(--crave-primary); }
+
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--crave-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 2px solid var(--border-color);
+}
+
+.user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.user-avatar i { font-size: 1.2rem; color: var(--text-light); }
+
+.user-info { display: flex; flex-direction: column; }
+.user-name { font-weight: 700; font-size: 0.9rem; color: var(--crave-dark); }
+.user-role { font-size: 0.75rem; color: var(--text-light); }
+
+.top-action-btn {
+    background: none;
+    border: none;
+    color: var(--text-light);
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+.top-action-btn:hover { color: var(--crave-primary-hover); }
+
+.top-action-btn span {
+    position: relative; 
+    bottom: 2px; 
+    font-weight: 700; 
+    font-size: 0.9rem; 
+    color: var(--crave-dark);
+}
+
+.top-action-btn:hover span { color: var(--crave-primary-hover); }
+
+/* --- USER PROFILE HOVER EFFECTS --- */
+.user-profile {
+    padding: 6px 12px;
+    border-radius: 30px;
+    transition: all 0.2s ease-in-out;
+}
+.user-profile:hover { background: #f4fbf7; }
+.user-profile:hover .user-name { color: var(--crave-primary); }
+.user-profile:hover .user-role { color: var(--crave-dark); }
+.user-profile:hover .user-avatar {
+    border-color: var(--crave-primary);
+    box-shadow: 0 4px 10px rgba(34, 197, 94, 0.2);
+}
+
+/* --- WALLET DROPDOWN PANEL --- */
+.wallet-pill-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.wallet-dropdown {
+    position: absolute;
+    top: 130%;
+    right: 0;
+    width: 260px;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(45, 26, 17, 0.1);
+    border: 1px solid var(--border-color);
+    padding: 20px;
+    z-index: 2000;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.wallet-pill-wrapper:hover .wallet-dropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.wallet-pill-wrapper::after {
+    content: '';
+    position: absolute;
+    height: 20px;
+    width: 100%;
+    bottom: -20px;
+    left: 0;
+}
+
+/* Dropdown Internal Styling */
+.wp-section { display: flex; flex-direction: column; gap: 12px; }
+.wp-label { font-size: 0.75rem; font-weight: 800; color: var(--text-light); display: flex; align-items: center; gap: 8px; }
+.badge-type { padding: 3px 8px; border-radius: 6px; font-size: 0.65rem; color: white; letter-spacing: 0.5px; }
+.badge-customer { background: var(--crave-primary); }
+.wp-balance-main { font-size: 1.8rem; font-weight: 800; color: var(--crave-dark); letter-spacing: -0.5px; }
+.wp-balance-sub { font-size: 0.8rem; color: #e67e22; font-weight: 600; background: #fff8e1; padding: 6px 10px; border-radius: 8px; display: inline-block; width: fit-content; }
+.wp-balance-sub i { margin-right: 4px; }
+.wp-actions { margin-top: 10px; border-top: 1px dashed var(--border-color); padding-top: 15px; }
+
+.btn-wp {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f4fbf7;
+    color: var(--crave-primary-hover);
+    padding: 10px 15px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+    border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.btn-wp:hover { background: var(--crave-primary); color: white; }
+
+/* =========================================
+   BASE CRAVE MOBILE RESPONSIVENESS
+   ========================================= */
+
+.mobile-menu-btn {
+    display: none;
+    background: transparent;
+    border: none;
+    font-size: 1.8rem;
+    color: var(--crave-dark);
+    cursor: pointer;
+    margin-right: 15px;
+}
+
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1500;
+    backdrop-filter: blur(2px);
+}
+
+.mobile-only {
+    display: none !important;
+}
+
+/* --- SUPPORT WIDGET --- */
+.support-widget {
+    position: relative;
+    padding: 15px 24px;
+    margin-top: auto; /* Docks widget to the absolute bottom of the sidebar */
+}
+
+.support-icon {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    color: var(--text-light);
+    font-weight: 700;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+    padding: 12px;
+    border-radius: 12px;
+    background: transparent;
+}
+
+.support-icon:hover {
+    color: var(--crave-primary);
+    background: #e0d9f6;
+}
+
+.support-icon i {
+    font-size: 1.3rem;
+}
+
+.support-menu {
+    position: absolute;
+    bottom: 100%; /* Makes the menu popup ABOVE the headset icon */
+    left: 24px;
+    background: white;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 -5px 25px rgba(0,0,0,0.08);
+    border-radius: 16px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 200px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1000;
+}
+
+/* Triggers the hover reveal */
+.support-widget:hover .support-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(-10px);
+}
+
+.sm-title {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: var(--text-light);
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    padding-left: 10px;
+    margin-bottom: 5px;
+}
+
+.support-menu a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-main);
+    transition: background 0.2s;
+}
+
+.support-menu a:hover {
+    background: #f4fbf7;
+    color: var(--crave-primary);
+}
+
+.support-menu a i {
+    font-size: 1.1rem;
+}
+
+/* --- CRAVE "ON BREAK" STATE DESIGN --- */
+
+.crave-break-wrapper {
+    display: flex;
+    justify-content: center;
+    margin: auto;
+    padding: 30px; /* Reduced outer padding so the card stretches more */
+    width: 100%;
+    min-height: 85vh; /* Pushes it to cover almost the whole vertical height */
+}
+
+.crave-break-card {
+    position: relative;
+    background: linear-gradient(135deg, var(--crave-primary), var(--luxa-purple));
+    border-radius: 32px; /* Slightly rounder corners for the larger size */
+    padding: 80px 60px; /* Massive internal breathing room */
+    max-width: 1100px; /* Much wider on desktop (was 800px) */
+    width: 100%;
+    min-height: 70vh; /* Forces the card itself to be tall and majestic */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 60px; /* More space between icon and text */
+    box-shadow: 0 25px 50px rgba(45, 27, 105, 0.25);
+    overflow: hidden;
+    z-index: 1;
+}
+
+/* Abstract Background Shapes scaled up to fit the new wide card */
+.break-decor {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.04);
+    z-index: -1;
+}
+
+.break-decor.shape-1 {
+    width: 500px;
+    height: 500px;
+    top: -150px;
+    right: -100px;
+}
+
+.break-decor.shape-2 {
+    width: 350px;
+    height: 350px;
+    bottom: -100px;
+    left: -100px;
+    background: rgba(229, 223, 52, 0.05); 
+}
+
+/* Floating Animation for the Icon */
+@keyframes floatIcon {
+    0% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-20px) rotate(8deg); }
+    100% { transform: translateY(0px) rotate(0deg); }
+}
+
+.break-icon-container {
+    flex-shrink: 0;
+}
+
+.floating-icon {
+    font-size: 9rem; /* Scaled up heavily for the larger screen */
+    animation: floatIcon 4.5s ease-in-out infinite;
+    filter: drop-shadow(0 20px 20px rgba(0,0,0,0.3));
+}
+
+.break-content {
+    color: white;
+    max-width: 600px; /* Prevents the text from stretching too wide and becoming hard to read */
+}
+
+.break-title {
+    font-family: 'Gagalin', sans-serif; 
+    font-size: 4rem; /* Massive, punchy headline */
+    color: #e5df34; 
+    margin-bottom: 20px;
+    letter-spacing: 2px;
+    line-height: 1.05;
+}
+
+.break-text {
+    font-family: 'Poppins', sans-serif; 
+    font-size: 1.25rem; /* Larger, highly readable body text */
+    line-height: 1.8;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 40px;
+}
+
+.break-actions {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.btn-break-primary {
+    background: var(--crave-yellow); 
+    color: var(--crave-dark); 
+    border: none;
+    padding: 16px 32px; /* Thicker button */
+    border-radius: 40px;
+    font-weight: 800;
+    font-size: 1.05rem; /* Larger text */
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 10px 25px rgba(229, 223, 52, 0.3);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-break-primary:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 15px 30px rgba(229, 223, 52, 0.5);
+    background: white;
+}
+
+.btn-break-secondary {
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 15px 28px;
+    border-radius: 40px;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px);
+}
+
+.btn-break-secondary:hover {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: white;
+}
+
+/* --- MOBILE MENU OVERRIDES --- */
+@media (max-width: 900px) {
+    .mobile-menu-override {
+        left: 0;
+        right: 0;
+        bottom: 100%;
+        width: 100%;
+    }
+}
+
+@media (max-width: 900px) {
+    .mobile-only { display: flex !important; }
+    .desktop-only { display: none !important; }
+    .desktop-text { display: none !important; }
+    
+    .mobile-menu-btn { display: block; }
+    
+    .crave-sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 2000;
+        box-shadow: 5px 0 25px rgba(0,0,0,0.1);
+    }
+    
+    .crave-sidebar.active { transform: translateX(0); }
+    .sidebar-overlay.active { display: block; }
+
+    /* Fix Content & Topbar spanning full width */
+    .crave-main-wrapper {
+        margin-left: 0;
+        width: 100vw; /* Take full viewport width */
+    }
+
+    .crave-topbar {
+        left: 0;
+        padding: 0 20px;
+        box-shadow: 0 10px 30px rgba(45, 26, 17, 0.1);
+    }
+
+    .topbar-left {
+        display: flex;
+        align-items: center;
+    }
+
+    .topbar-left a { display: none; }
+
+    .sidebar-footer {
+        padding: 20px;
+        border-top: 1px solid var(--border-color);
+        flex-direction: column;
+        background: #fff;
+    }
+
+    .wallet-dropdown {
+        max-width: 90vw;
+    }
+
+    .crave-break-wrapper {
+        padding: 15px; /* Minimal padding so it practically touches the screen edges */
+        min-height: calc(90vh - var(--topbar-height)); /* Full viewport minus header */
+        margin: auto;
+    }
+
+    .crave-break-card {
+        flex-direction: column;
+        text-align: center;
+        padding: 50px 20px;
+        gap: 30px;
+        border-radius: 24px;
+        min-height: 100%; /* Stretches card to fill wrapper */
+    }
+    
+    .break-decor.shape-1 {
+        width: 300px;
+        height: 300px;
+        top: -80px;
+        right: -80px;
+    }
+
+    .floating-icon {
+        font-size: 6.5rem; /* Still huge, but balanced for mobile */
+    }
+
+    .break-title {
+        font-size: 2.8rem;
+    }
+
+    .break-text {
+        font-size: 1rem;
+    }
+
+    .break-actions {
+        flex-direction: column;
+        width: 100%;
+        margin-top: 10px;
+    }
+
+    .btn-break-primary, .btn-break-secondary {
+        width: 100%;
+        justify-content: center;
+        padding: 15px;
+    }
+}

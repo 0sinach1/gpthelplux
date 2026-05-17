@@ -1,0 +1,361 @@
+{% extends "MAIN/base.html" %}
+{% load static %}
+
+{% block title %}Project CRAVE | Incoming Signal{% endblock %}
+
+{% block extra_css %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.cdnfonts.com/css/gagalin" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Carter+One&display=swap" rel="stylesheet">
+
+<style>
+    :root {
+        --crave-yellow: #e5df34;
+        --crave-primary: #2D1B69;
+    }
+
+    /* --- DARK MODE OVERRIDES JUST FOR THIS PAGE --- */
+    .crave-hype-container {
+        /* Deep space, almost black background */
+        background-color: #f7f6fb;
+        color: #f8f7f4;
+        overflow-x: hidden;
+        min-height: calc(100vh - 80px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 60px 20px;
+    }
+
+    /* --- CAROUSEL CONTAINER (Bigger & Darker) --- */
+    .hype-carousel {
+        position: relative;
+        width: 100%;
+        max-width: 1100px; /* Increased from 900px to make it massive */
+        background: rgb(23, 13, 48); /* Translucent dark purple/black */
+        backdrop-filter: blur(10px);
+        border-radius: 24px;
+        /* Glowing shadow effect */
+        box-shadow: 0 30px 50px rgba(0, 0, 0, 0.8);
+        overflow: hidden;
+        border: 1px solid rgba(229, 223, 52, 0.1);
+    }
+
+    .carousel-track {
+        display: flex;
+        transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+        width: 300%;
+    }
+
+    .carousel-slide {
+        width: 33.333%;
+        padding: 80px 60px 100px 60px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        opacity: 0.3;
+        transition: opacity 0.6s ease;
+    }
+
+    .carousel-slide.active-slide {
+        opacity: 1;
+    }
+
+    /* --- SLIDE 1: THE REVEAL --- */
+    .signal-badge {
+        background: rgba(229, 223, 52, 0.1);
+        color: var(--crave-yellow);
+        padding: 8px 20px;
+        border-radius: 30px;
+        font-size: 0.8rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+        margin-bottom: 30px;
+        display: inline-block;
+        border: 1px solid rgba(229, 223, 52, 0.3);
+        animation: neon-pulse 2s infinite;
+    }
+
+    @keyframes neon-pulse {
+        0% { box-shadow: 0 0 0 0 rgba(229, 223, 52, 0.3); }
+        70% { box-shadow: 0 0 0 15px rgba(229, 223, 52, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(229, 223, 52, 0); }
+    }
+
+    .crave-title {
+        font-size: 5rem; /* Increased size */
+        font-weight: 800;
+        color: #ffffff;
+        margin: 0 0 25px 0;
+        line-height: 1;
+    }
+
+    .crave-highlight {
+        font-family: 'Gagalin', 'Carter One', cursive;
+        color: var(--crave-yellow);
+        text-shadow: 3px 3px 0px rgba(0,0,0,0.5);
+        letter-spacing: 2px;
+    }
+
+    .mysterious-text {
+        font-size: 1.25rem;
+        color: #9c8db8;
+        max-width: 700px;
+        line-height: 1.7;
+        margin: 0 auto;
+    }
+
+    /* --- SLIDE 2 & 3: ARSENAL & PROTOCOL --- */
+    .slide-heading {
+        font-size: 2.8rem;
+        color: #ffffff;
+        font-weight: 800;
+        margin-bottom: 50px;
+        font-family: 'Arima', serif;
+    }
+
+    .feature-grid, .step-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 30px;
+        width: 100%;
+    }
+
+    .m-card {
+        background: rgba(255, 255, 255, 0.03); /* Glass effect */
+        padding: 40px 30px;
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        transition: all 0.3s ease;
+    }
+    .m-card:hover { 
+        transform: translateY(-8px); 
+        background: rgba(255, 255, 255, 0.05); 
+        border-color: rgba(229, 223, 52, 0.3);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5); 
+    }
+
+    .m-icon {
+        width: 70px;
+        height: 70px;
+        background: rgba(0, 0, 0, 0.5);
+        color: var(--crave-yellow);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        margin: 0 auto 25px;
+        border: 1px solid rgba(229, 223, 52, 0.2);
+    }
+
+    .m-card h3 { font-size: 1.3rem; color: #ffffff; margin-bottom: 12px; font-weight: 800; }
+    .m-card p { font-size: 0.95rem; color: #9c8db8; line-height: 1.6; margin: 0; }
+
+    /* Step Specifics */
+    .step-number {
+        font-family: 'Gagalin', 'Carter One', cursive;
+        font-size: 3rem;
+        color: var(--crave-yellow);
+        -webkit-text-stroke: 1px rgba(255, 255, 255, 0.1);
+        margin-bottom: 15px;
+        display: block;
+        opacity: 0.8;
+    }
+
+    /* --- CAROUSEL CONTROLS --- */
+    .carousel-controls {
+        position: absolute;
+        bottom: 30px;
+        left: 0;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 15px;
+        z-index: 10;
+    }
+
+    .dot {
+        width: 12px;
+        height: 12px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .dot.active {
+        background: var(--crave-yellow);
+        transform: scale(1.4);
+        box-shadow: 0 0 10px var(--crave-yellow);
+    }
+
+    .nav-arrow {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: #ffffff;
+        cursor: pointer;
+        backdrop-filter: blur(5px);
+        z-index: 10;
+        transition: all 0.2s;
+    }
+    .nav-arrow:hover { 
+        background: var(--crave-yellow); 
+        color: #000000; 
+        border-color: var(--crave-yellow);
+    }
+    .nav-prev { left: 20px; }
+    .nav-next { right: 20px; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .crave-title { font-size: 3.5rem; }
+        .mysterious-text { font-size: 1.1rem; }
+        .feature-grid, .step-grid { grid-template-columns: 1fr; gap: 20px; }
+        .crave-hype-container {min-height: 85%;}
+        .carousel-slide { padding: 50px 20px 50px 20px; }
+        .m-card { padding: 30px 20px; }
+        .nav-arrow { display: none; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="crave-hype-container">
+    <div class="hype-carousel" id="craveCarousel">
+        
+        <button class="nav-arrow nav-prev" onclick="moveSlide(-1)"><i class="fas fa-chevron-left"></i></button>
+        <button class="nav-arrow nav-next" onclick="moveSlide(1)"><i class="fas fa-chevron-right"></i></button>
+
+        <div class="carousel-track" id="carouselTrack">
+            
+            <div class="carousel-slide active-slide">
+                <span class="signal-badge">Intercepted Signal</span>
+                <h1 class="crave-title">luxa <span class="crave-highlight">CRAVE</span></h1>
+                <p class="mysterious-text">
+                    The campus food revolution is loading... <br><br>
+                    A seamless, hyper-secure framework designed to bridge the gap between you and your favorite meals is on the horizon. The days of unnecessary stress are numbered. Prepare your appetite.
+                </p>
+            </div>
+
+            <div class="carousel-slide">
+                <h2 class="slide-heading">Prepare for...</h2>
+                <div class="feature-grid">
+                    <div class="m-card">
+                        <div class="m-icon"><i class="fas fa-shield-alt"></i></div>
+                        <h3>Ironclad Escrow</h3>
+                        <p>No more friend trust issues. You don't have to rely on friends who are prone to disappointing you to satisfy your hunger.</p>
+                    </div>
+                    <div class="m-card">
+                        <div class="m-icon"><i class="fas fa-bolt"></i></div>
+                        <h3>Student Couriers</h3>
+                        <p>Ghost-tier navigation. Delivered by peers who actually know the difference between Block A and the Porter's Lodge.</p>
+                    </div>
+                    <div class="m-card">
+                        <div class="m-icon"><i class="fas fa-fingerprint"></i></div>
+                        <h3>1-Click Pack Presets</h3>
+                        <p>Save your ultimate meal combos to your profile. Trigger your favorite orders instantly without rebuilding the pack.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="carousel-slide">
+                <h2 class="slide-heading">The Protocol</h2>
+                <div class="step-grid">
+                    <div class="m-card">
+                        <span class="step-number">01</span>
+                        <h3>Establish Uplink</h3>
+                        <p>Select your university and access the classified menus of available cafeterias and marts.</p>
+                    </div>
+                    <div class="m-card">
+                        <span class="step-number">02</span>
+                        <h3>Compile Payload</h3>
+                        <p>Drag, drop, and bundle your customized meal components into our proprietary pack builder.</p>
+                    </div>
+                    <div class="m-card">
+                        <span class="step-number">03</span>
+                        <h3>Extract & Enjoy</h3>
+                        <p>Authorize payment securely from your wallet and track your courier's approach in real-time.</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="carousel-controls">
+            <div class="dot active" onclick="goToSlide(0)"></div>
+            <div class="dot" onclick="goToSlide(1)"></div>
+            <div class="dot" onclick="goToSlide(2)"></div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    let currentSlide = 0;
+    const totalSlides = 3;
+    const track = document.getElementById('carouselTrack');
+    const dots = document.querySelectorAll('.dot');
+    const slides = document.querySelectorAll('.carousel-slide');
+    let autoPlayTimer;
+
+    function updateCarousel() {
+        track.style.transform = `translateX(-${currentSlide * 33.333}%)`;
+        
+        dots.forEach(dot => dot.classList.remove('active'));
+        dots[currentSlide].classList.add('active');
+
+        slides.forEach(slide => slide.classList.remove('active-slide'));
+        slides[currentSlide].classList.add('active-slide');
+    }
+
+    function moveSlide(direction) {
+        currentSlide += direction;
+        if (currentSlide >= totalSlides) currentSlide = 0;
+        if (currentSlide < 0) currentSlide = totalSlides - 1;
+        updateCarousel();
+        resetAutoPlay();
+    }
+
+    function goToSlide(index) {
+        currentSlide = index;
+        updateCarousel();
+        resetAutoPlay();
+    }
+
+    function startAutoPlay() {
+        autoPlayTimer = setInterval(() => {
+            moveSlide(1);
+        }, 8000); 
+    }
+
+    function resetAutoPlay() {
+        clearInterval(autoPlayTimer);
+        startAutoPlay();
+    }
+
+    const carousel = document.getElementById('craveCarousel');
+    carousel.addEventListener('mouseenter', () => clearInterval(autoPlayTimer));
+    carousel.addEventListener('mouseleave', startAutoPlay);
+
+    startAutoPlay();
+</script>
+{% endblock %}
+
+{% block luxaslide %}
+{% endblock %}

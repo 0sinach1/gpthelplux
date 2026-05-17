@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Your Notifications{% endblock %}
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'MAIN/css/orders.css' %}" />
+{% endblock %}
+
+{% block category_bar %}{% endblock %}
+
+{% block content %}
+<div class="container page-wrapper" style="max-width:780px;">
+
+  {# Header #}
+  <div class="notif-header">
+    <div>
+      <h1>Your Notifications</h1>
+      <p class="notif-header__count">
+        {{ unread_count|default:"0" }} unread notification{{ unread_count|pluralize }}
+      </p>
+    </div>
+    <a href="{% url 'mark_all_notifications_read' %}"
+       class="notif-mark-all"
+       id="markAllBtn">Mark all as read</a>
+  </div>
+
+  {# Tabs #}
+  <div style="margin-bottom:var(--sp-5);">
+    <div class="tabs" style="width:fit-content;">
+      <a href="?tab=unread"
+         class="tab-btn {% if active_tab == 'unread' or not active_tab %}active{% endif %}">
+        Unread
+        {% if unread_count %}<span class="tab-count">{{ unread_count }}</span>{% endif %}
+      </a>
+      <a href="?tab=read"
+         class="tab-btn {% if active_tab == 'read' %}active{% endif %}">
+        Read
+        {% if read_count %}<span class="tab-count">{{ read_count }}</span>{% endif %}
+      </a>
+    </div>
+  </div>
+
+  {# ── Notification cards ── #}
+  {% if active_tab == 'read' %}
+    {% with notifs=notifications_read %}
+      {% include 'partials/notification_list.html' with notifs=notifs is_read=True %}
+    {% endwith %}
+  {% else %}
+    {% with notifs=notifications_unread %}
+      {% include 'partials/notification_list.html' with notifs=notifs is_read=False %}
+    {% endwith %}
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('markAllBtn')?.addEventListener('click', function(e) {
+  e.preventDefault();
+  fetch('{% url "mark_all_notifications_read" %}', {
+    method: 'POST',
+    headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' }
+  }).then(() => window.location.reload());
+});
+</script>
+{% endblock %}

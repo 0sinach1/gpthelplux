@@ -1,0 +1,311 @@
+{% load crispy_forms_tags %}
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" sizes="50x50" href="{% static '/images/titlelogo.png' %}" >
+    <title>Upgrade to Luxa Courier</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Arima:wght@100..700&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+    <style>
+        :root {
+            --luxa-primary: #2D1B69;
+            --luxa-bg: #f8f9fc;
+        }
+
+        body {
+            background-color: var(--luxa-bg); 
+            font-family: 'Poppins', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+        }
+
+        .card-registration {
+            background-color: #ffffff;
+            border: none;
+            border-radius: 1.25rem;
+            box-shadow: 0 15px 35px rgba(45, 27, 105, 0.08);
+            overflow: hidden;
+        }
+
+        .brand-text {
+            color: var(--luxa-primary);
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        /* Custom Input styling for a cleaner look */
+        .form-control, .form-select {
+            border-radius: 0.5rem;
+            border: 1px solid #dee2e6;
+            padding: 0.6rem 1rem;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: var(--luxa-primary);
+            box-shadow: 0 0 0 0.25rem rgba(45, 27, 105, 0.15);
+        }
+
+        /* Primary Button */
+        .btn-primary {
+            background-color: var(--luxa-primary);
+            border-color: var(--luxa-primary);
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover, .btn-primary:focus {
+            background-color: #1a0f40; /* Darker shade for hover */
+            border-color: #1a0f40;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(45, 27, 105, 0.2);
+        }
+
+        .text-primary-custom {
+            color: var(--luxa-primary);
+        }
+
+        .text-muted {
+            color: #8fa0b5 !important;
+            font-weight: 500;
+        }
+
+        /* Image Preview Section */
+        .photo-upload-section {
+            background-color: #f8f9fc;
+            border: 1px dashed #cbd5e1;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+            margin-bottom: 1.5rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .photo-upload-section:hover {
+            border-color: var(--luxa-primary);
+        }
+
+        .avatar-preview {
+            width: 75px;
+            height: 75px;
+            border-radius: 50%;
+            background-color: #e2e8f0;
+            border: 2px solid var(--luxa-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .avatar-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+
+        .avatar-preview i {
+            font-size: 2.2rem;
+            color: #94a3b8;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-9 col-lg-7 col-xl-5">
+                
+                <div class="card card-registration">
+                    <div class="card-body p-4 p-md-5">
+                        
+                        <div class="text-center mb-4">
+                            <a href="{% url 'index' %}"><img src="{% static 'images/LUXA_Logo.png' %}" alt="Luxa Logo" style="width: 120px; margin-bottom: 1rem;"></a>
+                            <h3 class="brand-text mb-1">Upgrade Account</h3>
+                            <p class="text-muted small">You already have a luxa account! Just provide a few extra details to become a Courier Partner.</p>
+                        </div>
+
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert" style="border-radius: 0.5rem; font-size: 0.9rem;">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+
+                        <form method="POST" enctype="multipart/form-data">
+                            {% csrf_token %}
+
+                            <div class="photo-upload-section">
+                                <div class="avatar-preview" id="previewContainer">
+                                    <i class="bi bi-person-fill" id="defaultIcon"></i>
+                                    <img id="imagePreview" src="#" alt="Profile Preview">
+                                </div>
+                                <div class="flex-grow-1 w-100">
+                                    {{ form.photo|as_crispy_field }}
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    {{ form.gender|as_crispy_field }}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    {{ form.date_of_birth|as_crispy_field }}
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                {{ form.university_profile|as_crispy_field }}
+                            </div>
+
+                            <div class="d-grid gap-2 mt-2">
+                                <button type="button" class="btn btn-primary btn-lg fw-bold shadow-sm" onclick="triggerSocialModal()">
+                                    Complete Upgrade
+                                </button>
+                            </div>
+
+                            <div class="modal fade" id="socialMediaModal" data-bs-backdrop="static" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content" style="border: none; border-radius: 1.25rem; box-shadow: 0 15px 35px rgba(45, 27, 105, 0.2);">
+                                        <div class="modal-body p-4 p-md-5">
+                                            <div class="text-center mb-4">
+                                                <div style="width: 70px; height: 70px; background: #f3e8ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;">
+                                                    <i class="bi bi-chat-text-fill" style="font-size: 2rem; color: var(--luxa-primary);"></i>
+                                                </div>
+                                                <h4 style="color: var(--luxa-primary); font-weight: 800;">One Last Step!</h4>
+                                                <p class="text-muted small">How can we reach you quickly? Please provide your contact details.</p>
+                                            </div>
+                                            
+                                            <div class="mb-3 text-start">
+                                                {{ form.social_media_platform|as_crispy_field }}
+                                            </div>
+                                            <div class="mb-4 text-start">
+                                                {{ form.social_media_handle|as_crispy_field }}
+                                            </div>
+                                            
+                                            <button type="submit" class="btn btn-primary w-100 fw-bold">
+                                                Confirm & Upgrade
+                                            </button>
+                                            <button type="button" class="btn btn-link w-100 mt-2 text-muted text-decoration-none" data-bs-dismiss="modal">Go Back</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="text-center mt-4">
+                                <p class="small text-muted mb-0">
+                                    Changed your mind? 
+                                    <a href="{% url 'index' %}" class="text-decoration-none text-primary-custom fw-bold">Return to Store</a>
+                                </p>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <div class="text-center mt-4 text-muted small fw-medium">
+                    &copy; {% now "Y" %} Luxa Nigeria. All rights reserved.
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Target the file input inside the crispy form. 
+            const fileInput = document.querySelector('input[type="file"]');
+            const previewImg = document.getElementById('imagePreview');
+            const defaultIcon = document.getElementById('defaultIcon');
+
+            if (fileInput) {
+                fileInput.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file && file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        
+                        reader.onload = function(event) {
+                            previewImg.src = event.target.result;
+                            previewImg.style.display = 'block';
+                            defaultIcon.style.display = 'none';
+                        };
+                        
+                        reader.readAsDataURL(file);
+                    } else {
+                        previewImg.src = '#';
+                        previewImg.style.display = 'none';
+                        defaultIcon.style.display = 'block';
+                    }
+                });
+            }
+
+            // --- NEW: WhatsApp Dynamic Formatting ---
+            const platformSelect = document.querySelector('select[name="social_media_platform"]');
+            const handleInput = document.querySelector('input[name="social_media_handle"]');
+
+            if (platformSelect && handleInput) {
+                platformSelect.addEventListener('change', function(e) {
+                    const label = document.querySelector('label[for="' + handleInput.id + '"]');
+                    
+                    if (e.target.value === 'WHATSAPP') {
+                        handleInput.placeholder = "e.g., +2348000000000";
+                        handleInput.type = "tel";
+                        if(label) label.innerHTML = 'WhatsApp Number<span class="asteriskField">*</span>';
+                    } else {
+                        handleInput.placeholder = "e.g., @yourhandle";
+                        handleInput.type = "text";
+                        if(label) label.innerHTML = 'Social Media Handle<span class="asteriskField">*</span>';
+                    }
+                });
+            }
+        });
+
+        // --- UPDATED: Modal Trigger & Validation ---
+        function triggerSocialModal() {
+            const form = document.querySelector('form');
+            const platform = document.querySelector('select[name="social_media_platform"]');
+            const handle = document.querySelector('input[name="social_media_handle"]');
+
+            // 1. Temporarily remove 'required' from the hidden modal fields
+            if (platform) platform.removeAttribute('required');
+            if (handle) handle.removeAttribute('required');
+
+            // 2. Check the visible fields on the main page
+            if (form.reportValidity()) {
+                
+                // 3. Main page is valid! Put 'required' back so the final submit button enforces them.
+                if (platform) platform.setAttribute('required', 'required');
+                if (handle) handle.setAttribute('required', 'required');
+
+                // 4. Open the modal
+                const socialModal = new bootstrap.Modal(document.getElementById('socialMediaModal'));
+                socialModal.show();
+                
+            } else {
+                // If the main page had missing fields, put 'required' back just in case.
+                if (platform) platform.setAttribute('required', 'required');
+                if (handle) handle.setAttribute('required', 'required');
+            }
+        }
+    </script>
+
+</body>
+</html>

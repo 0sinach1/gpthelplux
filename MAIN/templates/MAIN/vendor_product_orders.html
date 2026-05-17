@@ -1,0 +1,187 @@
+{% extends "MAIN/base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Product Orders{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/category.css' %}">
+<style>
+    .orders-container {
+        max-width: 1000px;
+        margin: 40px auto;
+        padding: 0 20px;
+    }
+    
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+
+    /* COMPACT CARD STYLES */
+    .compact-order-card {
+        background: white;
+        border: 1px solid #e0e0e0;
+        border-radius: 10px;
+        padding: 20px 25px;
+        margin-bottom: 15px;
+        display: grid;
+        grid-template-columns: 1.5fr 1fr 1.5fr 1fr 1fr 0.5fr;
+        align-items: center;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        position: relative; /* Required for badge positioning */
+    }
+
+    .compact-order-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        border-color: #ccc;
+    }
+
+    /* --- NEW BADGE CSS --- */
+    .new-badge-pulse {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        background: #ff4757; /* Bright Red */
+        color: white;
+        font-size: 0.7rem;
+        font-weight: 800;
+        padding: 4px 8px;
+        border-radius: 12px;
+        box-shadow: 0 2px 5px rgba(255, 71, 87, 0.4);
+        z-index: 10;
+        animation: pulse-red 2s infinite;
+    }
+
+    @keyframes pulse-red {
+        0% { box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.7); }
+        70% { box-shadow: 0 0 0 6px rgba(255, 71, 87, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(255, 71, 87, 0); }
+    }
+    /* -------------------- */
+
+    .c-label {
+        font-size: 0.75rem;
+        color: #999;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 4px;
+        display: block;
+    }
+
+    .c-value {
+        font-weight: 600;
+        color: #2c3e50;
+        font-size: 0.95rem;
+    }
+
+    .c-id { font-size: 1.1rem; font-weight: 700; color: #2c3e50; }
+    .c-total { font-weight: 800; color: #27ae60; font-size: 1.1rem; text-align: right; }
+    
+    .c-arrow {
+        color: #ccc;
+        font-size: 1.2rem;
+        text-align: right;
+        transition: transform 0.2s, color 0.2s;
+    }
+    .compact-order-card:hover .c-arrow {
+        color: #6a3aff;
+        transform: translateX(3px);
+    }
+
+    .status-pill {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 700;
+    }
+    .sp-pending { background: #fff8e1; color: #f39c12; }
+    .sp-processing { background: #e3f2fd; color: #2196f3; }
+    .sp-shipped { background: #e8f5e9; color: #2ecc71; }
+    .sp-delivered { background: #e8f5e9; color: #27ae60; }
+    .sp-cancelled { background: #ffebee; color: #c62828; }
+
+    @media (max-width: 768px) {
+        .compact-order-card {
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .c-arrow { display: none; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="orders-container">
+    <div class="page-header">
+        <h1>All Product Orders</h1>
+    </div>
+    
+    {% if orders %}
+        {% for order in orders %}
+        <div class="compact-order-card" onclick="window.location.href='{% url 'vendor_order_detail' order.id %}'">
+            
+            {% if not order.vendor_seen %}
+                <div class="new-badge-pulse">NEW</div>
+            {% endif %}
+            <div>
+                <span class="c-id">#{{ order.order_number }}</span>
+                <span class="c-label" style="margin-top: 5px;">{{ order.created_at|date:"M d, Y" }}</span>
+            </div>
+
+            <div>
+                <span class="c-label">Status</span>
+                <span class="status-pill sp-{{ order.status }}">
+                    {{ order.get_status_display }}
+                </span>
+            </div>
+
+            <div>
+                <span class="c-label">Customer</span>
+                <span class="c-value">
+                    {% if order.customer.kyc_profile %}
+                        {{ order.customer.kyc_profile.full_name_on_id|truncatechars:20 }}
+                    {% else %}
+                        {{ order.customer.full_name|truncatechars:20 }}
+                    {% endif %}
+                    {% if order.is_kyc_verified %}
+                        <i class="fas fa-check-circle" style="color: #27ae60; margin-left: 5px;" title="Verified by Govt ID"></i>
+                    {% endif %}
+                </span>
+            </div>
+
+            <div>
+                <span class="c-label">Contents</span>
+                <span class="c-value">{{ order.items.count }} Item{% if order.items.count != 1 %}s{% endif %}</span>
+            </div>
+
+            <div style="text-align: right;">
+                <span class="c-label">Total Earnings</span>
+                <div class="c-total">{% if order.vendor_payout and order.vendor_payout > 0 %}
+                        {{ currency_symbol }}{{ order.vendor_payout|floatformat:2 }}
+                    {% else %}
+                        {{ currency_symbol }}{{ order.subtotal|floatformat:2 }}
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="c-arrow">&rarr;</div>
+
+        </div>
+        {% endfor %}
+    {% else %}
+        <div style="text-align: center; padding: 60px; background: #f9f9f9; border-radius: 12px; color: #777;">
+            <p style="font-size: 1.2rem;">No orders found.</p>
+            <p>Once customers place orders, they will appear here.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block luxaslide %}
+{% endblock %}

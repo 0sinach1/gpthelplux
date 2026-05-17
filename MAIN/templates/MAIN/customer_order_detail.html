@@ -1,0 +1,219 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Order #{{ order.order_id }}{% endblock %}
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'MAIN/css/orders.css' %}" />
+{% endblock %}
+
+{% block category_bar %}{% endblock %}
+
+{% block content %}
+<div class="container page-wrapper">
+
+  {# Back link #}
+  <a href="{% url 'customer_orders' %}" class="breadcrumb" style="margin-bottom:var(--sp-5);">
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/>
+    </svg>
+    Back to My Orders
+  </a>
+
+  {# Order header #}
+  <div class="order-detail-header">
+    <div class="order-detail-header__left">
+      <h1>Order #{{ order.order_id }}</h1>
+      <p>
+        Placed on {{ order.created_at|date:"F d, Y" }}
+        {% if order.shipment_count %} · {{ order.shipment_count }} Shipment{{ order.shipment_count|pluralize }}{% endif %}
+      </p>
+    </div>
+    <span class="badge badge--{{ order.status|lower }}" style="font-size:13px; padding:6px 14px;">
+      {{ order.get_status_display }}
+    </span>
+  </div>
+
+  {# ── Desktop: horizontal progress stepper ── #}
+  <div class="order-progress-card" id="desktopProgress">
+    <h3 class="order-progress-card__title">
+      📦 Order Progress
+    </h3>
+
+    {% with steps="Order Placed,Validated,Processing,In-transit,Delivered" %}
+    <div class="progress-stepper" style="position:relative;">
+      <div class="progress-stepper__track"></div>
+      <div class="progress-stepper__fill"
+           style="width:{% widthratio order.progress_step|default:4 5 100 %}%;"></div>
+
+      {% for step_name in steps|split:"," %}
+        {% with i=forloop.counter %}
+          <div class="progress-step
+            {% if i < order.progress_step|default:4 %}progress-step--done
+            {% elif i == order.progress_step|default:4 %}progress-step--active{% endif %}">
+            <div class="progress-step__dot">
+              {% if i < order.progress_step|default:4 %}
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
+                </svg>
+              {% endif %}
+            </div>
+            <p class="progress-step__label">{{ step_name }}</p>
+            <p class="progress-step__date">
+              {% if i == 1 %}{{ order.created_at|date:"M d" }}
+              {% elif i == 2 %}{{ order.validated_at|date:"M d"|default:"" }}
+              {% elif i == 3 %}{{ order.processing_at|date:"M d"|default:"" }}
+              {% elif i == 4 %}{% if i == order.progress_step|default:4 %}Est. today{% else %}{{ order.transit_at|date:"M d"|default:"" }}{% endif %}
+              {% elif i == 5 %}{% if i > order.progress_step|default:4 %}Pending{% else %}{{ order.delivered_at|date:"M d"|default:"" }}{% endif %}
+              {% endif %}
+            </p>
+          </div>
+        {% endwith %}
+      {% endfor %}
+    </div>
+    {% endwith %}
+  </div>
+
+  {# ── Mobile: vertical progress stepper ── #}
+  <div class="order-progress-card" id="mobileProgress" style="display:none;">
+    <h3 class="order-progress-card__title">📦 Progress</h3>
+    <div class="progress-stepper progress-stepper--vertical">
+      {% with steps="Order Placed,Validated,Processing,In-transit,Delivered" %}
+      {% for step_name in steps|split:"," %}
+        {% with i=forloop.counter %}
+          <div class="progress-step
+            {% if i < order.progress_step|default:4 %}progress-step--done
+            {% elif i == order.progress_step|default:4 %}progress-step--active{% endif %}">
+            <div class="progress-step__dot">
+              {% if i < order.progress_step|default:4 %}
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
+                </svg>
+              {% endif %}
+            </div>
+            <div class="progress-step__body">
+              <p class="progress-step__label">
+                {{ step_name }}
+                {% if i == order.progress_step|default:4 %} — Now{% endif %}
+              </p>
+              <p class="progress-step__date">
+                {% if i == 1 %}{{ order.created_at|date:"M d, g:i A" }}
+                {% elif i == 2 and order.validated_at %}{{ order.validated_at|date:"M d, g:i A" }}
+                {% elif i == 3 and order.processing_at %}{{ order.processing_at|date:"M d, g:i A" }}
+                {% elif i == 4 and order.transit_at %}{{ order.transit_at|date:"M d, g:i A" }}
+                {% elif i == 5 and order.delivered_at %}{{ order.delivered_at|date:"M d, g:i A" }}
+                {% endif %}
+              </p>
+            </div>
+          </div>
+        {% endwith %}
+      {% endfor %}
+      {% endwith %}
+    </div>
+  </div>
+
+  {# ── Courier card ── #}
+  {% if courier %}
+    <div class="courier-card">
+      <div class="courier-card__avatar">
+        {% if courier.avatar %}
+          <img src="{{ courier.avatar.url }}" alt="{{ courier.name }}" />
+        {% else %}
+          <div style="width:100%;height:100%;background:var(--clr-accent);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff;">
+            {{ courier.name|first|upper }}
+          </div>
+        {% endif %}
+      </div>
+      <div class="courier-card__body">
+        <p class="courier-card__name">{{ courier.name }}</p>
+        <p class="courier-card__sub">{{ courier.company }}</p>
+        <p class="courier-card__track">
+          Tracking: {{ courier.tracking_id }}
+          &nbsp;|&nbsp; {{ order.shipping_origin }} → {{ order.shipping_destination }}
+          &nbsp;·&nbsp; <span class="courier-on-time">+ On time</span>
+        </p>
+      </div>
+      <a href="tel:{{ courier.phone }}" class="btn btn--ghost btn--sm">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z"/>
+        </svg>
+        Call Courier
+      </a>
+    </div>
+  {% endif %}
+
+  {# ── Shipments ── #}
+  {% for shipment in shipments %}
+    <div class="shipment-card">
+      <div class="shipment-card__header">
+        <div>
+          <p class="shipment-card__label">Shipment {{ forloop.counter }} of {{ shipments|length }}</p>
+          <p class="shipment-card__vendor">{{ shipment.vendor_name }}</p>
+        </div>
+        <span class="badge badge--{{ shipment.status|lower }}">{{ shipment.get_status_display }}</span>
+      </div>
+      <div class="shipment-card__body">
+        {% for item in shipment.items.all %}
+          <div class="shipment-item {% if not forloop.first %}mt-4{% endif %}">
+            <div class="shipment-item__img">
+              {% if item.product.cover_image %}
+                <img src="{{ item.product.cover_image.url }}" alt="{{ item.product.name }}" loading="lazy" />
+              {% endif %}
+            </div>
+            <div style="flex:1;">
+              <p class="shipment-item__name">{{ item.product.name }}</p>
+              <p class="shipment-item__qty text-muted text-sm">Qty: {{ item.quantity }}</p>
+            </div>
+            <p class="shipment-item__price">₦{{ item.total|floatformat:2 }}</p>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endfor %}
+
+  {# ── Shipping + Payment grid ── #}
+  <div class="order-detail-grid">
+
+    {# Shipping #}
+    <div class="order-detail-box">
+      <p class="order-detail-box__title">Shipping Details</p>
+      {% if shipping_address %}
+        <p style="font-size:14px; color:var(--clr-text); line-height:1.8;">
+          {{ shipping_address.full_name }}<br />
+          {{ shipping_address.address_line1 }}<br />
+          {% if shipping_address.address_line2 %}{{ shipping_address.address_line2 }}<br />{% endif %}
+          {{ shipping_address.city }}, {{ shipping_address.state }}
+        </p>
+      {% else %}
+        <p class="text-muted text-sm">No shipping address on record.</p>
+      {% endif %}
+    </div>
+
+    {# Payment #}
+    <div class="order-detail-box">
+      <p class="order-detail-box__title">Payment Summary</p>
+      <div class="payment-line">
+        <span>Items Subtotal</span>
+        <span>₦{{ payment_summary.subtotal|default:order.subtotal|floatformat:2 }}</span>
+      </div>
+      <div class="payment-line">
+        <span>VAT &amp; Charges</span>
+        <span>₦{{ payment_summary.vat|default:order.vat|floatformat:2 }}</span>
+      </div>
+      <div class="payment-line payment-line--total">
+        <span>Grand Total</span>
+        <span>₦{{ payment_summary.total|default:order.total|floatformat:2 }}</span>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+{# Toggle desktop/mobile stepper via CSS #}
+<style>
+@media (max-width: 768px) {
+  #desktopProgress { display: none !important; }
+  #mobileProgress  { display: block !important; }
+}
+</style>
+{% endblock %}

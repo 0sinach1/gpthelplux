@@ -1,0 +1,547 @@
+:root {
+    --primary-color: #2c3e50;
+    --secondary-color: #34495e;
+    --accent-green: #960ffa;
+    --accent-red: #c0392b;
+    --accent-gold: #f39c12;
+    --accent-blue: #2980b9;
+    --bg-light: #f8f9fa;
+    --card-shadow: 0 8px 15px rgba(0,0,0,0.05);
+    --hover-shadow: 0 12px 20px rgba(0,0,0,0.1);
+    --transition-speed: 0.3s ease;
+}
+
+.dashboard-container {
+    max-width: 1000px;
+    margin: 40px auto;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    padding: 0 20px;
+}
+
+/* --- Return Navigation Pills --- */
+.return-nav-pills {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+    align-items: center;
+    position: fixed;
+    top: 140px;
+    left: 20px;
+}
+
+.return-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 18px;
+    background: white;
+    color: var(--secondary-color);
+    border: 1px solid #e0e0e0;
+    border-radius: 30px; /* Classic Pill Shape */
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: var(--transition-speed);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.return-pill:hover {
+    background: #f8f9fa;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+    color: var(--primary-color);
+    border-color: #d0d0d0;
+}
+
+/* Special styling for the Crave Return Pill to match the Crave aesthetic */
+.return-pill.crave-pill {
+    color: #16a34a; /* Crave Primary Green */
+    border-color: #bbf7d0;
+    background: #f4fbf7;
+}
+
+.return-pill.crave-pill:hover {
+    background: #dcfce7;
+    border-color: #86efac;
+    color: #15803d;
+}
+
+/* --- Tab Switcher --- */
+.wallet-tabs {
+    position: relative;
+    display: flex;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+.tab-btn {
+    padding: 12px 25px;
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    font-weight: 600;
+    background: #e9ecef;
+    color: #6c757d;
+    text-decoration: none;
+    transition: var(--transition-speed);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+.tab-btn:hover {
+    transform: translateY(-2px);
+    background: #dde2e6;
+}
+.tab-btn.active {
+    background: var(--primary-color);
+    color: white;
+    box-shadow: 0 4px 10px rgba(44, 62, 80, 0.3);
+}
+
+#backtocourierpg {
+    display: flex;
+    position: absolute;
+    left: -250px;
+    top: 100px;
+    align-self: center;
+}
+
+/* --- Master Balance Card (The New Layout) --- */
+.balance-master-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: var(--card-shadow);
+    display: flex;
+    flex-wrap: wrap;
+    overflow: hidden;
+    margin-bottom: 40px;
+    border: 1px solid #eee;
+}
+
+/* Left Side: Available Balance */
+.balance-main {
+    flex: 2;
+    padding: 30px;
+    border-right: 1px solid #f0f0f0;
+    min-width: 300px;
+}
+
+/* Right Side: Mini Stats (Locked/Pending) */
+.balance-side {
+    flex: 1;
+    background: #fdfdfd;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 15px;
+    min-width: 250px;
+}
+
+.balance-label {
+    color: #6c757d;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.balance-amount-large {
+    font-size: 3rem;
+    font-weight: 800;
+    color: var(--primary-color);
+    margin-bottom: 20px;
+    line-height: 1;
+}
+
+/* Action Buttons Container */
+.action-group {
+    display: flex;
+    gap: 15px;
+}
+
+.action-btn {
+    flex: 1;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition-speed);
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-deposit { 
+    background: var(--accent-green); 
+    color: white; 
+    box-shadow: 0 4px 6px rgba(39, 174, 96, 0.2);
+}
+.btn-deposit:hover { 
+    background: #219150; 
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(39, 174, 96, 0.3);
+}
+
+.btn-withdraw { 
+    background: white; 
+    border: 2px solid var(--primary-color); 
+    color: var(--primary-color); 
+}
+
+.btn-withdraw:hover { 
+    background: #f8f9fa; 
+    cursor: pointer;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+/* --- Interactive Mini Stats --- */
+.mini-stat-card {
+    background: white;
+    border: 1px solid #eee;
+    padding: 15px 20px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: var(--transition-speed);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.mini-stat-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+}
+
+.mini-stat-card.locked::before { background: var(--accent-gold); }
+.mini-stat-card.pending::before { background: var(--accent-blue); }
+
+.mini-stat-card:hover {
+    transform: translateX(-5px) scale(1.02);
+    box-shadow: var(--hover-shadow);
+    border-color: transparent;
+}
+
+.mini-content h4 {
+    margin: 0;
+    font-size: 0.8rem;
+    color: #999;
+    text-transform: uppercase;
+}
+
+.mini-content p {
+    margin: 5px 0 0 0;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--secondary-color);
+}
+
+.mini-icon {
+    font-size: 1.5rem;
+    opacity: 0.2;
+}
+
+/* --- Transaction History Table --- */
+.table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+/* --- RESPONSIVE TABLE WRAPPER --- */
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+    border-radius: 16px;
+    box-shadow: var(--card-shadow);
+}
+
+/* Remove the shadow and rounding from the table itself since the wrapper now handles it */
+.history-table {
+    box-shadow: none;
+    border-radius: 0;
+    min-width: 600px; /* Forces the table to stay a readable width, triggering the wrapper's scroll */
+}
+
+.history-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: var(--card-shadow);
+}
+.history-table th { 
+    background: #f1f3f5; 
+    text-align: left; 
+    padding: 18px 25px; 
+    color: #495057; 
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+}
+.history-table td { 
+    padding: 20px 25px; 
+    border-bottom: 1px solid #f1f1f1; 
+    color: #2c3e50;
+}
+.history-table tr:last-child td { border-bottom: none; }
+.history-table tr:hover td { background-color: #fafafa; }
+
+.status-badge { 
+    padding: 6px 12px; 
+    border-radius: 20px; 
+    font-size: 0.85rem; 
+    font-weight: 700; 
+}
+.bg-green-light { background: #d4edda; color: #155724; }
+.bg-red-light { background: #f8d7da; color: #721c24; }
+
+/* --- Modals --- */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+.modal-overlay.show {
+    opacity: 1;
+}
+
+.modal-content {
+    background: white;
+    padding: 35px;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.2);
+    transform: translateY(20px);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.modal-overlay.show .modal-content {
+    transform: translateY(0);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 15px;
+}
+.modal-header h3 { margin: 0; color: var(--primary-color); }
+.close-modal {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #999;
+}
+.close-modal:hover { color: var(--accent-red); }
+
+.form-input {
+    width: 100%;
+    padding: 14px;
+    margin: 10px 0 25px 0;
+    border: 2px solid #eee;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+    box-sizing: border-box; /* Prevent padding from breaking width */
+}
+.form-input:focus {
+    border-color: var(--primary-color);
+    outline: none;
+}
+
+/* Specific Modal Styles for Transaction List */
+.txn-list-container {
+    max-height: 400px;
+    overflow-y: auto;
+}
+.txn-item {
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.txn-item:last-child { border-bottom: none; }
+.txn-meta { display: flex; flex-direction: column; gap: 4px; }
+.txn-desc { font-weight: 600; font-size: 0.95rem; }
+.txn-date { font-size: 0.8rem; color: #888; }
+
+/* Add to your CSS */
+.txn-row {
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+.txn-row:hover {
+    background-color: #f8f9fa; /* Light grey hover effect */
+}
+
+/* Searchable Bank List Styles */
+.bank-search-container {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.bank-list-dropdown {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    border-radius: 0 0 6px 6px;
+    border-top: none;
+    display: none; /* Hidden by default */
+    background: white;
+    position: absolute;
+    width: 100%;
+    z-index: 10;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.bank-list-dropdown.show {
+    display: block;
+}
+
+.bank-option {
+    padding: 10px 15px;
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+    font-size: 0.9em;
+    transition: background 0.1s;
+}
+
+.bank-option:hover {
+    background-color: #f0f7ff;
+    color: var(--primary-color);
+}
+
+.bank-option.selected {
+    background-color: #e3f2fd;
+    font-weight: 600;
+}
+
+@media only screen and (max-width: 900px) {
+    #backtocourierpg {
+        display: flex;
+        position: relative;
+        left: 0;
+        align-self: center;
+    }
+
+    .wallet-tabs {
+        position: relative;
+        display: flex;
+        gap: 15px;
+        margin-bottom: 25px;
+        overflow-x: auto;
+        scroll-behavior: auto;
+    }
+
+    /* Responsive adjustment for the pill container */
+    @media only screen and (max-width: 900px) {
+        .return-nav-pills {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            align-items: center;
+            position: relative;
+            top: 0;
+            left: 15px;
+        }
+    }
+    
+    .dashboard-container {
+        margin: 20px auto;
+        padding: 0 15px;
+    }
+
+    /* --- Smart Tabs on Mobile --- */
+    .wallet-tabs {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 10px;
+        margin-bottom: 20px;
+        overflow-x: auto;
+        scroll-behavior: smooth;
+        padding-bottom: 5px; /* Breathing room for scroll */
+        
+        /* Hide scrollbars for a cleaner app-like feel */
+        scrollbar-width: none; 
+        -ms-overflow-style: none;
+    }
+    
+    .wallet-tabs::-webkit-scrollbar { 
+        display: none; 
+    }
+
+    .tab-btn {
+        padding: 10px 16px;
+        font-size: 0.85rem;
+        white-space: nowrap; /* Prevents text from awkwardly stacking */
+        text-align: center;
+        justify-content: center;
+        flex-shrink: 0; /* Prevents buttons from squishing */
+    }
+
+    #backtocourierpg {
+        position: static; /* Removes absolute positioning so it flows naturally in the scroll list */
+        padding-left: 12px !important;
+        padding-right: 15px !important;
+    }
+
+    /* --- Table Adjustments for Mobile --- */
+    .history-table th, 
+    .history-table td {
+        padding: 15px 12px; /* Tighter padding to fit more content on screen */
+        font-size: 0.85rem;
+    }
+
+    /* --- Master Card Adjustments --- */
+    .balance-main {
+        min-width: 100%;
+        padding: 20px;
+        border-right: none;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .balance-amount-large {
+        font-size: 2.2rem; /* Slightly smaller for mobile */
+    }
+
+    .balance-side {
+        min-width: 100%;
+        padding: 20px;
+    }
+
+    /* Action buttons stack neatly or stay side-by-side cleanly */
+    .action-group {
+        gap: 10px;
+    }
+    
+    .action-btn {
+        padding: 10px 15px;
+        font-size: 0.85rem;
+    }
+}

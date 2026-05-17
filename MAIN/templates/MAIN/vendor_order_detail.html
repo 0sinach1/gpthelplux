@@ -1,0 +1,246 @@
+{% extends "MAIN/base.html" %}
+{% load static %}
+
+{% block title %}Order Details{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/category.css' %}">
+<style>
+    /* ... (Keep existing styles) ... */
+    .order-detail-container { max-width: 1000px; margin: 20px auto; padding: 20px; }
+    .order-header { background: white; border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+    .order-number { font-size: 1.5em; font-weight: bold; color: #2c3e50; margin-bottom: 10px; }
+    .order-status { display: inline-block; padding: 8px 20px; border-radius: 20px; font-weight: bold; margin-top: 10px; }
+    .status-pending { background: #fff3cd; color: #856404; }
+    .status-processing { background: #cfe2ff; color: #084298; }
+    .status-shipped { background: #d1e7dd; color: #0f5132; }
+    .status-delivered { background: #d1e7dd; color: #0f5132; }
+    .status-cancelled { background: #f8d7da; color: #842029; }
+    
+    .order-section { background: white; border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+    .order-section h3 { margin-top: 0; color: #2c3e50; border-bottom: 2px solid #2c3e50; padding-bottom: 10px; }
+    
+    .order-item { display: flex; padding: 15px 0; border-bottom: 1px solid #eee; }
+    .order-item:last-child { border-bottom: none; }
+    .item-image { width: 100px; height: 100px; object-fit: cover; border-radius: 4px; margin-right: 15px; }
+    .item-details { flex: 1; }
+    .item-name { font-weight: bold; font-size: 1.1em; margin-bottom: 5px; }
+    .item-info { color: #666; font-size: 0.9em; margin-bottom: 5px; }
+    .item-price { font-size: 1.2em; font-weight: bold; color: #2c3e50; }
+    
+    .order-summary { background: #f9f9f9; padding: 15px; border-radius: 4px; }
+    .summary-row { display: flex; justify-content: space-between; padding: 8px 0; }
+    .summary-row.total { border-top: 2px solid #2c3e50; margin-top: 10px; padding-top: 15px; font-size: 1.3em; font-weight: bold; }
+    
+    .info-row { display: flex; margin-bottom: 10px; }
+    .info-label { font-weight: bold; width: 200px; }
+    .info-value { flex: 1; }
+    .customer-info-box { background: #f9f9f9; padding: 15px; border-radius: 4px; }
+    
+    .transaction-link { display: inline-block; margin-top: 10px; padding: 8px 15px; background: #007bff; color: white; text-decoration: none; border-radius: 4px; }
+    .transaction-link:hover { background: #0056b3; }
+
+    .variant-pill { display: inline-block; background: #f0f0f0; padding: 2px 6px; border-radius: 4px; font-size: 0.85em; margin-right: 5px; border: 1px solid #e0e0e0; color:#555;}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="order-detail-container">
+    <div class="order-header">
+        <div class="order-number">Order #{{ order.order_number }}</div>
+        <div>
+            <span class="order-status status-{{ order.status }}">{{ order.get_status_display }}</span>
+            <span class="order-status" style="background: #d1e7dd; color: #0f5132; margin-left: 10px;">
+                Payment: {{ order.get_payment_status_display }}
+            </span>
+        </div>
+        <div style="margin-top: 15px; color: #666; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+            <div><strong>Placed on:</strong> {{ order.created_at|date:"F d, Y" }} at {{ order.created_at|time:"g:i A" }}</div>
+            {% if order.shipped_at %}
+            <div><strong>Shipped on:</strong> {{ order.shipped_at|date:"F d, Y" }} at {{ order.shipped_at|time:"g:i A" }}</div>
+            {% endif %}
+            {% if order.delivered_at %}
+            <div><strong>Delivered on:</strong> {{ order.delivered_at|date:"F d, Y" }} at {{ order.delivered_at|time:"g:i A" }}</div>
+            {% endif %}
+            <div><strong>Last updated:</strong> {{ order.updated_at|date:"F d, Y" }} at {{ order.updated_at|time:"g:i A" }}</div>
+        </div>
+    </div>
+    
+    <div class="order-section">
+        <h3>Customer Information</h3>
+        <div class="customer-info-box">
+            <div class="info-row">
+                <span class="info-label">Name:</span>
+                <span class="info-value">
+                    {% if order.customer.kyc_profile %}
+                        {{ order.customer.kyc_profile.full_name_on_id }}
+                    {% else %}
+                        {{ order.customer.full_name }}
+                    {% endif %}
+                    {% if order.is_kyc_verified %}
+                        <i class="fas fa-check-circle" style="color: #27ae60; margin-left: 5px;" title="Verified by Govt ID"></i>
+                    {% endif %}
+                </span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Email:</span>
+                <span class="info-value">{{ order.customer.email }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Customer Address:</span>
+                <span class="info-value">{{ order.shipping_address }}</span>
+            </div>
+            {% if order.customer.phone_number %}
+            <div class="info-row">
+                <span class="info-label">Phone:</span>
+                <span class="info-value">{{ order.customer.phone_number }}</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="order-section">
+        <h3>Order Items</h3>
+        {% for item in order.items.all %}
+        <div class="order-item">
+            {% if item.product.main_image %}
+                <img src="{{ item.product.main_image.url }}" alt="{{ item.product.name }}" class="item-image">
+            {% else %}
+                <div class="item-image" style="background: #f0f0f0; display: flex; align-items: center; justify-content: center;">
+                    <span style="color: #999;">No Image</span>
+                </div>
+            {% endif %}
+            <div class="item-details">
+                <div class="item-name">{{ item.product.name }}</div>
+                {% if item.product.sku %}
+                <div class="item-info">
+                    <strong>SKU:</strong> {{ item.product.sku }}
+                </div>
+                {% endif %}
+                <div class="item-info">
+                    <strong>Quantity:</strong> {{ item.quantity }}
+                    
+                    {% if item.color or item.size %}
+                        <div style="margin-top: 5px;">
+                            {% if item.color %}
+                                <span class="variant-pill">
+                                    <strong>Color:</strong> {{ item.color }}
+                                </span>
+                            {% endif %}
+                            {% if item.size %}
+                                <span class="variant-pill">
+                                    <strong>Size:</strong> {{ item.size }}
+                                </span>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="item-info">
+                    <strong>Unit Price:</strong> {{ currency_symbol }}{{ item.price|floatformat:2 }} each
+                </div>
+            </div>
+            <div class="item-price">
+                {{ currency_symbol }}{{ item.subtotal|floatformat:2 }}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <div class="order-section">
+        <h3>Order Summary</h3>
+        <div class="order-summary">
+            <div class="summary-row">
+                <span>Subtotal:</span>
+                <span>{{ currency_symbol }}{{ order.subtotal|floatformat:2 }}</span>
+            </div>
+            {% if order.tax > 0 %}
+            <div class="summary-row">
+                <span>Tax:</span>
+                <span>{{ currency_symbol }}{{ order.tax|floatformat:2 }}</span>
+            </div>
+            {% endif %}
+            <div class="summary-row total">
+                <span>Total Amount Paid by Customer:</span>
+                <span>{{ currency_symbol }}{{ order.total|floatformat:2 }}</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Luxa Fee Breakdown Section -->
+    <div class="order-section">
+        <h3>Your Earnings Breakdown</h3>
+        <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; border: 1px solid #86efac;">
+            <div class="summary-row" style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #dcfce7;">
+                <span style="color: #166534;">Total Sales:</span>
+                <span style="color: #166534; font-weight: 500;">{{ currency_symbol }}{{ order.subtotal|floatformat:2 }}</span>
+            </div>
+            
+            {% if order.luxa_cut_percentage > 0 %}
+            <div class="summary-row" style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #dcfce7; color: #dc2626;">
+                <span>
+                    Luxa Service Fee 
+                    <span style="font-size: 0.85em; color: #9ca3af;">({{ order.luxa_cut_percentage|floatformat:0 }}% of {{ currency_symbol }}{{ order.subtotal|floatformat:2 }})</span>
+                </span>
+                <span>-{{ currency_symbol }}{{ order.luxa_cut_amount|floatformat:2 }}</span>
+            </div>
+            {% endif %}
+            
+            <div class="summary-row" style="display: flex; justify-content: space-between; padding: 12px 0; margin-top: 8px; border-top: 2px solid #86efac;">
+                <span style="font-weight: 700; color: #166534; font-size: 1.1em;">Your Earnings:</span>
+                <span style="font-weight: 700; color: #166534; font-size: 1.5em;">
+                    {% if order.vendor_payout and order.vendor_payout > 0 %}
+                        {{ currency_symbol }}{{ order.vendor_payout|floatformat:2 }}
+                    {% else %}
+                        {{ currency_symbol }}{{ order.subtotal|floatformat:2 }}
+                    {% endif %}
+                </span>
+            </div>
+            
+            <div style="margin-top: 15px; padding: 12px; background: #dcfce7; border-radius: 6px; font-size: 0.85em; color: #166534;">
+                <strong>How it works:</strong> Your earnings = Total Sales - Luxa Service Fee. 
+                The service fee helps cover platform operations, payment processing, and customer support.
+            </div>
+        </div>
+    </div>
+
+    <div class="order-section">
+        <h3>Order Timeline</h3>
+        <div style="display: flex; flex-direction: column; gap: 15px;">
+            <div style="display: flex; align-items: start; gap: 15px;">
+                <div style="width: 12px; height: 12px; border-radius: 50%; background: #28a745; margin-top: 5px;"></div>
+                <div>
+                    <div style="font-weight: bold; color: #2c3e50;">Order Placed</div>
+                    <div style="color: #666; font-size: 0.9em;">{{ order.created_at|date:"F d, Y" }} at {{ order.created_at|time:"g:i A" }}</div>
+                </div>
+            </div>
+            
+            {% if order.shipped_at %}
+            <div style="display: flex; align-items: start; gap: 15px;">
+                <div style="width: 12px; height: 12px; border-radius: 50%; background: #17a2b8; margin-top: 5px;"></div>
+                <div>
+                    <div style="font-weight: bold; color: #2c3e50;">Shipped</div>
+                    <div style="color: #666; font-size: 0.9em;">{{ order.shipped_at|date:"F d, Y" }} at {{ order.shipped_at|time:"g:i A" }}</div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if order.delivered_at %}
+            <div style="display: flex; align-items: start; gap: 15px;">
+                <div style="width: 12px; height: 12px; border-radius: 50%; background: #28a745; margin-top: 5px;"></div>
+                <div>
+                    <div style="font-weight: bold; color: #2c3e50;">Delivered</div>
+                    <div style="color: #666; font-size: 0.9em;">{{ order.delivered_at|date:"F d, Y" }} at {{ order.delivered_at|time:"g:i A" }}</div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div style="margin-top: 20px;">
+        <a href="{% url 'vendor_product_orders' %}" class="btn btn-secondary" style="background: #6c757d; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px;">Back to Orders</a>
+    </div>
+</div>
+{% endblock %}
+
+{% block luxaslide %}
+{% endblock %}

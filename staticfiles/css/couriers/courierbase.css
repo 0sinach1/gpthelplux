@@ -1,0 +1,611 @@
+/* --- RESET & VARIABLES --- */
+:root {
+    --primary-color: #000000; /* Luxa Black */
+    --accent-color: #D4AF37; /* Optional Gold accent if needed */
+    --bg-light: #f4f6f8;
+    --text-dark: #333;
+    --text-light: #666;
+    --white: #ffffff;
+    --luxapurple: #960ffa;
+    --footer-bg: #260b33;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Poppins', sans-serif; /* Clean modern font */
+    background-color: var(--bg-light);
+    color: var(--text-dark);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* Ensures footer stays at bottom */
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+    transition: 0.3s;
+}
+
+ul {
+    list-style: none;
+}
+
+/* --- UTILITIES --- */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* --- BUTTONS --- */
+.btn {
+    padding: 8px 20px;
+    border-radius: 4px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    display: inline-block;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: var(--white);
+    border: 1px solid var(--primary-color);
+}
+
+.btn-primary:hover {
+    opacity: 0.9;
+    color: var(--luxapurple);
+}
+
+.btn-outline {
+    border: 1px solid var(--text-light);
+    color: var(--text-dark);
+}
+
+.btn-outline:hover {
+    background-color: var(--luxapurple);
+    color: var(--white);
+}
+
+.btn-text {
+    color: var(--text-dark);
+    margin-right: 15px;
+}
+
+.btn-text:hover {
+    color: var(--luxapurple);
+}
+
+/* --- TOP HEADER --- */
+.main-header {
+    background-color: var(--white);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    height: 70px;
+    display: flex;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.logo-area {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 20px;
+}
+
+.nav-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.nav-logo-img {
+    height: 40px; /* Constraints logo size */
+    width: auto;
+}
+
+.nav-actions {
+    display: flex;
+    align-items: center;
+}
+
+.user-greeting {
+    margin-right: 15px;
+    font-size: 0.9rem;
+    color: var(--text-light);
+    display: none; /* Hidden on very small mobile, shown on larger */
+}
+
+@media(min-width: 768px) {
+    .user-greeting { display: block; }
+}
+
+/* --- DASHBOARD BAR (Sub-header) --- */
+.dashboard-bar {
+    background-color: var(--white);
+    border-top: 1px solid #eee;
+    padding: 20px 0;
+    margin-bottom: 20px;
+    height: fit-content;
+}
+
+.status-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.status-flex h5 {
+    font-size: 1.1rem;
+    margin-bottom: 2px;
+}
+
+.status-flex small {
+    color: var(--text-light);
+}
+
+.badge-active {
+    background-color: #e6f4ea;
+    color: #1e8e3e;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.badge-inactive {
+    background-color: #fdecea;
+    color: #d93025;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+/* COURIER ONLINE/OFFLINE TOGGLE */
+.switch { position: relative; display: inline-block; width: 50px; height: 24px; vertical-align: middle; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+.slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+input:checked + .slider { background-color: #2ecc71; } /* Green for Online */
+input:checked + .slider:before { transform: translateX(26px); }
+
+/* --- MAIN CONTENT --- */
+.content-wrapper {
+    flex: 1; /* Pushes footer down */
+    width: 100%;
+    padding-bottom: 40px;
+}
+
+/* --- FOOTER --- */
+footer {
+    background-color: var(--footer-bg);
+    color: #aaa;
+    padding-top: 60px;
+    margin-top: auto;
+}
+
+.footer-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 40px;
+    padding: 0 20px 40px 20px;
+}
+
+.footer-logo {
+    max-width: 100px;
+    margin-bottom: 15px; 
+}
+
+.footer-col h3 {
+    color: var(--white);
+    margin-bottom: 20px;
+    font-size: 1.1rem;
+}
+
+.footer-col ul li {
+    margin-bottom: 10px;
+}
+
+.footer-col ul li a:hover {
+    color: var(--luxapurple);
+    padding-left: 5px; /* Slight movement effect */
+}
+
+.social-links {
+    margin-top: 20px;
+    display: flex;
+    gap: 15px;
+}
+
+.social-links img {
+    height: 24px;
+    width: 24px;
+    transition: transform 0.2s;
+    filter: invert(1); /* Optional: makes icons white */
+}
+
+.social-links img:hover {
+    transform: scale(1.1);
+}
+
+.footer-copyright {
+    background-color: #000;
+    text-align: center;
+    padding: 20px;
+    font-size: 0.85rem;
+    border-top: 1px solid #222;
+}
+
+/* --- DASHBOARD BAR ENHANCEMENTS --- */
+.dashboard-titles {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.courier-badges {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.courier-type-badge {
+    padding: 5px 10px;
+    background-color: rgb(30, 131, 17);
+    border-radius: 8px;
+    color: white;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.btn-manage-avail {
+    background-color: #43327a;
+    color: white;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.2s;
+}
+
+.btn-manage-avail:hover {
+    background-color: #3A2580;
+    color: white;
+}
+
+.status-toggle {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.status-label {
+    font-weight: 600;
+    margin-right: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* =========================================
+   SUPPORT MODAL & NAV BUTTON STYLES
+   ========================================= */
+
+/* The button in the header */
+.btn-support-nav {
+    position: relative;
+    background: transparent; /* Blends perfectly into the navbar */
+    color: #64748b; /* Lighter, softer slate font color */
+    border: none; /* Removed the hard border for a cleaner look */
+    padding: 5px 8px;
+    border-radius: 8px;
+    border-style: solid;
+    border-width: 1px;
+    border-color: #d1d5db;
+    font-size: 0.8rem; /* Made the text bigger */
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+
+/* Specifically target the icon to make it pop subtly */
+.btn-support-nav i {
+    font-size: 1.4rem; /* Noticeably larger support icon */
+    color: #94a3b8; /* Even lighter color for the icon */
+    transition: color 0.2s ease;
+}
+
+/* Hover effects to make it feel responsive */
+.btn-support-nav:hover {
+    background: #f8fafc; /* Very faint background on hover */
+    color: var(--luxapurple); /* Text turns brand purple */
+}
+
+.btn-support-nav:hover i {
+    color: var(--luxapurple); /* Icon turns brand purple */
+    transform: scale(1.1); /* Tiny bounce effect on hover */
+}
+
+/* Modal Overlay Background */
+.support-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(3px);
+    z-index: 9999;
+    display: none; /* Hidden by default */
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    padding: 20px;
+}
+
+.support-modal-overlay.show {
+    opacity: 1;
+}
+
+/* Modal Content Box */
+.support-modal-content {
+    background: white;
+    width: 100%;
+    max-width: 400px;
+    border-radius: 16px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    transform: translateY(20px);
+    transition: transform 0.3s ease;
+    overflow: hidden;
+}
+
+.support-modal-overlay.show .support-modal-content {
+    transform: translateY(0);
+}
+
+.support-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.close-modal-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #94a3b8;
+    cursor: pointer;
+    line-height: 1;
+    transition: color 0.2s;
+}
+
+.close-modal-btn:hover {
+    color: #ef4444;
+}
+
+.support-modal-body {
+    padding: 20px;
+}
+
+/* The 3 Contact Options */
+.support-options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.support-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 14px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 1rem;
+    color: white;
+    text-decoration: none;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.support-link:hover {
+    transform: translateY(-2px);
+    color: white; /* Ensures it stays white on hover */
+}
+
+.btn-whatsapp {
+    background: #25d366;
+    box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3);
+}
+
+.btn-gmail {
+    background: #ea4335;
+    box-shadow: 0 4px 15px rgba(234, 67, 53, 0.3);
+}
+
+.btn-instagram {
+    background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+    box-shadow: 0 4px 15px rgba(220, 39, 67, 0.3);
+}
+
+.admin-link {
+    position: absolute;
+    right: 20px;
+}
+
+.btn-admin-nav {
+    background-color: transparent;
+    color: #64748b;
+    border: 1px solid #797d83;
+    padding: 5px 10px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+}
+
+.btn-admin-nav:hover {
+    background-color: #f8fafc;
+    color: var(--luxapurple);
+}
+
+/* Hide the word "Support" on very small mobile screens so it doesn't crowd the logo */
+@media (max-width: 480px) {
+    .support-text {
+        display: none;
+    }
+    .btn-support-nav {
+        padding: 6px 10px;
+    }
+    .btn-support-nav i {
+        font-size: 1.5rem; /* Keep icon big even when text is hidden */
+    }
+}
+
+/* =========================================
+   MOBILE RESPONSIVENESS
+   ========================================= */
+@media (max-width: 768px) {
+    .main-header {
+        height: 60px; /* Slimmer header on mobile */
+    }
+    
+    .nav-logo-img {
+        height: 30px; /* Smaller logo */
+    }
+
+    .btn-outline {
+        padding: 5px 12px;
+        font-size: 0.8rem;
+    }
+
+    .dashboard-bar {
+        padding: 15px 0;
+    }
+
+    /* Stack the whole bar vertically */
+    .status-flex {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .dashboard-titles {
+        width: 100%;
+    }
+
+    .courier-badges {
+        flex-direction: column;
+        align-items: flex-start;
+        width: 100%;
+        gap: 10px;
+    }
+
+    /* Make the button full-width for easy thumb tapping */
+    .btn-manage-avail {
+        width: 100%;
+        justify-content: center;
+        padding: 10px;
+        font-size: 0.95rem;
+    }
+
+    /* Put the toggle switch in its own neat box */
+    .status-toggle {
+        width: 100%;
+        justify-content: space-between;
+        background: #f8fafc;
+        padding: 12px 15px;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+    }
+}
+
+/* --- SCOUTING BADGE --- */
+.scouting-badge {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    padding: 6px 16px;
+    border-radius: 30px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #334155;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.04);
+}
+
+/* Override existing margins for the badge context */
+.scouting-badge .sla-led-container {
+    padding-right: 0; 
+    margin-top: 0;
+}
+
+/* Ensure mobile layout handles the 3rd element gracefully */
+@media (max-width: 768px) {
+    .scouting-badge {
+        width: 50%;
+        justify-content: center;
+        align-self: center;
+    }
+}
+
+/* --- MINIMALIST SLA LED INDICATOR --- */
+.status-toggle {
+    display: flex;
+    align-items: flex-end;
+    
+}
+
+.led-bulb {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    transition: all 0.4s ease;
+    border: 1px solid rgba(0,0,0,0.1);
+}
+
+/* THE NEON "THROBBING" GREEN */
+.led-bulb.active {
+    background-color: #00ff00;
+    box-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00;
+    animation: led-throb 1.5s infinite ease-in-out;
+}
+
+/* THE "OFF" STATE */
+.led-bulb.inactive {
+    background-color: #333;
+    box-shadow: inset 0 0 4px rgba(0,0,0,0.5);
+    opacity: 0.3;
+}
+
+@keyframes led-throb {
+    0% { transform: scale(0.9); opacity: 0.6; box-shadow: 0 0 8px #00ff00; }
+    50% { transform: scale(1.2); opacity: 1; box-shadow: 0 0 15px #00ff00, 0 0 25px #00ff00; }
+    100% { transform: scale(0.9); opacity: 0.6; box-shadow: 0 0 8px #00ff00; }
+}

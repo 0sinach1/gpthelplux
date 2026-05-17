@@ -1,0 +1,82 @@
+{% load humanize %}
+
+{% if assignments.returns %}
+    <div style="background:#fceceb; border:1px solid #e74c3c; border-radius:8px; padding:15px; margin-bottom:20px; color:#c0392b; font-size:0.9rem;">
+        <strong>Action Required:</strong> Manage your pending returns or resolve issues with customer deliveries.
+    </div>
+{% endif %}
+
+{% for item in assignments.returns %}
+    
+    {# --- CAMPUS ORDER LOGIC --- #}
+    {% if item.raw_order %}
+        <div class="batch-card" id="order-card-{{ item.raw_order.order_id }}" style="border-left: 4px solid #9539cb;">
+            <div class="card-header">
+                <span class="id-tag">Campus Order {{ item.raw_order.order_number }}</span>
+                {% if item.status == 'cancelled' %}
+                    <span class="status-pill status-cancel">Officially Cancelled</span>
+                {% else %}
+                    <span class="status-pill status-transit" style="background:#fff3cd; color:#856404;">Pending Cancellation</span>
+                {% endif %}
+            </div>
+            
+            <div style="margin-bottom:15px; font-size:0.9rem; color:#555;">
+                <div style="display:flex; justify-content:space-between;">
+                    <span><strong>Location:</strong> {{ item.raw_order.building.name|default:"Campus Hub"|truncatechars:30 }}</span>
+                    <span><strong>Value:</strong> ₦{{ item.raw_order.total_order_cost|intcomma }}</span>
+                </div>
+            </div>
+
+            <div style="display:flex; gap:10px;">
+                {% if item.status == 'cancelled' %}
+                    <button class="btn btn-red" style="flex:1;" onclick="confirmReturn('{{ item.raw_order.order_id }}', '{{ item.raw_order.order_id }}')">
+                        Confirm Return to Hub
+                    </button>
+                {% elif item.status == 'pending_cancellation' %}
+                    <button class="btn btn-dark" style="flex:1;" onclick="restoreOrder('{{ item.raw_order.order_id }}')">
+                        🔄 Restore to Active Batch
+                    </button>
+                {% endif %}
+                <button class="btn btn-outline" onclick="openOrderModal('{{ item.raw_order.order_id }}')">View Info</button>
+            </div>
+        </div>
+
+    {# --- STANDARD ORDER LOGIC --- #}
+    {% else %}
+        <div class="batch-card" id="order-card-{{ item.order_id }}" style="border-left: 4px solid #c0392b;">
+            <div class="card-header">
+                <span class="id-tag">Standard Order {{ item.order_id|truncatechars:12 }}</span>
+                {% if item.status == 'cancelled' %}
+                    <span class="status-pill status-cancel">Officially Cancelled</span>
+                {% else %}
+                    <span class="status-pill status-transit" style="background:#fff3cd; color:#856404;">Pending Cancellation</span>
+                {% endif %}
+            </div>
+            
+            <div style="margin-bottom:15px; font-size:0.9rem; color:#555;">
+                <div style="display:flex; justify-content:space-between;">
+                    <span><strong>Customer:</strong> {{ item.delivery_location.address|truncatechars:30 }}</span>
+                    <span><strong>Value:</strong> ₦{{ item.total_price|intcomma }}</span>
+                </div>
+            </div>
+
+            <div style="display:flex; gap:10px;">
+                {% if item.status == 'cancelled' %}
+                    <button class="btn btn-red" style="flex:1;" onclick="confirmReturn('{{ item.order_id }}', '{{ item.order_id }}')">
+                        Confirm Return to Hub
+                    </button>
+                {% elif item.status == 'pending_cancellation' %}
+                    <button class="btn btn-dark" style="flex:1;" onclick="restoreOrder('{{ item.order_id }}')">
+                        🔄 Restore to Active Batch
+                    </button>
+                {% endif %}
+                <button class="btn btn-outline" onclick="openOrderModal('{{ item.order_id }}')">View Info</button>
+            </div>
+        </div>
+    {% endif %}
+
+{% empty %}
+    <div style="text-align:center; padding:40px; color:#94a3b8;">
+        <p>No active cancellations or returns.</p>
+    </div>
+{% endfor %}

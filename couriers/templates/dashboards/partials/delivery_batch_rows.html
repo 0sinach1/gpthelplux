@@ -1,0 +1,25 @@
+{% for batch in batches %}
+<tr>
+    <td style="font-family: monospace; font-weight: bold;">{{ batch.batch_id }}</td>
+    <td>{{ batch.courier.user_account.username }}</td>
+    <td>{{ batch.total_volume|default:"0" }} Courions</td>
+    <td>{{ batch.campus_orders.count }} Orders</td>
+    <td><span class="status-badge status-{{ batch.status }}" style="color: blueviolet; font-weight: 500;">{{ batch.status|upper }}</span></td>
+    <td>{{ batch.created_at|date:"b d, H:i" }}</td>
+    <td>
+        <button class="btn btn-sm" style="background: #e2e8f0; border: none; padding: 5px 10px; border-radius: 6px; cursor: pointer;" 
+                hx-get="{% url 'escrow_batch_details_api' batch.id %}" 
+                hx-target="#batch-details-content"
+                onclick="openBatchModal()">
+            Manage
+        </button>
+    </td>
+</tr>
+{% empty %}
+<tr>
+    <td colspan="7" style="text-align: center; padding: 30px; color: #64748b;">
+        <i class="bi bi-inbox" style="font-size: 1.5rem; display: block; margin-bottom: 10px;"></i>
+        No batches found matching this criteria.
+    </td>
+</tr>
+{% endfor %}

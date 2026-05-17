@@ -1,0 +1,12 @@
+{% extends "MAIN/base.html" %}
+
+{% block content %}
+<div style="min-height: 70vh; display: flex; align-items: center; justify-content: center;">
+    <div style="text-align: center;">
+        <i class="fas fa-exclamation-circle" style="font-size: 3rem; color: #e74c3c; margin-bottom: 20px;"></i>
+        <h2>Link Expired or Invalid</h2>
+        <p style="color: #64748b;">This reset link is no longer valid.</p>
+        <a href="{% url 'request_pin_reset' %}" class="btn btn-primary" style="margin-top: 20px; background: #960ffa; border: none;">Request New Link</a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends "MAIN/base.html" %}
+{% load static %}
+
+{% block title %}Reset Delivery PIN{% endblock %}
+
+{% block content %}
+<div style="min-height: 70vh; display: flex; align-items: center; justify-content: center; background: #f8f9fa; padding: 20px;">
+    <div style="background: white; padding: 40px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); max-width: 400px; width: 100%; text-align: center;">
+        
+        <div style="width: 60px; height: 60px; background: #f3e8ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #960ffa; margin: 0 auto 20px auto;">
+            <i class="fas fa-shield-alt"></i>
+        </div>
+
+        <h2 style="margin-bottom: 10px; font-weight: 800;">Secure PIN Reset</h2>
+        <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 30px;">
+            Your identity has been verified. You may now securely set a new 4-digit Delivery PIN.
+        </p>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div style="padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 0.85rem; font-weight: 600; text-align: left;
+                            {% if message.tags == 'success' %}background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0;
+                            {% else %}background: #fff5f5; color: #e53e3e; border: 1px solid #fecaca;{% endif %}">
+                    <i class="fas {% if message.tags == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %}" style="margin-right: 5px;"></i> {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="POST">
+            {% csrf_token %}
+            
+            <div style="margin-bottom: 20px; text-align: left;">
+                <label style="font-size: 0.8rem; font-weight: 600; color: #475569; display: block; margin-bottom: 8px;">New PIN</label>
+                <input type="password" name="new_pin" maxlength="4" pattern="\d{4}" required autofocus
+                       style="width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 1.5rem; letter-spacing: 15px; text-align: center; transition: 0.3s; outline: none;" placeholder="••••">
+            </div>
+
+            <div style="margin-bottom: 30px; text-align: left;">
+                <label style="font-size: 0.8rem; font-weight: 600; color: #475569; display: block; margin-bottom: 8px;">Confirm New PIN</label>
+                <input type="password" name="confirm_new_pin" maxlength="4" pattern="\d{4}" required
+                       style="width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 1.5rem; letter-spacing: 15px; text-align: center; transition: 0.3s; outline: none;" placeholder="••••">
+            </div>
+
+            <button type="submit" style="width: 100%; background: #960ffa; color: white; border: none; padding: 15px; border-radius: 8px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: 0.2s; margin-bottom: 15px;">
+                Save New PIN
+            </button>
+            
+            <a href="{% url 'editprofile' %}" style="color: #64748b; text-decoration: none; font-size: 0.9rem; font-weight: 600; transition: color 0.2s;">
+                Cancel Reset
+            </a>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Nice focus effect matching the checkout UI
+    const inputs = document.querySelectorAll('input[type="password"]');
+    inputs.forEach(input => {
+        input.addEventListener('focus', () => input.style.borderColor = '#960ffa');
+        input.addEventListener('blur', () => input.style.borderColor = '#e2e8f0');
+    });
+</script>
+{% endblock %}

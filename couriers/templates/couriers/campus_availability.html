@@ -1,0 +1,292 @@
+{% extends 'couriers/courierbase.html' %}
+{% load static %}
+
+{% block title %}Campus Availability Manager{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/couriers/campus_availability.css' %}">
+{% endblock %}
+
+{% block content %}
+<form method="POST" action="{% url 'campus_availability_manager' %}">
+    {% csrf_token %}
+    
+    <div class="manager-container">
+        <div class="page-header">
+            <h2>Availability Manager</h2>
+            <p>Toggle products and packs to temporarily remove them from the student app.</p>
+        </div>
+
+        <!-- --- NEW: SMART SEARCH TRIGGER --- -->
+        <div class="search-trigger-container">
+            <button type="button" class="fake-search-btn" onclick="openSearchModal()">
+                <span class="material-symbols-outlined" style="color: #94a3b8;">search</span>
+                <span style="color: #94a3b8;">Search for a product to update...</span>
+            </button>
+        </div>
+
+        {% if courier.courier_category != 'EXTERNAL_UPDATER' %}
+        <div class="manager-card" style="border: 2px solid var(--primary);">
+            <div class="card-title-bar" style="cursor: default;">
+                <h3><span class="material-symbols-outlined" style="color: var(--primary); vertical-align: middle; margin-right: 8px;">inventory_2</span> Packaging & Containers</h3>
+            </div>
+            
+            <div class="card-body-pad">
+                <div class="pack-grid">
+                    {% for pack in pack_sizes %}
+                    <div class="product-row">
+                        <div class="product-info">
+                            <h5>{{ pack.get_size_name_display }}</h5>
+                            <p>Base Price: ₦{{ pack.base_price }}</p>
+                        </div>
+                        <label class="smart-switch">
+                            <input type="checkbox" name="pack_{{ pack.id }}" {% if pack.availability %}checked{% endif %}>
+                            <span class="smart-slider"></span>
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <h4 style="margin: 40px 0 15px 0; color: var(--text-sec); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Campus Outlets</h4>
+
+        {% for outlet in outlets %}
+        <div class="manager-card">
+            
+            <div class="card-title-bar" onclick="toggleMyAccordion(this)">
+                <h3>
+                    {% if outlet.icon_url %}
+                        <span class="material-symbols-outlined" style="width: 24px; height: 24px; object-fit: contain;">
+                            {{ outlet.icon_url }}
+                        </span>
+                    {% else %}
+                        <span class="material-symbols-outlined" style="color: var(--text-sec); margin-right: 8px;">storefront</span>
+                    {% endif %}
+                    {{ outlet.name }}
+                </h3>
+                
+                <div class="title-controls">
+                    <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-sec);">Outlet Status</span>
+                    
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <!-- <label class="smart-switch">
+                            <input type="checkbox" name="outlet_{{ outlet.id }}" {% if outlet.availability_status %}checked{% endif %} onclick="event.stopPropagation();">
+                            <span class="smart-slider" onclick="event.stopPropagation();"></span>
+                        </label> -->
+                        
+                        <span class="material-symbols-outlined toggle-icon" style="color: #cbd5e1; transition: transform 0.3s; margin-left: 5px;">keyboard_arrow_down</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-content" style="display: none;">
+                {% for section in outlet.sections.all %}
+                    <div class="section-block">
+                        <div class="section-header">{{ section.name }}</div>
+                        
+                        <div class="product-grid">
+                            {% for product in section.products.all %}
+                            <div class="product-row">
+                                <div class="product-info">
+                                    <h5>{{ product.product_name }}</h5>
+                                    <p>₦{{ product.unit_price }} &middot; {{ product.unit_of_measure }}</p>
+                                </div>
+                                
+                                {% if product.product_image %}
+                                    <img src="{{ product.product_image.url }}" 
+                                         style="width: 38px; height: 38px; border-radius: 8px; object-fit: cover; margin-right: 15px; border: 1px solid rgba(0,0,0,0.05);" 
+                                         alt="{{ product.product_name }}">
+                                {% else %}
+                                    <div style="width: 38px; height: 38px; border-radius: 8px; background: #f1f5f9; display: flex; align-items: center; justify-content: center; margin-right: 15px; border: 1px solid rgba(0,0,0,0.05);">
+                                        <span class="material-symbols-outlined" style="font-size: 1.2rem; color: #cbd5e1;">lunch_dining</span>
+                                    </div>
+                                {% endif %}
+
+                                <label class="smart-switch">
+                                    <input type="checkbox" name="product_{{ product.id }}" {% if product.availability_status %}checked{% endif %}>
+                                    <span class="smart-slider"></span>
+                                </label>
+                            </div>
+                            {% empty %}
+                            <p style="color: var(--text-sec); font-size: 0.85rem;">No products in this section.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% empty %}
+                    <p style="color: var(--text-sec); font-size: 0.85rem; margin-top: 20px;">No menu sections defined for this outlet.</p>
+                {% endfor %}
+            </div>
+
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="floating-save-bar">
+        <a href="{% url 'courier_dashboard' %}" class="btn-cancel">Cancel</a>
+        <button type="submit" class="btn-save">
+            <span class="material-symbols-outlined" style="font-size: 1.2rem;">save</span> Save Changes
+        </button>
+    </div>
+
+    <!-- --- NEW: SMART SEARCH MODAL --- -->
+    <div id="availabilitySearchModal" class="search-modal-overlay" onclick="closeSearchModal(event)">
+        <div class="search-modal-content" onclick="event.stopPropagation()">
+            <div class="search-modal-header">
+                <span class="material-symbols-outlined" style="color: var(--primary);">search</span>
+                <input type="text" id="liveSearchInput" placeholder="Start typing a product name..." autocomplete="off" onkeyup="performSearch()">
+                <span class="material-symbols-outlined close-icon" onclick="closeSearchModal(event)">close</span>
+            </div>
+            <div class="search-results-container" id="searchResults">
+                <div class="empty-search-state">Type to find products across all outlets and sections.</div>
+            </div>
+        </div>
+    </div>
+
+</form>
+<script>
+    function toggleMyAccordion(headerElement) {
+        // 1. Find the content box immediately after the clicked header
+        const contentBox = headerElement.nextElementSibling;
+        
+        // 2. Find the arrow icon inside the clicked header
+        const icon = headerElement.querySelector('.toggle-icon');
+
+        // Failsafe
+        if (!contentBox) return;
+
+        // 3. Toggle using raw inline styles (Overrides all CSS files and caches)
+        if (contentBox.style.display === 'block') {
+            contentBox.style.display = 'none';
+            if (icon) icon.style.transform = 'rotate(0deg)';
+        } else {
+            contentBox.style.display = 'block';
+            if (icon) icon.style.transform = 'rotate(180deg)';
+        }
+    }
+
+    
+    // --- SMART SEARCH LOGIC ---
+    let productIndex = [];
+
+    // 1. Build the index by scraping the DOM structure
+    document.addEventListener("DOMContentLoaded", () => {
+        const productRows = document.querySelectorAll('.manager-card .product-row');
+        
+        productRows.forEach(row => {
+            const input = row.querySelector('input[type="checkbox"]');
+            if (!input || !input.name.startsWith('product_')) return;
+
+            const nameEl = row.querySelector('h5');
+            const imgEl = row.querySelector('img') || row.querySelector('.material-symbols-outlined');
+            
+            // Traverse up the DOM to find the Section and Outlet names
+            const sectionBlock = row.closest('.section-block');
+            const managerCard = row.closest('.manager-card');
+            
+            const sectionName = sectionBlock ? sectionBlock.querySelector('.section-header').innerText.trim() : "Unknown Section";
+            
+            // Clean up the outlet name (removes the icon text if present)
+            let outletName = "Unknown Outlet";
+            if (managerCard) {
+                const titleH3 = managerCard.querySelector('.card-title-bar h3');
+                if (titleH3) {
+                    // Clone it, remove the span holding the icon, and get pure text
+                    const clone = titleH3.cloneNode(true);
+                    const span = clone.querySelector('span');
+                    if (span) span.remove();
+                    outletName = clone.innerText.trim();
+                }
+            }
+
+            productIndex.push({
+                id: input.name,
+                name: nameEl ? nameEl.innerText.trim() : "Unknown Product",
+                imageHTML: imgEl ? imgEl.outerHTML : '',
+                outlet: outletName,
+                section: sectionName,
+                inputRef: input // Store a direct reference to the hidden original input
+            });
+        });
+    });
+
+    function openSearchModal() {
+        const modal = document.getElementById('availabilitySearchModal');
+        modal.classList.add('active');
+        document.getElementById('liveSearchInput').focus();
+        document.body.style.overflow = 'hidden'; // Prevent background scrolling
+    }
+
+    function closeSearchModal(event) {
+        if (event) event.preventDefault();
+        document.getElementById('availabilitySearchModal').classList.remove('active');
+        document.body.style.overflow = 'auto';
+        document.getElementById('liveSearchInput').value = '';
+        document.getElementById('searchResults').innerHTML = '<div class="empty-search-state">Type to find products across all outlets and sections.</div>';
+    }
+
+    function performSearch() {
+        const query = document.getElementById('liveSearchInput').value.toLowerCase().trim();
+        const resultsContainer = document.getElementById('searchResults');
+        
+        if (query.length < 2) {
+            resultsContainer.innerHTML = '<div class="empty-search-state">Type at least 2 characters...</div>';
+            return;
+        }
+
+        const filtered = productIndex.filter(p => p.name.toLowerCase().includes(query));
+
+        if (filtered.length === 0) {
+            resultsContainer.innerHTML = '<div class="empty-search-state">No products found matching "' + query + '"</div>';
+            return;
+        }
+
+        let html = '';
+        filtered.forEach(p => {
+            // Check the current state of the actual form input
+            const isChecked = p.inputRef.checked ? 'checked' : '';
+            
+            html += `
+            <div class="search-result-item">
+                <div class="search-result-info">
+                    <div style="width: 38px; height: 38px; border-radius: 8px; overflow: hidden; flex-shrink: 0; border: 1px solid rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; background: #f1f5f9;">
+                        ${p.imageHTML}
+                    </div>
+                    <div class="sr-text">
+                        <div class="sr-name">${p.name}</div>
+                        <div class="sr-breadcrumbs">
+                            <span class="material-symbols-outlined" style="font-size: 0.8rem;">storefront</span> ${p.outlet} 
+                            <span style="color: #cbd5e1;">&gt;</span> ${p.section}
+                        </div>
+                    </div>
+                </div>
+                
+                <label class="smart-switch" onclick="event.stopPropagation()">
+                    <input type="checkbox" id="search_toggle_${p.id}" ${isChecked} onchange="syncToggleState('${p.id}', this.checked)">
+                    <span class="smart-slider"></span>
+                </label>
+            </div>`;
+        });
+
+        resultsContainer.innerHTML = html;
+    }
+
+    // This function bridges the modal to the actual form
+    function syncToggleState(inputId, isChecked) {
+        // 1. Find the real input hidden inside the accordions
+        const realInput = document.querySelector(`input[name="${inputId}"]`);
+        
+        if (realInput) {
+            // 2. Change its checked status
+            realInput.checked = isChecked;
+            
+            // Optional UX feedback (Briefly flash green/red)
+            const searchToggle = document.getElementById(`search_toggle_${inputId}`);
+            const slider = searchToggle.nextElementSibling;
+            slider.style.boxShadow = isChecked ? '0 0 10px rgba(45, 27, 105, 0.4)' : '0 0 10px rgba(239, 68, 68, 0.4)';
+            setTimeout(() => { slider.style.boxShadow = 'none'; }, 300);
+        }
+    }
+</script>
+{% endblock %}

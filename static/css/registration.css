@@ -1,0 +1,262 @@
+/* --- GLOBAL RESET --- */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background-color: #f7f6fb; /* Light background for contrast */
+    overflow-x: hidden;
+}
+
+/* --- LOGO SECTION --- */
+#luxalogo {
+    padding: 10px 40px;
+    width: 100%;
+}
+
+#luxa {
+    width: 180px;
+}
+
+/* --- FORM CONTAINERS (Shared Styles) --- */
+.form_cont, .logincont {
+    position: relative; /* Changed from absolute to relative */
+    width: 100%;
+    max-width: 750px; /* Limits width on big screens */
+    margin: 20px auto 50px auto; /* Centers horizontally + space top/bottom */
+    padding: 40px;
+    color: black;
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); /* Softer, modern shadow */
+    z-index: 5;
+}
+
+/* HEADINGS & TEXT */
+.form_hd {
+    text-align: center;
+    font-size: 28px;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 20px;
+    line-height: 1.3;
+}
+
+.logincont p, .form_cont p {
+    text-align: center;
+    color: #666;
+    margin-bottom: 20px;
+}
+
+.link {
+    text-decoration: none;
+    color: #9245f0;
+    font-weight: 600;
+}
+
+/* --- FORM ELEMENTS --- */
+.registration, .loginreg {
+    width: 100%;
+}
+
+.actinp {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#or {
+    margin-top: 20px;
+    font-weight: 500;
+}
+
+/* Inputs (Crispy Forms usually output standard Bootstrap classes, but we ensure styling here) */
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="date"],
+input[type="number"],
+select,
+textarea {
+    width: 100%;
+    font-size: 16px;
+    border-radius: 12px;
+    padding: 12px 15px;
+    border: 1px solid #e0e0e0;
+    background-color: #f9f9f9;
+    margin-bottom: 15px;
+    transition: all 0.3s ease;
+}
+
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: #9245f0;
+    background-color: #fff;
+    box-shadow: 0 0 0 3px rgba(146, 69, 240, 0.1);
+}
+
+/* BUTTONS */
+.subbtn {
+    display: block;
+    width: 100%;
+    font-size: 16px;
+    font-weight: 600;
+    background-color: #9245f0;
+    color: white;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(146, 69, 240, 0.3);
+    transition: transform 0.2s, background-color 0.3s;
+    margin-top: 10px;
+}
+
+.subbtn:hover {
+    background-color: #7a30d0;
+    transform: translateY(-2px);
+}
+
+/* DECORATIVE CUTOUT */
+#cutout {
+    position: absolute;
+    height: 400px;
+    top: -30%;
+    right: -140px;
+    z-index: -1 !important;
+    pointer-events: none;
+}
+
+/* VENDOR FORM SPECIFIC (If used) */
+.maincont {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    width: 100%;
+}
+
+.vendformcont {
+    background: white;
+    width: 100%;
+    max-width: 800px;
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+}
+
+/* password */
+.password-container {
+    position: relative;
+    width: 100%;
+}
+
+/* The Eye Icon styling */
+.toggle-password-icon {
+    position: absolute;
+    right: 15px; /* Adjust distance from right edge */
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #6c757d; /* Grey color */
+    z-index: 10;
+}
+
+.toggle-password-icon:hover {
+    color: #333; /* Darker on hover */
+}
+
+/* Simple internal styles for the choice buttons */
+.choice-btn {
+    width: 100%;
+    margin-bottom: 15px;
+    padding: 12px;
+    border-radius: 5px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    cursor: pointer;
+    border: 1px solid #ddd;
+    transition: all 0.3s ease;
+}
+
+.btn-google {
+    background-color: #fff;
+    color: #757575;
+}
+.btn-google:hover {
+    background-color: #f1f1f1;
+    color: #333;
+}
+
+.btn-email {
+    background-color: #333; /* Matches your Luxa theme likely */
+    color: #fff;
+}
+.btn-email:hover {
+    background-color: #555;
+    color: #fff;
+}
+
+.choice-icon {
+    margin-right: 10px;
+}
+
+#back-to-choices {
+    display: flex;
+    width: 150px;
+    justify-self: center;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+/* --- MOBILE RESPONSIVENESS --- */
+@media only screen and (max-width: 900px) {
+    
+    /* Center Logo */
+    #luxalogo {
+        display: flex;
+        justify-content: center;
+        padding: 20px;
+        margin: 0;
+    }
+    
+    /* Make Container Full Width with Breathing Room */
+    .form_cont, .logincont {
+        width: 90%; /* 90% width on mobile */
+        margin: 10px auto;
+        padding: 25px;
+        top: 0;
+        left: 0;
+        transform: none; /* Reset desktop transform if it existed */
+    }
+
+    /* Hide Decorative Elements */
+    #cutout {
+        display: none;
+    }
+
+    /* Adjust Typography */
+    .form_hd {
+        font-size: 24px;
+    }
+
+    .form_hd br {
+        display: none; /* Remove line breaks in headers on mobile */
+    }
+    
+    input[type="text"],
+    input[type="password"],
+    input[type="email"] {
+        font-size: 16px; /* Prevents iOS zoom on focus */
+    }
+}

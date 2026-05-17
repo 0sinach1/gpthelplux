@@ -1,0 +1,45 @@
+{% extends "MAIN/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div style="min-height: 80vh; display: flex; align-items: center; justify-content: center; background: #f7f6fb;">
+    <div style="background: white; padding: 40px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 100%; max-width: 400px; text-align: center;">
+        
+        <div style="margin-bottom: 20px;">
+            <i class="fas fa-lock" style="font-size: 3rem; color: #960ffa;"></i>
+        </div>
+
+        <h2 style="margin-bottom: 10px; color: #1e293b;">
+            {% if is_creation %}Create Wallet PIN{% else %}Wallet Access{% endif %}
+        </h2>
+        
+        <p style="color: #64748b; margin-bottom: 30px;">
+            {% if is_creation %}
+                Set a 4-digit PIN to secure your funds.
+            {% else %}
+                Enter your 4-digit PIN to continue.
+            {% endif %}
+        </p>
+
+        <form method="post">
+            {% csrf_token %}
+            {{ form|crispy }}
+            
+            <button type="submit" style="width: 100%; background: #960ffa; color: white; border: none; padding: 15px; border-radius: 8px; font-weight: 700; margin-top: 20px; cursor: pointer;">
+                {% if is_creation %}Set PIN{% else %}Access Wallet{% endif %}
+            </button>
+            {% if not is_creation %}
+                <div style="text-align: left; margin-top: 10px; margin-bottom: 20px;">
+                    <a href="{% url 'request_pin_reset' %}" style="color: #960ffa; font-size: 0.95rem; text-decoration: none; font-weight: 500; ">
+                        Forgot PIN?
+                    </a>
+                </div>
+            {% endif %}
+        </form>        
+
+        <div style="margin-top: 20px;">
+            <a href="/index/" style="color: #64748b; text-decoration: none; font-size: 0.9rem;">Cancel & Return Home</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

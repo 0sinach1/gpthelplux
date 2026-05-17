@@ -1,0 +1,180 @@
+{% extends "MAIN/base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Categories{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static '/css/category.css' %}">
+<style>
+    html {
+        scroll-behavior: smooth;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="all">
+    <div id="pro-nav">
+        <p><a href="/index">Home</a></p>
+        <span> &gt; </span>
+        <p><a href="/categories">All Categories</a></p>
+        {% if category %}
+            {% if category.parent %}
+                <span> &gt; </span>
+                <p>
+                    <a href="{% url 'category_detail' category.parent.slug %}">
+                        {{ category.parent.name }}
+                    </a>
+                </p>
+            {% endif %}
+
+            <span> &gt; </span>
+            <p>{{ category.name }}</p>
+        {% endif %}
+    </div>
+
+    {% if categories %}
+        <div class="catcont">
+            <div class="pro-grid">
+                <div class="morepro">
+                    <div class="header2">
+                        <div class="header-subtitle">Browse all categories</div>
+                        <h1 class="header-title">All Categories</h1>
+                    </div>
+                    
+                    <div class="carouse">
+                        <img src="{% static '/images/left-arrow.svg' %}" class="nav-button left-nav" id="cat-left">
+                        
+                        <div class="categories-grid scroll-container">
+                            {% for cat in categories %}
+                            <a href="{% url 'category_detail' cat.slug %}#category-products" class="product-card-link">
+                                <div class="product-card">
+                                    <div class="inner">
+                                        <div class="product-image">
+                                            {% if cat.image %}
+                                                <img src="{{ cat.image.url }}" alt="{{ cat.name }}">
+                                            {% else %}
+                                                <svg viewBox="0 0 24 24" fill="white" role="img">
+                                                    <rect x="4" y="6" width="16" height="12" rx="2" stroke="currentColor" stroke-width="2" fill="none"/>
+                                                </svg>
+                                            {% endif %}
+                                        </div>
+                                        <div class="product-info">
+                                            <div class="product-name">{{ cat.name }}</div>
+                                            {% if cat.description %}
+                                            <div class="category-desc description-text">{{ cat.description|truncatewords:8 }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+                            {% endfor %}
+                        </div>
+
+                        <img src="{% static '/images/right-arrow.svg' %}" class="nav-button right-nav" id="cat-right">
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if category %}
+        {% if subcategories %}
+        <div class="catcont" id="category-subcategories">
+            <div class="header2">
+                <div class="header-subtitle">Browse {{ category.name }}</div>
+                <h1 class="header-title">Subcategories</h1>
+            </div>
+
+            <div class="products-grid">
+                {% for subcat in subcategories %}
+                <a href="{% url 'category_detail' subcat.slug %}" class="product-card-link">
+                    <div class="product-card">
+                        <div class="inner">
+                            <div class="product-image">
+                                {% if subcat.image %}
+                                    <img src="{{ subcat.image.url }}" alt="{{ subcat.name }}">
+                                {% else %}
+                                    <svg viewBox="0 0 24 24" fill="#ccc" role="img" style="width:50px; height:50px;">
+                                        <rect x="4" y="6" width="16" height="12" rx="2" stroke="currentColor" stroke-width="2" fill="none"/>
+                                    </svg>
+                                {% endif %}
+                            </div>
+                            <div class="product-info">
+                                <div class="product-name"><strong>{{ subcat.name }}</strong></div>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if products %}
+        <div class="catcont" id="category-products"> 
+            <div class="header2">
+                <div class="header-subtitle">Shop Items</div>
+                <h1 class="header-title">{{ category.name }}</h1>
+            </div>
+
+            <div class="products-grid">
+                {% for product in products %}
+                <a href="{% url 'product_detail' product.slug %}" class="product-card-link">
+                    <div class="product-card">
+                        <div class="inner">
+                            <div class="product-image">
+                                {% if product.main_image %}
+                                    <img src="{{ product.processed_media.final_main_image.url }}" alt="{{ product.name }}">
+                                {% else %}
+                                    <svg viewBox="0 0 24 24" fill="#eee" role="img" style="width:50px; height:50px;">
+                                        <circle cx="12" cy="12" r="8" stroke="#ccc" stroke-width="2" fill="none"/>
+                                    </svg>
+                                {% endif %}
+                            </div>
+                            <div class="product-info">
+                                <div class="product-name">{{ product.name|truncatewords:5 }}</div>
+                                <div class="product-price" style="color: #6a3aff; font-weight: bold;">
+                                    {{ currency_symbol }}{{ product.price|intcomma }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+                {% empty %}
+                <div class="empty-state" style="grid-column: 1/-1; text-align: center; padding: 20px;">
+                    <p>No products available in this category yet.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    {% endif %} 
+
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Target the categories grid now
+        const grid = document.querySelector(".categories-grid");
+        const left = document.querySelector("#cat-left");
+        const right = document.querySelector("#cat-right");
+
+        if (!grid || !left || !right) return;
+
+        const scrollAmount = 250; // Adjusted for smaller cards
+
+        right.addEventListener("click", () => {
+            grid.scrollBy({ left: scrollAmount, behavior: "smooth" });
+        });
+
+        left.addEventListener("click", () => {
+            grid.scrollBy({ left: -scrollAmount, behavior: "smooth" });
+        });
+    });
+</script>
+{% endblock %}
+
+{% block luxaslide %}
+{% endblock %}

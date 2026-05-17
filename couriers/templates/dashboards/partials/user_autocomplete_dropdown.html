@@ -1,0 +1,13 @@
+{% if users %}
+    <div class="autocomplete-dropdown-menu">
+        {% for user in users %}
+            <div class="autocomplete-item" onclick="selectAutocompleteUser('{{ user.username }}')">
+                <div style="font-weight: 600; color: #1e293b;">
+                    {{ user.first_name }} {{ user.last_name }} 
+                    <span style="color: var(--primary); font-size: 0.85rem; margin-left: 5px;">@{{ user.username }}</span>
+                </div>
+                <div style="font-size: 0.75rem; color: var(--text-muted);">{{ user.email }}</div>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}

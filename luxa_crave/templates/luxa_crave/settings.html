@@ -1,0 +1,394 @@
+{% extends "luxa_crave/base_crave.html" %}
+{% load static %}
+{% load hosts %}
+{% load humanize %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/luxa_crave/crave_settings_style.css' %}">
+{% endblock %}
+
+{% block navlinks %}
+    <a href="javascript:history.back()">
+        <i class="bi bi-arrow-left"></i> 
+        Return
+    </a>
+{% endblock %}
+
+{% block title %}
+    My Settings - Luxa Campus
+{% endblock %}
+
+{% block settings %}
+
+<div id="settings-wrapper" class="theme-{{ settings_hub.selected_theme }}">
+
+    <div class="settings-layout" style="display: flex; height: 100%; background: var(--card-bg, #fff); overflow: hidden;">        
+        <aside class="settings-nav-sidebar" style="width: 280px; background: #f8fafc; border-right: 1px solid #e2e8f0; padding: 40px 20px;">
+            <div class="nav-header" style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: #94a3b8; margin-bottom: 15px; padding-left: 10px;">Personalization</div>
+            
+            <a href="javascript:void(0)" onclick="showSection('student-section', this)" class="nav-link" style="display: flex; align-items: center; gap: 10px; padding: 15px; color: #3b82f6; text-decoration: none; font-weight: 600; background: #eff6ff; border-radius: 8px; margin-bottom: 5px;">
+                <i class="bi bi-person-fill"></i> <span class="nav-link-txt">My Student Profile</span> 
+            </a>
+            <a href="javascript:void(0)" onclick="showSection('orders-section', this)" class="nav-link" style="display: flex; align-items: center; gap: 10px; padding: 15px; color: #475569; text-decoration: none; font-weight: 600; border-radius: 8px; margin-bottom: 5px;">
+                <i class="bi bi-box-seam"></i> <span class="nav-link-txt">Order History</span>
+            </a>
+            <a href="javascript:void(0)" onclick="showSection('theme-section', this)" class="nav-link" style="display: flex; align-items: center; gap: 10px; padding: 15px; color: #475569; text-decoration: none; font-weight: 600; border-radius: 8px; margin-bottom: 5px;">
+                <i class="bi bi-palette"></i> <span class="nav-link-txt">Theme</span>
+            </a>
+            <a href="javascript:void(0)" onclick="showSection('presets-section', this)" class="nav-link" style="display: flex; align-items: center; gap: 10px; padding: 15px; color: #475569; text-decoration: none; font-weight: 500; border-radius: 8px; margin-bottom: 5px;">
+                <i class="bi bi-stars"></i> <span class="nav-link-txt">Campus Presets</span>
+            </a>
+            <a href="javascript:void(0)" onclick="showSection('proxy-section', this)" class="nav-link" style="display: flex; align-items: center; gap: 10px; padding: 15px; color: #475569; text-decoration: none; font-weight: 500; border-radius: 8px;">
+                <i class="bi bi-person-check"></i> <span class="nav-link-txt">Default Proxy</span>
+            </a>
+            <a href="javascript:void(0)" onclick="showSection('pin-section', this)" class="nav-link" style="display: flex; align-items: center; gap: 10px; padding: 15px; color: #475569; text-decoration: none; font-weight: 500; border-radius: 8px;">
+                <i class="bi bi-person-check"></i> <span class="nav-link-txt">Delivery, Order creation pin and authentication</span>
+            </a>            
+        </aside>
+
+        <main class="settings-main-content" style="flex: 1; padding: 60px;">
+
+            <div id="student-section" class="settings-panel" style="display: block; width: 100%;">
+                <div class="settings-card" style="max-width: 600px;">
+                    <h1 class="settings-title">Student Profile</h1>
+                    <p class="settings-subtitle">Manage your campus details and security settings.</p>
+
+                    <div style="display: flex; flex-direction: column; gap: 15px; margin-bottom: 40px;">
+                        
+                        <a href="{% host_url 'editprofile' host 'default' %}" target="_blank" style="display: flex; align-items: center; justify-content: space-between; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; text-decoration: none; transition: all 0.2s; background: white;" onmouseover="this.style.borderColor='#3b82f6'" onmouseout="this.style.borderColor='#e2e8f0'">
+                            <div style="display: flex; align-items: center; gap: 15px;">
+                                <div style="width: 50px; height: 50px; background: #eff6ff; color: #3b82f6; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                                    <i class="bi bi-person-fill"></i>
+                                </div>
+                                <div>
+                                    <h4 style="margin: 0; color: #1e293b; font-size: 1rem; font-weight: 700;">{{ request.user.first_name }} {{ request.user.last_name }}</h4>
+                                    <span style="color: #64748b; font-size: 0.85rem;">{{ request.user.email }}</span>
+                                </div>
+                            </div>
+                            <i class="bi bi-pencil-square" style="color: #94a3b8; font-size: 1.2rem;"></i>
+                        </a>
+
+                        <a href="{% url 'crave_entry' %}?change=true" style="display: flex; align-items: center; justify-content: space-between; padding: 15px 20px; border: 1px solid #e2e8f0; border-radius: 12px; text-decoration: none; color: #1e293b; background: #f8fafc;">
+                            <div style="display: flex; align-items: center; gap: 10px; font-weight: 600;">
+                                <i class="bi bi-building" style="color: #64748b;"></i> Change Default Campus
+                            </div>
+                            <span style="font-size: 0.85rem; color: #64748b;">Current: {{ university.name }} <i class="bi bi-chevron-right" style="margin-left: 5px;"></i></span>
+                        </a>
+                    </div>
+
+                    <h3 style="font-size: 1.1rem; font-weight: 800; color: #1e293b; margin-bottom: 15px; border-top: 1px solid #e2e8f0; padding-top: 25px;">Order History Summary</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 40px;">
+                        <div id="order-total" style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 20px; border-radius: 12px; text-align: center;" onclick="showSection('orders-section', this)">
+                            <span style="display: block; font-size: 2rem; font-weight: 800; color: var(--accent, #3b82f6);">{{ total_orders }}</span>
+                            <span style="font-size: 0.8rem; font-weight: 700; color: #64748b; text-transform: uppercase;">Total Orders</span>
+                        </div>
+                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 20px; border-radius: 12px; text-align: center;">
+                            <span style="display: block; font-size: 1.6rem; font-weight: 800; color: #10b981; margin-top: 5px;">₦{{ total_spent|intcomma }}</span>
+                            <span style="font-size: 0.8rem; font-weight: 700; color: #64748b; text-transform: uppercase;">Total Spent</span>
+                        </div>
+                    </div>
+
+                    <h3 style="font-size: 1.1rem; font-weight: 800; color: #1e293b; margin-bottom: 15px; border-top: 1px solid #e2e8f0; padding-top: 25px;">My Delivery Address</h3>
+                    <div id="customer-address-display" style="display: {% if customer.crave_profile.campus_address %}block{% else %}none{% endif %}; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 20px; transition: all 0.3s;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <div style="display: flex; gap: 15px; align-items: center;">
+                                <div style="width: 45px; height: 45px; background: #eff6ff; color: #3b82f6; border-radius: 10px; display: flex; justify-content: center; align-items: center; font-size: 1.2rem;">
+                                    <i class="bi bi-geo-alt-fill"></i>
+                                </div>
+                                <div>
+                                    <strong style="display: block; font-size: 1rem; color: #1e293b;" id="display-loc-name">
+                                        {{ customer.crave_profile.campus_address.name|default:"Not Set" }}
+                                    </strong>
+                                    <span style="font-size: 0.85rem; color: #64748b;" id="display-bldg-room">
+                                        {{ customer.crave_profile.campus_building.name|default:"-" }} — Room {{ customer.crave_profile.room_number|default:"-" }}
+                                    </span>
+                                </div>
+                            </div>
+                            <button onclick="toggleAddressEdit(true)" style="background: white; border: 1px solid #e2e8f0; padding: 8px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; color: #3b82f6; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='white'">
+                                <i class="bi bi-pencil-square"></i> Change
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="customer-address-form" style="display: {% if customer.crave_profile.campus_address %}none{% else %}block{% endif %}; animation: fadeIn 0.3s ease;">
+                        <div style="margin-bottom: 15px;">
+                            <label style="display:block; font-size:0.85rem; font-weight:700; color:#475569; margin-bottom:5px;">Building / Hostel</label>
+                            <select id="customer-location" onchange="filterBuildings('customer-location', 'customer-building')" style="width: 100%; padding: 15px; border: 1px solid #e2e8f0; border-radius: 10px; font-family: inherit; font-size: 0.95rem; outline: none; background: white; cursor: pointer;">
+                                <option value="">Select a Zone...</option>
+                                {% for loc in locations %}
+                                    <option value="{{ loc.id }}" {% if customer.crave_profile.campus_address.id == loc.id %}selected{% endif %}>{{ loc.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 15px; margin-bottom: 20px;">
+                            <div>
+                                <label style="display:block; font-size:0.85rem; font-weight:700; color:#475569; margin-bottom:5px;">Wing / Block</label>
+                                <select id="customer-building" style="width: 100%; padding: 15px; border: 1px solid #e2e8f0; border-radius: 10px; font-family: inherit; font-size: 0.95rem; outline: none; background: white; cursor: pointer;">
+                                    <option value="">Select a Building...</option>
+                                    {% for bldg in buildings %}
+                                        <option value="{{ bldg.id }}" data-zone-id="{{ bldg.parent_location.id }}" {% if customer.crave_profile.campus_building.id == bldg.id %}selected{% endif %}>{{ bldg.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display:block; font-size:0.85rem; font-weight:700; color:#475569; margin-bottom:5px;">Room No.</label>
+                                <input type="text" id="customer-room" value="{{ customer.crave_profile.room_number|default:'' }}" style="width: 100%; padding: 15px; border: 1px solid #e2e8f0; border-radius: 10px; font-family: inherit; font-size: 0.95rem; outline: none;">
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; gap: 10px;">
+                            <button onclick="saveCustomerAddress()" id="btn-save-address" style="flex: 2; padding: 15px; background: var(--accent, #3b82f6); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.3s;">
+                                Save My Address
+                            </button>
+                            <button onclick="toggleAddressEdit(false)" id="btn-cancel-address" style="display: {% if customer.crave_profile.campus_address %}block{% else %}none{% endif %}; flex: 1; padding: 15px; background: #f1f5f9; color: #475569; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.3s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            
+            <div id="theme-section" class="settings-panel" style="display: none;">
+                <div class="panel-header" style="margin-bottom: 30px;">
+                    <h2 style="font-size: 1.8rem; font-weight: 800; color: var(--text-title); margin: 0 0 5px 0;">App Theme</h2>
+                    <p style="color: #64748b; margin: 0; font-size: 0.95rem;">Customize your Luxa Crave experience.</p>
+                </div>
+
+                <div style="border: 2px dashed #e2e8f0; border-radius: 15px; padding: 80px 40px; text-align: center; color: #94a3b8; background: var(--card-bg, #fff);">
+                    <i class="bi bi-palette" style="font-size: 4rem; opacity: 0.4;"></i>
+                    <h2 style="margin-top: 20px; color: var(--text-title); font-weight: 800;">Themes Coming Soon</h2>
+                    <p style="font-size: 0.95rem; max-width: 400px; margin: 10px auto 0 auto;">We are currently crafting beautiful new themes to personalize your dashboard. Check back in a future update!</p>
+                </div>
+            </div>
+
+            <div id="presets-section" class="settings-panel" style="display: none; width: 100%;">
+                <div class="settings-card" style="max-width: 800px; width: 100%;">
+                    <h1 class="settings-title">My Campus Presets</h1>
+                    <p class="settings-subtitle">Manage your saved custom packs for quick ordering.</p>
+                    
+                    {% if user_presets %}
+                    <div class="preset-settings-grid">
+                        {% for preset in user_presets %}
+                        <div class="preset-settings-card" id="settings-preset-{{ preset.id }}">
+                            <div class="preset-card-header">
+                                <h3 class="preset-name">{{ preset.preset_name }}</h3>
+                                <span class="preset-outlet"><i class="bi bi-shop"></i> {{ preset.outlet.name }}</span>
+                            </div>
+                            <div class="preset-card-body" onclick="viewPresetDetails({{ preset.id }})" style="cursor: pointer;" title="View Items">
+                                <span class="preset-details">{{ preset.items.count }} Items • ₦{{ preset.current_total_price|intcomma }}</span>
+                                <div style="margin-top: 10px; font-size: 0.8rem; color: var(--accent, #3b82f6); font-weight: 600; display: flex; align-items: center; gap: 5px;">
+                                    <i class="bi bi-eye"></i> View Details
+                                </div>
+                            </div>
+                            <div class="preset-card-footer">
+                                <button class="btn-preset-delete" onclick="deleteSettingsPreset({{ preset.id }}, this)" title="Delete Preset">
+                                    <i class="bi bi-trash3"></i> Delete
+                                </button>
+                                
+                                <a href="{% url 'outlet_terminal' preset.outlet.id %}?inject_preset={{ preset.id }}" class="btn-preset-order">
+                                    Order Now <i class="bi bi-arrow-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div style="border: 2px dashed #e2e8f0; border-radius: 15px; padding: 80px 40px; text-align: center; color: #94a3b8;">
+                        <i class="bi bi-stars" style="font-size: 4rem; opacity: 0.4;"></i>
+                        <h2 style="margin-top: 20px; color: #475569;">No Presets Found</h2>
+                        <p>You haven't saved any custom packs for {{ settings_hub.profile.name }} yet. Build a pack in the terminal and click the heart icon to save it here!</p>
+                    </div>
+                    {% endif %}
+                    <div style="margin-top: 20px; text-align: center; border: 1px solid #e2e8f0; padding: 20px; border-radius: 12px; background: #f8fafc; color: #475569;">
+                        <p>Add more presets in the <a href="{% url 'outlet_terminal' settings_hub.profile.id %}" style="color: #3b82f6; text-decoration: underline;">Order Terminal</a></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preset card details modal! -->
+            <div id="presetDetailsModal" class="settings-modal-overlay">
+                <div class="settings-modal-content">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #f1f5f9; padding-bottom: 15px;">
+                        <h3 style="margin: 0; font-size: 1.2rem; color: #1e293b; font-weight: 800;">Preset Details</h3>
+                        <button onclick="closePresetDetailsModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #94a3b8;">&times;</button>
+                    </div>
+                    <div id="presetDetailsContent">
+                        </div>
+                </div>
+            </div>
+
+            <div id="proxy-section" class="settings-panel" style="display: none; width: 100%;">
+                <div class="settings-card" style="max-width: 600px;">
+                    <h1 class="settings-title">Default Proxy</h1>
+                    <p class="settings-subtitle">Authorized person to collect your order at the Hall Porter's desk.</p>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px 0; margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; border-top: 1px solid #e2e8f0;">
+                        <div>
+                            <span style="font-weight: 700; color: #1e293b; display: block; font-size: 0.95rem;">Enable Proxy Delivery</span>
+                            <span style="font-size: 0.8rem; color: #64748b;">Allow someone else to receive your orders</span>
+                        </div>
+                        <label class="crave-switch">
+                            <input type="checkbox" id="proxy-toggle" {% if request.user.customer_profile.crave_profile.proxy_enabled %}checked{% endif %} onchange="toggleProxyState()">
+                            <span class="crave-slider"></span>
+                        </label>
+                    </div>
+
+                    <div id="proxy-form-container" class="proxy-form-container {% if not request.user.customer_profile.crave_profile.proxy_enabled %}disabled-form{% endif %}">
+                        
+                        <div style="display: flex; gap: 20px; align-items: flex-start; margin-bottom: 20px; flex-wrap: wrap;">
+                            
+                            <div style="flex: 1; min-width: 250px;">
+                                <div style="margin-bottom: 15px;">
+                                    <label style="display:block; font-size:0.85rem; font-weight:700; color:#475569; margin-bottom:5px;">Proxy Name</label>
+                                    <input type="text" id="proxy-name" value="{{ request.user.customer_profile.crave_profile.default_proxy.proxy_name|default:'' }}" placeholder="e.g. John Doe" style="width: 100%; padding: 15px; border: 1px solid #e2e8f0; border-radius: 10px; font-family: inherit; font-size: 0.95rem; outline: none;">
+                                </div>
+
+                                <!-- NEW: Proxy Gender Dropdown -->
+                                <div>
+                                    <label style="display:block; font-size:0.85rem; font-weight:700; color:#475569; margin-bottom:5px;">Gender</label>
+                                    <select id="proxy-gender" style="width: 100%; padding: 15px; border: 1px solid #e2e8f0; border-radius: 10px; font-family: inherit; font-size: 0.95rem; outline: none; background: white; cursor: pointer;">
+                                        <option value="male" {% if request.user.customer_profile.crave_profile.default_proxy.proxy_gender == 'male' %}selected{% endif %}>Male</option>
+                                        <option value="female" {% if request.user.customer_profile.crave_profile.default_proxy.proxy_gender == 'female' %}selected{% endif %}>Female</option>
+                                    </select>
+                                </div>
+
+                                <div style="margin-bottom: 15px;">
+                                    <label style="display:block; font-size:0.85rem; font-weight:700; color:#475569; margin-bottom:5px;">Proxy Zone / Area</label>
+                                    <select id="proxy-location" onchange="filterBuildings('proxy-location', 'proxy-building')" style="width: 100%; padding: 15px; border: 1px solid #e2e8f0; border-radius: 10px; font-family: inherit; font-size: 0.95rem; outline: none; background: white; cursor: pointer;">
+                                        <option value="">Select a Zone...</option>
+                                        {% for loc in locations %}
+                                            <option value="{{ loc.id }}" {% if request.user.customer_profile.crave_profile.default_proxy.proxy_location.id == loc.id %}selected{% endif %}>{{ loc.value }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 15px; margin-bottom: 15px;">
+                                    <div>
+                                        <label style="display:block; font-size:0.85rem; font-weight:700; color:#475569; margin-bottom:5px;">Building / Hall</label>
+                                        <select id="proxy-building" style="width: 100%; padding: 15px; border: 1px solid #e2e8f0; border-radius: 10px; font-family: inherit; font-size: 0.95rem; outline: none; background: white; cursor: pointer;">
+                                            <option value="">Select a Building...</option>
+                                            {% for bldg in buildings %}
+                                                <option value="{{ bldg.id }}" data-zone-id="{{ bldg.parent_location.id }}" {% if request.user.customer_profile.crave_profile.default_proxy.proxy_building.id == bldg.id %}selected{% endif %}>{{ bldg.value }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label style="display:block; font-size:0.85rem; font-weight:700; color:#475569; margin-bottom:5px;">Room No.</label>
+                                        <input type="text" id="proxy-room" value="{{ request.user.customer_profile.crave_profile.default_proxy.proxy_address|default:'' }}" placeholder="e.g. A204" style="width: 100%; padding: 15px; border: 1px solid #e2e8f0; border-radius: 10px; font-family: inherit; font-size: 0.95rem; outline: none;">
+                                    </div>
+                                </div>
+
+                                <div style="margin-bottom: 15px;">
+                                    <label style="display:block; font-size:0.85rem; font-weight:700; color:#475569; margin-bottom:5px;">Proxy Seed Phrase</label>
+                                    <input type="text" id="proxy-seed-phrase" value="{{ request.user.customer_profile.crave_profile.default_proxy.proxy_seed_phrase_hash|default:'' }}" placeholder="e.g. SEED_PHRASE_TEXT" style="width: 100%; padding: 15px; border: 1px solid #e2e8f0; border-radius: 10px; font-family: inherit; font-size: 0.95rem; outline: none;">
+                                </div>
+                            </div>
+
+                            <div style="width: 140px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center;">
+                                <label style="display:block; font-size:0.85rem; font-weight:700; color:#475569; margin-bottom:5px;">Proxy Photo</label>
+                                
+                                <div id="proxy-image-preview" onclick="document.getElementById('proxy-image-input').click()" 
+                                     style="width: 120px; height: 120px; border-radius: 16px; border: 2px dashed #cbd5e1; background-color: #f8fafc; cursor: pointer; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; background-size: cover; background-position: center; transition: all 0.2s;
+                                     {% if request.user.customer_profile.crave_profile.default_proxy.proxy_photo %}background-image: url('{{ request.user.customer_profile.crave_profile.default_proxy.proxy_photo.url }}'); border-style: solid; border-color: transparent; box-shadow: 0 4px 10px rgba(0,0,0,0.1);{% endif %}">
+                                    
+                                    <i class="bi bi-camera-fill" id="proxy-cam-icon" style="font-size: 2rem; color: #94a3b8; {% if request.user.customer_profile.crave_profile.default_proxy.proxy_photo %}display: none;{% endif %}"></i>
+                                </div>
+                                
+                                <input type="file" id="proxy-image-input" accept="image/*" style="display: none;" onchange="previewProxyImage(event)">
+                                <small style="font-size: 0.7rem; color: #64748b; margin-top: 8px; text-align: center;">Tap to upload<br>(Optional)</small>
+                            </div>
+
+                        </div>
+
+                        <div style="background: #fffbeb; border-left: 4px solid #f59e0b; padding: 15px; border-radius: 6px; font-size: 0.85rem; color: #92400e; margin-bottom: 20px;">
+                            <i class="bi bi-exclamation-triangle-fill" style="margin-right: 8px;"></i>
+                            <strong>Security Note:</strong> Setting a proxy authorizes Luxa Crave to complete delivery to this person.
+                        </div>
+                        
+                        <button onclick="saveProxySettings()" id="btn-save-proxy" style="width: 100%; padding: 15px; background: var(--accent, #3b82f6); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.3s;">
+                            Save Proxy Recipient
+                        </button>
+                    </div>
+
+                    <div id="proxy-disabled-msg" style="display: {% if request.user.customer_profile.crave_profile.proxy_enabled %}none{% else %}block{% endif %}; background: #f1f5f9; color: #64748b; padding: 15px; border-radius: 8px; text-align: center; font-size: 0.85rem; font-weight: 600; margin-top: 15px;">
+                        <i class="bi bi-shield-lock" style="margin-right: 5px;"></i> Proxy delivery is currently disabled. You will receive your own orders.
+                    </div>
+                </div>
+            </div>
+
+            <div id="pin-section" class="settings-panel" style="display: none; width: 100%;">
+                <div class="settings-card" style="max-width: 600px;">
+                    <h1 class="settings-title">Delivery and order creation pin settings</h1>
+                    <p class="settings-subtitle">Manage your pin settings for delivery and order creation. Please note that the pin used for delivery in the luxa store and the luxa campus sections are the same!</p>
+                    <div>
+                        <div style="display: flex; gap: 10px;">
+                            {% if not request.user.customer_profile.delivery_pin %}
+                            <a href="{% host_url 'setup_delivery_pin' host 'default' %}" style="flex: 1; text-align: center; padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; text-decoration: none; color: #1e293b; font-weight: 600; font-size: 0.9rem; background: white;"><i class="bi bi-shield-lock"></i> Setup PIN</a>
+                            {% elif request.user.customer_profile.delivery_pin %}
+                            <a href="{% host_url 'change_delivery_pin' host 'default' %}" style="flex: 1; text-align: center; padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; text-decoration: none; color: #1e293b; font-weight: 600; font-size: 0.9rem; background: white;"><i class="bi bi-key"></i> Change PIN</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order History Section -->
+            <div id="orders-section" class="settings-panel" style="display: none; width: 100%;">
+                <div class="settings-card" style="max-width: 800px; width: 100%;">
+                    <h1 class="settings-title">Order History</h1>
+                    <p class="settings-subtitle">Track your recent campus deliveries and view past receipts.</p>
+                    
+                    {% if all_orders %}
+                    <div class="orders-list-container">
+                        {% for order in all_orders %}
+                        <div class="order-history-card" onclick="viewOrderDetails('{{ order.order_id }}')">
+                            <div class="order-icon">
+                                <i class="bi bi-receipt-cutoff"></i>
+                            </div>
+                            <div class="order-info">
+                                <h4>{{ order.order_number }}</h4>
+                                <span>{{ order.order_date|date:"M d, Y • h:i A" }} • {{ order.total_physical_packs }} Courions(s)</span>
+                            </div>
+                            <div class="order-meta">
+                                <span class="order-price">₦{{ order.total_order_cost|intcomma }}</span>
+                                <span class="order-status badge-{{ order.status }}" id="status-badge-{{ order.order_id }}">{{ order.get_status_display }}</span>
+                            </div>
+                            <div class="order-chevron">
+                                <i class="bi bi-chevron-right"></i>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div style="border: 2px dashed #e2e8f0; border-radius: 15px; padding: 80px 40px; text-align: center; color: #94a3b8;">
+                        <i class="bi bi-bag-x" style="font-size: 4rem; opacity: 0.4;"></i>
+                        <h2 style="margin-top: 20px; color: #475569;">No Orders Yet</h2>
+                        <p>You haven't placed any orders on campus yet. Head over to the terminal to satisfy your cravings!</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div id="orderDetailsModal" class="settings-modal-overlay">
+                <div class="settings-modal-content" style="max-width: 500px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #f1f5f9; padding-bottom: 15px;">
+                        <h3 style="margin: 0; font-size: 1.2rem; color: #1e293b; font-weight: 800;">Order Receipt</h3>
+                        <button onclick="closeOrderDetailsModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #94a3b8;">&times;</button>
+                    </div>
+                    <div id="orderDetailsContent">
+                        </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+{% csrf_token %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/luxa_crave/settings.js' %}"></script>
+{% endblock %}

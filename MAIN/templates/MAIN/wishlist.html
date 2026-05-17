@@ -1,0 +1,141 @@
+{% extends "MAIN/base.html" %}
+{% load static %}
+
+{% block title %}My Wishlist{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/category.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>My Wishlist</h1>
+    
+    {% if wishlist_items %}
+        <div class="products-grid">
+            {% for item in wishlist_items %}
+            <div class="product-card">
+                <a href="{% url 'product_detail' item.product.slug %}">
+                    {% if item.product.main_image %}
+                        <img src="{{ item.product.main_image.url }}" alt="{{ item.product.name }}" class="product-image">
+                    {% else %}
+                        <div class="product-image-placeholder"></div>
+                    {% endif %}
+                    <div class="product-info">
+                        <h3 class="product-name">{{ item.product.name }}</h3>
+                        <p class="product-price">{{ currency_symbol }}{{ item.product.price|floatformat:2 }}</p>
+                        {% if item.product.vendor %}
+                            <p class="product-vendor">by {{ item.product.vendor.business_name }}</p>
+                        {% endif %}
+                    </div>
+                </a>
+                <div class="wishlist-actions" style="margin-top: 10px;">
+                    <button class="btn btn-primary add-to-cart-btn" data-product-id="{{ item.product.id }}" style="margin-right: 10px;">Add to Cart</button>
+                    <button class="btn btn-danger remove-wishlist-btn" data-product-id="{{ item.product.id }}">Remove</button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>Your wishlist is empty. <a href="{% url 'index' %}">Start shopping</a> to add items to your wishlist.</p>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block luxaslide %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Remove from wishlist handlers
+    document.querySelectorAll('.remove-wishlist-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const productId = this.getAttribute('data-product-id');
+            if (confirm('Remove this item from wishlist?')) {
+                removeFromWishlist(productId);
+            }
+        });
+    });
+
+    // Add to cart handlers
+    document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const productId = this.getAttribute('data-product-id');
+            addToCartFromWishlist(productId);
+        });
+    });
+
+    function removeFromWishlist(productId) {
+        fetch(`/wishlist/remove/${productId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                alert(data.message || 'Item removed from wishlist');
+                location.reload();
+            } else {
+                alert(data.error || 'Failed to remove item');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred');
+        });
+    }
+
+    function addToCartFromWishlist(productId) {
+        fetch(`/cart/add/${productId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'quantity=1'
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                alert('Product added to cart!');
+            } else {
+                alert(data.error || 'Failed to add to cart');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred');
+        });
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+});
+</script>
+{% endblock %}
+
