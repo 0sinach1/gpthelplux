@@ -130,29 +130,23 @@ def process_courier_payout(master_order_id):
 
 # ---------------------------------------------------------
 # STEP 1: CHECKOUT LOCK
-# Customer funds move from available balance into locked escrow.
+# Moves customer funds from available balance into escrow.
 # ---------------------------------------------------------
-def step_1_checkout_lock(customer_user, amount, order_id):
-    """Lock a customer's funds for an order in an idempotent transaction.
+def step_1_checkout_lock(customer, amount, order_id):
+    """Lock customer funds for an order checkout.
 
-    This legacy helper is still used by tests and older checkout flows. It
-    debits the customer's available balance, moves the same amount to locked
-    escrow, records a unique lock transaction, and mirrors the vendor's pending
-    clearing balance when the order can be found.
+    The function is idempotent per order: a duplicate lock request with the
+    same order id is ignored once a lock transaction already exists.
     """
-    amount = Decimal(amount)
-    lock_ref = f"LOCK-{order_id}"
+    amount = Decimal(str(amount))
+    transaction_ref = f"LOCK-{order_id}"
 
-    if WalletTransaction.objects.filter(reference=lock_ref).exists():
+    if WalletTransaction.objects.filter(reference=transaction_ref).exists():
         return
 
     with transaction.atomic():
-        try:
-            order = Order.objects.select_for_update().get(pk=order_id)
-        except Order.DoesNotExist:
-            order = None
+        customer_wallet = get_wallet(customer, Wallet.WalletType.CUSTOMER)
 
-        customer_wallet = get_wallet(customer_user, Wallet.WalletType.CUSTOMER)
         if customer_wallet.available_balance < amount:
             raise ValueError(f"Insufficient funds. Required: ₦{amount}")
 
@@ -165,15 +159,9 @@ def step_1_checkout_lock(customer_user, amount, order_id):
             transaction_type='PURCHASE_LOCK',
             amount=-amount,
             running_balance=customer_wallet.available_balance,
-            reference=lock_ref,
-            description=f"Payment locked for Order #{order_id}"
+            reference=transaction_ref,
+            description=f"Escrow lock for Order #{order_id}",
         )
-
-        if order is not None:
-            vendor_share = order.vendor_payout if order.vendor_payout else order.subtotal
-            vendor_wallet = get_wallet(order.vendor.user_account, Wallet.WalletType.VENDOR)
-            vendor_wallet.pending_clearing += vendor_share
-            vendor_wallet.save()
 
 
 # ---------------------------------------------------------
