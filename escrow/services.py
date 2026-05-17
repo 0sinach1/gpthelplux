@@ -197,7 +197,11 @@ def step_3_complete_delivery(order_id):
     transaction_ref = f"EARN-{order_id}"
 
     # 1. OPTIMIZATION: Quick check before locking DB rows
-    if WalletTransaction.objects.filter(reference=transaction_ref).exists():
+    refs_to_check = [transaction_ref]
+    order_number = Order.objects.filter(pk=order_id).values_list('order_number', flat=True).first()
+    if order_number:
+        refs_to_check.append(f"EARN-{order_number}")
+    if WalletTransaction.objects.filter(reference__in=refs_to_check).exists():
         return
 
     try:
@@ -211,7 +215,7 @@ def step_3_complete_delivery(order_id):
                 raise ValueError("Security Alert: Attempted to settle a cancelled order.")
             if order.status != 'delivered':
                 return 
-            if WalletTransaction.objects.filter(reference=transaction_ref).exists():
+            if WalletTransaction.objects.filter(reference__in=refs_to_check).exists():
                 return 
 
             customer_user = order.customer.user_account 
